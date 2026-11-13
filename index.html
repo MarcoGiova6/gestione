@@ -451,28 +451,10 @@ function modalHtml(){
     const c=eff(),nameTxt=esc(S.names[S.uid]||"");
     let h=`<p class="mu" style="margin:0"><b>${nameTxt}</b>${adm?" (amministratore)":""}</p><p class="mu" style="margin:0">Accesso con ${esc(S.email)}</p>`;
     if(S.adminLoaded&&!S.adminUid)h+=`<p class="mu" style="margin:0">Non c’è ancora un amministratore. Solo lui modifica turni, checklist, cadenze, budget e avvisi.</p><button class="b" data-a="claimadmin">Imposta me come amministratore</button>`;
-    if(adm&&!(S.cfg&&S.cfg.resetDone)){
-      h+=m.busy?`<p class="mu" style="margin:0"><b>Cancellazione in corso…</b></p>`:m.confirm?
-        `<p style="margin:0"><b>Sei sicuro? Non si può annullare.</b></p><button class="b" data-a="wipego">Sì, cancella tutto</button><button class="g" data-a="wipeno">Annulla</button>`:
-        `<p class="mu" style="margin:0">Azzera i dati inseriti finora: attività, segnalazioni, spunte, riepiloghi, turni, obiettivi e avviso. Restano account, nomi, voci delle checklist e cadenze.</p><button class="g" data-a="wipeask">Azzera tutti i dati</button>`;
-    }
     h+=`<button class="g" data-a="logout">Esci</button><button class="g" data-a="mclose">Chiudi</button>`;
     return dlg("Il tuo profilo",h);
   }
   return "";
-}
-async function wipeAll(){
-  const M=S.modal;if(M){M.busy=true;M.v=(M.v||"")+"b";renderModal()}
-  try{
-    const delAll=async path=>{const q=await getDocs(collection(fdb,path));await Promise.all(q.docs.map(d=>deleteDoc(d.ref)))};
-    for(const c of ["reports","tasks","weeks","bmonth","rev","targets","bsum","bpers"])await delAll(c);
-    const days=await getDocs(collection(fdb,"days"));
-    for(const d of days.docs){await delAll("days/"+d.id+"/acts");await deleteDoc(d.ref)}
-    await delAll("users/"+S.uid+"/todos");
-    await D.doc("config/main").update({avviso:null,resetDone:true});
-    toast("Dati azzerati");
-  }catch(e){toast("Azzeramento non riuscito ("+((e&&e.code)||"errore")+")")}
-  closeModal();
 }
 function viewLogin(){
   return `<section class="pn login">${ph("Gestione")}<p class="mu" style="margin-top:0">Accedi con l’email e la password che ti ha dato l’amministratore.</p><div class="stack">
@@ -549,7 +531,7 @@ function viewAssign(){
   const recent=t=>!t.done||(Date.now()-(t.doneAt||0)<2.592e8);
   const given=S.tasks.filter(t=>t.by===S.uid&&t.to!==S.uid&&recent(t)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||tfor(x).localeCompare(tfor(y))||(x.at||0)-(y.at||0));
   const opts=Object.entries(S.names).filter(([id])=>id!==S.uid).map(([id,n])=>`<option value="${id}" ${S.draft.tkto===id?"selected":""}>${esc(n)}</option>`).join("");
-  return `<section class="pn">${ph("Assegna a un collega","solo amministratore")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option>${opts}</select><label class="fld" style="margin:4px 0 0"><span>Per il giorno</span><input type="date" data-d="tkday" value="${esc(S.draft.tkday||TODAY)}"></label><button class="b" data-a="addtask">Assegna</button></div><p class="mu">Il collega la vede in Oggi, nel giorno scelto.</p><div class="list">`+
+  return `<section class="pn">${ph("Assegna a un collega","solo amministratore")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option><option value="__all" ${S.draft.tkto==="__all"?"selected":""}>Tutti i colleghi</option>${opts}</select><label class="fld" style="margin:4px 0 0"><span>Per il giorno</span><input type="date" data-d="tkday" value="${esc(S.draft.tkday||TODAY)}"></label><button class="b" data-a="addtask">Assegna</button></div><p class="mu">Il collega la vede in Oggi, nel giorno scelto.</p><div class="list">`+
   given.map(t=>`<div class="row"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}<small class="sub">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}, ${esc(fmtDay(tfor(t)))}</small></span><button class="x" data-a="deltask" data-i="${t.id}" aria-label="Elimina">✕</button></div>`).join("")+`</div></section>`;
 }
 function chkCard(k,items,title){
@@ -727,7 +709,11 @@ function pdfMonth(ym){
   p.txt(40,800,"Budget "+MONTHS[mo-1]+" "+y,20,true);
   p.txt(40,782,"Generato il "+new Date().toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"})+" alle "+hm(Date.now()),9);
   [["Budget mensile",f(total)],["Incassato",f(inc)],["Mancano",f(Math.max(0,total-inc))],["Raggiunto",(total?Math.round(inc/total*100):0)+"%"]].forEach(([k,v],i)=>{p.txt(40+i*130,752,k,8.5);p.txt(40+i*130,736,v,14,true)});
-  let yy=700;
+  const kr=kpiRows(ym),kl=kr[kr.length-1];
+  p.txt(40,712,"KPI progressivo del mese"+(kl?" ("+kr.length+(kr.length===1?" giorno chiuso)":" giorni chiusi)"):""),9,true);
+  if(kl){[["Conversion rate",pc1(kl.ccv)],["Scontrino medio",kl.csm==null?"-":eur2(kl.csm)],["Scontrini",nm2(kl.C.rc)],["Ingressi",nm2(kl.C.en)],["Incassi giorni chiusi",f(kl.C.inc)]].forEach(([k,v],i)=>{p.txt(40+i*103,696,k,8);p.txt(40+i*103,681,v,12,true)})}
+  else p.txt(40,696,"Nessun giorno chiuso: KPI non disponibili.",8.5);
+  let yy=650;
   p.rect(40,yy-5,515,16,0.9);
   [["Giorno",40,0],["Iniziale",140,1],["Aggiornato",205,1],["In turno",215,0],["A testa",400,1],["Incassato",470,1],["Scarto",545,1]].forEach(([t,x,r])=>r?p.rt(x,yy,t,8,true):p.txt(x,yy,t,8,true));
   yy-=17;
@@ -866,9 +852,6 @@ function act(a,el){
   else if(a==="mopen"){closeModal();openModal({type:i})}
   else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;S.draft.rnuid=q.uid||"";openModal({type:"rename",sid:i})}
   else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim(),lk=S.draft.rnuid||"";clearDrafts();closeModal();if(m&&v)editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q){q.n=v;if(lk)q.uid=lk;else delete q.uid}})}
-  else if(a==="wipeask"){S.modal.confirm=true;S.modal.v=(S.modal.v||"")+"c";renderModal()}
-  else if(a==="wipeno"){S.modal.confirm=false;S.modal.v=(S.modal.v||"")+"n";renderModal()}
-  else if(a==="wipego"){wipeAll()}
   else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value}})}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     S.draft.rp="";
@@ -876,7 +859,10 @@ function act(a,el){
   else if(a==="resolve"){save(db.doc("reports/"+i),{res:true,resBy:S.uid,resAt:Date.now()})}
   else if(a==="delreport"){db.doc("reports/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="addtask"){if(!isAdmin())return;const t=(S.draft.tk||"").trim(),to=S.draft.tkto||"";if(!t){toast("Scrivi cosa deve fare");return}if(!to){toast("Scegli il collega");return}
-    S.draft.tk="";db.doc("tasks/"+uid8()).set({t,to,by:S.uid,at:Date.now(),done:false,for:S.draft.tkday||TODAY}).catch(()=>toast("Salvataggio non riuscito"));render()}
+    const dest=to==="__all"?Object.keys(S.names).filter(id=>id!==S.uid):[to];
+    if(!dest.length){toast("Nessun collega a cui assegnare");return}
+    S.draft.tk="";dest.forEach(id=>db.doc("tasks/"+uid8()).set({t,to:id,by:S.uid,at:Date.now(),done:false,for:S.draft.tkday||TODAY}).catch(()=>toast("Salvataggio non riuscito")));
+    if(dest.length>1)toast("Assegnata a "+dest.length+" colleghi");render()}
   else if(a==="taskdone"){save(db.doc("tasks/"+i),{done:el.checked,doneAt:el.checked?Date.now():0,doneBy:el.checked?S.uid:""})}
   else if(a==="deltask"){db.doc("tasks/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="claimadmin"){db.doc("meta/admin").set({uid:S.uid}).then(()=>toast("Ora sei l’amministratore")).catch(()=>toast("Non riuscito: c’è già un amministratore"))}
