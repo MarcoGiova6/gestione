@@ -47,6 +47,8 @@ main.wide{max-width:1100px}
 .pn{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:16px 18px;margin-bottom:14px}
 .pn.alert{border:1.5px solid var(--warn)}
 .pn.ok{border:1.5px solid var(--go)}
+.pn.avv{background:var(--hv);color:var(--hvx);border-color:transparent}
+.pn.avv .ph h2{color:var(--hvx)}
 .ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
 .ph h2{margin:0;font:400 24px/1.1 var(--disp);letter-spacing:.01em}
 .ph small{font:600 13.5px var(--sans);color:var(--mu);text-align:right}
@@ -67,7 +69,7 @@ main.wide{max-width:1100px}
 .tx{flex:1}
 .ck.dn .tx{color:var(--mu);text-decoration:line-through}
 .who{font-size:13px;color:var(--mu);text-align:right}
-.sub{display:block;color:var(--mu);font-size:13px;margin-top:2px}
+.sub{display:block;color:var(--mu);font-size:13px;margin-top:2px;white-space:pre-line}
 .sr{align-items:flex-start;padding:10px 0}
 .mk{flex:none;width:20px;text-align:center;font-weight:700;color:var(--mu)}
 .mk.ok{color:var(--go)}
@@ -76,6 +78,11 @@ main.wide{max-width:1100px}
 .meta{display:flex;gap:8px;font-size:13px;color:var(--mu)}
 .meta b{color:var(--ink);font-weight:600}
 .act input[type=text]{margin-top:8px}
+.cmadd{display:flex;gap:8px;margin-top:8px}
+.act .cmadd input[type=text]{margin-top:0;flex:1}
+.cm{font-size:14px;margin-top:8px;padding-left:10px;border-left:3px solid var(--ln)}
+.cm b{font-weight:600}
+.cm small{color:var(--mu);margin-left:6px;font-size:12.5px}
 input[type=text],input[type=email],input[type=password],textarea,select{width:100%;padding:12px 14px;border:1px solid transparent;border-radius:10px;background:var(--fill);color:var(--ink);font:inherit}
 textarea{min-height:100px;resize:vertical}
 .stack{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
@@ -117,6 +124,8 @@ td input:focus{background:var(--fill)}
 .sh-c{display:block;width:100%;border:0;border-radius:9px;padding:11px 4px;font:600 13.5px var(--sans);background:transparent;color:var(--mu);text-align:center}
 .sh-c.w{background:var(--hv);color:var(--hvx)}
 .sh-c.r{background:var(--fill);color:var(--mu)}
+.sh-c.f{background:var(--warnbg);color:var(--warn)}
+.sh-c.m{background:var(--badbg);color:var(--bad)}
 h3.sub2{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
 .wnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px}
 .wnav b{font-weight:700}
@@ -183,11 +192,11 @@ const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",mini
 const num=v=>{let s=String(v==null?"":v).trim().replace(/[€\s]/g,"");if(!s)return null;if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");const n=parseFloat(s);return isFinite(n)&&n>=0?n:null};
 const fnum=n=>n?String(n).replace(".",","):"";
 const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Persona 3"}];
-const defOpen=["Accendere luci e impianti","Controllare la cassa","Controllare ordini e consegne","Verificare pulizia e ordine"].map((t,i)=>({id:"o"+i,t}));
-const defClose=["Spegnere luci e impianti","Chiusura cassa","Pulizia e riordino","Chiudere porte e inserire l’allarme"].map((t,i)=>({id:"c"+i,t}));
+const defOpen=[{id:"o1",t:"Apertura cassa"},{id:"o3",t:"Ordine e pulizia"},{id:"o4",t:"Gestione OSN"}];
+const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizionatori"},{id:"c1",t:"Chiusura cassa"},{id:"c3",t:"Porte e allarme"}];
 const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:""};
 const subs={};
-const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||[],shiftTime:c.shiftTime||""}};
+const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||[],shiftTime:c.shiftTime||"",avviso:c.avviso||null,cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
 const rn=id=>S.names[id]||"Collega";
 const isAdmin=()=>!!S.uid&&S.adminUid===S.uid;
@@ -196,16 +205,25 @@ const fmtDay=x=>parse(x).toLocaleDateString("it-IT",{weekday:"short",day:"numeri
 const wdi=x=>(parse(x).getDay()+6)%7;
 const people=()=>Object.keys(S.names).filter(u=>S.names[u]).sort((a,b)=>rn(a).localeCompare(rn(b),"it"));
 const tg=(u,x)=>{const b=S.budAll[x||S.day];return(b&&b.u&&+b.u[u])||0};
-const stateOf=v=>{v=String(v||"").trim();if(!v)return "";return /^(r|riposo)$/i.test(v)?"r":"w"};
-const nextShift=v=>{const s=stateOf(v);return s===""?"L":s==="w"?"R":""};
+const stateOf=v=>{v=String(v||"").trim();if(!v)return "";if(/^(r|riposo)$/i.test(v))return "r";if(/^(f|ferie)$/i.test(v))return "f";if(/^(m|malattia)$/i.test(v))return "m";return "w"};
+const nextShift=v=>({"":"L",w:"R",r:"F",f:"M",m:""})[stateOf(v)];
 const cellsOf=w=>((S.weeksAll[w]||{}).cells)||{};
-const shiftWho=x=>{const cells=cellsOf(mondayOf(x)),st=eff().staff;return{on:st.filter(s=>stateOf(cells[x+"_"+s.id])==="w").map(s=>s.n),set:st.some(s=>stateOf(cells[x+"_"+s.id]))}};
+const shiftWho=x=>{const cells=cellsOf(mondayOf(x)),st=eff().staff,L={f:"ferie",m:"malattia"},sx=q=>stateOf(cells[x+"_"+q.id]);return{on:st.filter(q=>sx(q)==="w").map(q=>q.n),off:st.filter(q=>L[sx(q)]).map(q=>q.n+" ("+L[sx(q)]+")"),set:st.some(q=>sx(q))}};
+const turnoHtml=sw=>"<b>In turno:</b> "+(sw.on.length?esc(sw.on.join(", ")):"nessuno")+(sw.off.length?"<br><b>Assenti:</b> "+esc(sw.off.join(", ")):"");
+const cmAll=(o,by,at)=>{const a=[];if(o.c)a.push({t:o.c,by,at});Object.values(o.cm||{}).forEach(x=>a.push(x));return a.sort((p,q)=>(p.at||0)-(q.at||0))};
+const cmBlock=(o,key,id)=>cmAll(o,o.by,o.at).map(c=>`<div class="cm"><b>${esc(nm(c.by))}</b><small>${hm(c.at)}</small><br>${esc(c.t)}</div>`).join("")+`<div class="cmadd"><input type="text" data-d="cm_${id}" placeholder="Aggiungi un commento…" value="${esc(S.draft["cm_"+id]||"")}"><button class="g" data-a="${key}" data-i="${id}">Aggiungi</button></div>`;
+const memoPatch=()=>{if(S.draft.memo===undefined)return {};const t=S.draft.memo.trim();delete S.draft.memo;return {memo:t?{t,by:S.uid,at:Date.now()}:null,memoDone:null}};
+function migrate(){
+  if(S.mig||!S.loaded||!S.adminLoaded||!isAdmin()||!S.cfg||(S.cfg.cfgv||0)>=7)return;
+  S.mig=true;
+  D.doc("config/main").update({open:defOpen,close:defClose,cfgv:7}).catch(()=>{});
+}
 const hm=t=>t?new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"";
 let tt;function toast(m){const e=$("#toast");e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>e.hidden=true,3200)}
 const fail=e=>{S.err="Problema di connessione ai dati ("+((e&&e.code)||"errore")+").";render()};
 async function save(ref,data){try{await ref.update(data)}catch(e){toast("Salvataggio non riuscito")}}
 async function saveBud(ref,data){try{await ref.update(data)}catch(e){toast("Non salvato: controlla le regole di Firebase")}}
-function openDay(x){S.day=x;S.tab="oggi";S.confirm="";S.sumDay="";watchSum("");delete S.draft.sum;watchDay();render();scrollTo(0,0)}
+function openDay(x){S.day=x;S.tab="oggi";S.confirm="";S.sumDay="";watchSum("");delete S.draft.sum;delete S.draft.memo;watchDay();render();scrollTo(0,0)}
 function watchDay(){
   ["day","acts"].forEach(k=>subs[k]&&subs[k]());S.dayDoc={};S.acts=[];
   const r=D.doc("days/"+S.day);
@@ -234,7 +252,7 @@ async function start(u){
 }
 onAuthStateChanged(auth,u=>{S.authReady=true;if(u)start(u);else{S.uid=null;render()}});
 function editCfg(fn){
-  const c=JSON.parse(JSON.stringify(eff()));fn(c);S.cfg=c;
+  const nocfg=!S.cfg;const c=JSON.parse(JSON.stringify(eff()));fn(c);if(nocfg)c.cfgv=7;S.cfg=c;
   D.doc("config/main").set(c).catch(()=>toast("Solo l’amministratore può modificarlo"));render();
 }
 
@@ -257,12 +275,13 @@ function waText(x,d,acts){
   L.push("","*Checklist*",cl("open",c.open,"Apertura"),cl("close",c.close,"Chiusura"));
   const rec=c.rec.filter(r=>r.d===wdi(x)),rm=d.rec||{};
   if(rec.length){L.push("","*Attività fisse*");rec.forEach(r=>L.push((rm[r.id]?"✅ ":"⬜ ")+r.t+(rm[r.id]?" ("+rn(rm[r.id])+")":"")))}
-  if(acts.length){L.push("","*Attività svolte*");acts.forEach(a=>L.push("• "+a.t+" ("+rn(a.by)+")"+(a.c?": "+a.c:"")))}
+  if(acts.length){L.push("","*Attività svolte*");acts.forEach(a=>{L.push("• "+a.t+" ("+rn(a.by)+")");cmAll(a,a.by,a.at).forEach(c=>L.push("   ↳ "+rn(c.by)+": "+c.t))})}
   const td=S.tasks.filter(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===x);
   if(td.length){L.push("","*ToDo completate*");td.forEach(t=>L.push("• "+t.t+" ("+rn(t.doneBy||t.to)+")"))}
   const rp=S.reports.filter(r=>rday(r)===x);
-  if(rp.length){L.push("","*Segnalazioni*");rp.forEach(r=>L.push("• "+r.t+" ("+rn(r.by)+"), "+(r.res?"risolta":"aperta")))}
+  if(rp.length){L.push("","*Segnalazioni*");rp.forEach(r=>{L.push("• "+r.t+" ("+rn(r.by)+"), "+(r.res?"risolta":"aperta"));cmAll(r,r.by,r.at).forEach(c=>L.push("   ↳ "+rn(c.by)+": "+c.t))})}
   L.push("","*Riepilogo*",d.sum||"(nessun riepilogo)");
+  if(d.memo&&d.memo.t)L.push("","*Promemoria per domani*",d.memo.t);
   return L.join("\n");
 }
 function sendWa(text){
@@ -279,12 +298,10 @@ function viewLogin(){
   <button class="b" data-a="login">Entra</button></div></section>`;
 }
 function budgetPanel(){
-  const ps=people(),adm=isAdmin(),me=S.uid,mt=tg(me);
+  const adm=isAdmin(),mt=tg(S.uid);
   const lab=S.day===TODAY?"Il tuo obiettivo di oggi":"Il tuo obiettivo del "+fmtDay(S.day);
-  const rows=ps.filter(u=>u!==me&&tg(u)).map(u=>`<div class="trow"><span>${esc(rn(u))}</span><b>${eur(tg(u))}</b></div>`).join("");
-  return `<section class="gp"><div><div class="gl">${esc(lab)}</div>${mt?`<div class="gbig">${eur(mt)}</div>`:`<div class="gbig none">Non impostato</div>`}</div><div>`+
-  (S.budErr?`<p class="gnote">Obiettivi non disponibili: l’amministratore deve aggiornare le regole di Firebase.</p>`:(rows?`<div class="gl">Team</div>${rows}`:""))+
-  (adm?`<button class="g" data-a="budedit">Modifica obiettivi</button>`:"")+`</div></section>`;
+  return `<section class="gp"><div><div class="gl">${esc(lab)}</div>${mt?`<div class="gbig">${eur(mt)}</div>`:`<div class="gbig none">Non impostato</div>`}</div>`+
+  (S.budErr?`<div><p class="gnote">Obiettivi non disponibili: l’amministratore deve aggiornare le regole di Firebase.</p></div>`:(adm?`<div><button class="g" data-a="budedit">Modifica obiettivi</button></div>`:""))+`</section>`;
 }
 function openBanner(){
   const c=eff(),d=S.dayDoc;
@@ -294,30 +311,52 @@ function openBanner(){
   const w=d.waOpen;
   return `<section class="pn ok">${ph("Apertura completa")}${w?`<p class="mu" style="margin:0 0 10px">WhatsApp aperto alle ${hm(w.at)} da ${esc(nm(w.by))}</p>`:""}<button class="b" data-a="waopen">${w?"Invia di nuovo su WhatsApp":"Invia “Apertura OK” su WhatsApp"}</button></section>`;
 }
+function avvisoCard(){
+  const a=eff().avviso;
+  return a&&a.t?`<section class="pn avv">${ph("Avviso")}<p style="margin:0;white-space:pre-wrap">${esc(a.t)}</p></section>`:"";
+}
+function memoCard(){
+  if(S.day!==TODAY)return "";
+  for(let j=1;j<=7;j++){
+    const x=addDays(TODAY,-j),d=S.daysAll[x];
+    if(d&&d.memo&&d.memo.t){
+      if(d.memoDone)return "";
+      return `<section class="pn alert">${ph("Promemoria",esc(fmtDay(x)))}<p style="margin:0 0 6px;white-space:pre-wrap">${esc(d.memo.t)}</p><div class="meta"><b>${esc(nm(d.memo.by))}</b><span>${hm(d.memo.at)}</span></div><div style="margin-top:10px"><button class="g" data-a="memoread" data-i="${x}">Segna come letto</button></div></section>`;
+    }
+  }
+  return "";
+}
+function memoPanel(d){
+  const m=d.memo||{},v=S.draft.memo!==undefined?S.draft.memo:(m.t||"");
+  return `<section class="pn">${ph("Promemoria per domani",m.t?esc(nm(m.by))+" alle "+hm(m.at):"")}<textarea data-d="memo" placeholder="Cosa deve sapere chi apre domani?">${esc(v)}</textarea><div class="btns"><button class="g" data-a="savememo">Salva promemoria</button></div></section>`;
+}
 function reportsCard(){
   const list=S.reports.filter(r=>rday(r)===S.day).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(a.at||0)-(b.at||0));
   const open=list.filter(r=>!r.res);
   return `<section class="pn">${ph("Segnalazioni",list.length?(open.length?open.length+" aperte su "+list.length:list.length+" risolte"):"")}<div class="stack">
    <input type="text" data-d="rp" placeholder="Cosa non va? Cosa serve?" value="${esc(S.draft.rp||"")}">
    <button class="b" data-a="addreport">Invia segnalazione</button></div><div class="list">`+
-  list.map(r=>`<div class="act"><div class="line"><strong style="${r.res?"color:var(--mu);text-decoration:line-through":""}">${esc(r.t)}</strong>${(isAdmin()||r.by===S.uid)?`<button class="x" data-a="delreport" data-i="${r.id}" aria-label="Elimina">✕</button>`:""}</div><div class="meta"><b>${esc(nm(r.by))}</b><span>${hm(r.at)}</span>${r.res?`<span>risolta da ${esc(nm(r.resBy))}</span>`:""}</div>${r.res?"":`<div style="margin-top:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button></div>`}</div>`).join("")+`</div></section>`;
+  list.map(r=>`<div class="act"><div class="line"><strong style="${r.res?"color:var(--mu);text-decoration:line-through":""}">${esc(r.t)}</strong>${isAdmin()?`<button class="x" data-a="delreport" data-i="${r.id}" aria-label="Elimina">✕</button>`:""}</div><div class="meta"><b>${esc(nm(r.by))}</b><span>${hm(r.at)}</span>${r.res?`<span>risolta da ${esc(nm(r.resBy))}</span>`:""}</div>${cmBlock(r,"addcmrep",r.id)}${r.res?"":`<div style="margin-top:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button></div>`}</div>`).join("")+`</div></section>`;
 }
 function carryCard(){
   if(S.day!==TODAY)return "";
   const old=S.reports.filter(r=>!r.res&&rday(r)<TODAY).sort((a,b)=>(a.at||0)-(b.at||0));
   if(!old.length)return "";
   return `<section class="pn alert">${ph("Ancora aperte",old.length+" dai giorni scorsi")}<div class="list">`+
-  old.map(r=>`<div class="act"><strong>${esc(r.t)}</strong><div class="meta"><b>${esc(nm(r.by))}</b><span>${esc(fmtDay(rday(r)))}</span></div><div style="margin-top:8px;display:flex;gap:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button><button class="g" data-a="goday" data-i="${rday(r)}">Apri giorno</button></div></div>`).join("")+`</div></section>`;
+  old.map(r=>`<div class="act"><strong>${esc(r.t)}</strong><div class="meta"><b>${esc(nm(r.by))}</b><span>${esc(fmtDay(rday(r)))}</span></div>${cmBlock(r,"addcmrep",r.id)}<div style="margin-top:8px;display:flex;gap:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button><button class="g" data-a="goday" data-i="${rday(r)}">Apri giorno</button></div></div>`).join("")+`</div></section>`;
 }
 function viewTasks(){
   const recent=t=>!t.done||(Date.now()-(t.doneAt||0)<2.592e8);
-  const sorted=a=>a.filter(recent).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||(x.at||0)-(y.at||0));
-  const mine=sorted(S.tasks.filter(t=>t.to===S.uid)),given=sorted(S.tasks.filter(t=>t.by===S.uid&&t.to!==S.uid));
-  const opts=Object.entries(S.names).filter(([id])=>id!==S.uid).map(([id,n])=>`<option value="${id}" ${S.draft.tkto===id?"selected":""}>${esc(n)}</option>`).join("");
+  const mine=S.tasks.filter(t=>t.to===S.uid&&recent(t)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||(x.at||0)-(y.at||0));
   return `<section class="pn">${ph("Assegnate a te",mine.filter(t=>!t.done).length+" da fare")}<div class="list">`+
-  (mine.map(t=>`<label class="row ck ${t.done?"dn":""}">${ck(`data-a="taskdone" data-i="${t.id}"`,t.done)}<span class="tx">${esc(t.t)}</span><span class="who">da ${esc(nm(t.by))}</span></label>`).join("")||`<p class="mu">Nessuna attività assegnata.</p>`)+`</div></section>
-  <section class="pn">${ph("Assegna a un collega")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option>${opts}</select><button class="b" data-a="addtask">Assegna</button></div><div class="list">`+
-  given.map(t=>`<div class="row"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}</span><span class="who">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}</span>${(isAdmin()||t.by===S.uid)?`<button class="x" data-a="deltask" data-i="${t.id}" aria-label="Elimina">✕</button>`:""}</div>`).join("")+`</div><p class="mu">I colleghi compaiono nell’elenco dopo il primo accesso.</p></section>`;
+  (mine.map(t=>`<label class="row ck ${t.done?"dn":""}">${ck(`data-a="taskdone" data-i="${t.id}"`,t.done)}<span class="tx">${esc(t.t)}</span><span class="who">da ${esc(nm(t.by))}</span></label>`).join("")||`<p class="mu">Nessuna attività assegnata.</p>`)+`</div></section>`;
+}
+function viewAssign(){
+  const recent=t=>!t.done||(Date.now()-(t.doneAt||0)<2.592e8);
+  const given=S.tasks.filter(t=>t.by===S.uid&&t.to!==S.uid&&recent(t)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||(x.at||0)-(y.at||0));
+  const opts=Object.entries(S.names).filter(([id])=>id!==S.uid).map(([id,n])=>`<option value="${id}" ${S.draft.tkto===id?"selected":""}>${esc(n)}</option>`).join("");
+  return `<section class="pn">${ph("Assegna a un collega","solo amministratore")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option>${opts}</select><button class="b" data-a="addtask">Assegna</button></div><div class="list">`+
+  given.map(t=>`<div class="row"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}</span><span class="who">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}</span><button class="x" data-a="deltask" data-i="${t.id}" aria-label="Elimina">✕</button></div>`).join("")+`</div><p class="mu">I colleghi compaiono nell’elenco dopo il primo accesso.</p></section>`;
 }
 function viewTodo(){
   const done=S.todos.filter(t=>t.done).length;
@@ -336,8 +375,8 @@ function viewOggi(){
   const sw=shiftWho(S.day);
   return dayHead(dd.getDate(),dd.toLocaleDateString("it-IT",{weekday:"long"}),dd.toLocaleDateString("it-IT",{month:"long",year:"numeric"}),"dprev","dnext")+
   (S.day!==TODAY?`<p class="back"><button class="g" data-a="dtoday">Torna a oggi</button></p>`:"")+
-  (sw.set?`<p class="mu" style="margin:-6px 0 14px"><b>In turno:</b> ${sw.on.length?esc(sw.on.join(", ")):"nessuno"}</p>`:"")+
-  openBanner()+carryCard()+budgetPanel()+
+  (sw.set?`<p class="mu" style="margin:-6px 0 14px">${turnoHtml(sw)}</p>`:"")+
+  avvisoCard()+memoCard()+openBanner()+carryCard()+budgetPanel()+
   chk("open",c.open,"Apertura")+
   (rec.length?chk("rec",rec,"Attività fisse del "+GGL[wdi(S.day)].toLowerCase()):"")+
   `<section class="pn">${ph("Attività svolte",S.acts.length||"")}<div class="stack">
@@ -346,11 +385,11 @@ function viewOggi(){
     <button class="b" data-a="addact">Aggiungi attività</button></div><div class="list">`+
   S.acts.map(a=>`<div class="act"><div class="line"><strong>${esc(a.t)}</strong>${!(isAdmin()||a.by===S.uid)?"":S.confirm===a.id?`<button class="g" data-a="delact" data-i="${a.id}">Elimina?</button>`:`<button class="x" data-a="askdel" data-i="${a.id}" aria-label="Elimina">✕</button>`}</div>
     <div class="meta"><b>${esc(nm(a.by))}</b><span>${hm(a.at)}</span></div>
-    <input type="text" data-a="actc" data-i="${a.id}" placeholder="Aggiungi un commento…" value="${esc(a.c||"")}"></div>`).join("")+`</div></section>`+
+    ${cmBlock(a,"addcmact",a.id)}</div>`).join("")+`</div></section>`+
   reportsCard()+
   chk("close",c.close,"Chiusura")+
   `<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?"salvato da "+esc(nm(d.sumBy))+" alle "+hm(d.sumAt):"")}<textarea data-d="sum" placeholder="Com’è andata la giornata?">${esc(sum)}</textarea>
-   <div class="btns"><button class="g" data-a="savesum">Salva</button><button class="b" data-a="wasum">Salva e invia su WhatsApp</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`;
+   <div class="btns"><button class="g" data-a="savesum">Salva</button><button class="b" data-a="wasum">Salva e invia su WhatsApp</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`+memoPanel(d);
 }
 function viewCal(){
   const first=parse(S.month),y=first.getFullYear(),mo=first.getMonth();
@@ -373,8 +412,8 @@ function sheetHtml(){
   const row=(ok,txt,who,sub)=>`<div class="row sr"><span class="mk ${ok?"ok":""}">${ok?"✓":"–"}</span><span class="tx">${esc(txt)}${sub?`<small class="sub">${esc(sub)}</small>`:""}</span><span class="who">${who}</span></div>`;
   const sw=shiftWho(x);
   let h=`<div class="shbg" data-a="sumclose"></div><div class="sh" role="dialog" aria-label="Riepilogo del giorno"><div class="shh"><div class="dh" style="margin:0;flex:1"><div class="dnum">${dd.getDate()}</div><div class="dt"><b>${esc(dd.toLocaleDateString("it-IT",{weekday:"long"}))}</b><span>${esc(dd.toLocaleDateString("it-IT",{month:"long",year:"numeric"}))}</span></div></div><button class="g sq" data-a="sumclose" aria-label="Chiudi">✕</button></div><div class="sbody">`;
-  if(sw.set)h+=`<p class="mu" style="margin-top:0"><b>In turno:</b> ${sw.on.length?esc(sw.on.join(", ")):"nessuno"}</p>`;
-  const bl=people().filter(u=>tg(u,x));
+  if(sw.set)h+=`<p class="mu" style="margin-top:0">${turnoHtml(sw)}</p>`;
+  const bl=(isAdmin()?people():[S.uid]).filter(u=>tg(u,x));
   if(bl.length)h+=`<section class="pn">${ph("Obiettivi del giorno")}<div class="list">${bl.map(u=>`<div class="row"><span class="tx">${t2(u)}</span><b>${eur(tg(u,x))}</b></div>`).join("")}</div></section>`;
   if(fut){h+=`<p class="mu">Giorno futuro: qui compaiono turni e obiettivi.</p>`}
   else{
@@ -383,13 +422,14 @@ function sheetHtml(){
     h+=sec("open",c.open,"Apertura");
     const rec=c.rec.filter(r=>r.d===wdi(x)).map(r=>({id:r.id,t:r.t}));
     if(rec.length)h+=sec("rec",rec,"Attività fisse");
-    if(acts.length)h+=`<section class="pn">${ph("Attività svolte",acts.length)}<div class="list">${acts.map(a=>row(true,a.t,t2(a.by)+" alle "+hm(a.at),a.c?"Commento: "+a.c:"")).join("")}</div></section>`;
+    if(acts.length)h+=`<section class="pn">${ph("Attività svolte",acts.length)}<div class="list">${acts.map(a=>row(true,a.t,t2(a.by)+" alle "+hm(a.at),cmAll(a,a.by,a.at).map(c=>"↳ "+rn(c.by)+": "+c.t).join("\n"))).join("")}</div></section>`;
     const td=S.tasks.filter(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===x);
     if(td.length)h+=`<section class="pn">${ph("ToDo completate",td.length)}<div class="list">${td.map(t=>row(true,t.t,t2(t.doneBy||t.to)+" alle "+hm(t.doneAt),"Assegnata da "+rn(t.by)+" a "+rn(t.to))).join("")}</div></section>`;
     const rp=S.reports.filter(r=>rday(r)===x).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(a.at||0)-(b.at||0));
-    if(rp.length)h+=`<section class="pn">${ph("Segnalazioni",rp.length)}<div class="list">${rp.map(r=>row(!!r.res,r.t,t2(r.by)+" alle "+hm(r.at),r.res?"Risolta da "+rn(r.resBy):"Ancora aperta")).join("")}</div></section>`;
+    if(rp.length)h+=`<section class="pn">${ph("Segnalazioni",rp.length)}<div class="list">${rp.map(r=>row(!!r.res,r.t,t2(r.by)+" alle "+hm(r.at),(r.res?"Risolta da "+rn(r.resBy):"Ancora aperta")+cmAll(r,r.by,r.at).map(c=>"\n↳ "+rn(c.by)+": "+c.t).join(""))).join("")}</div></section>`;
     h+=sec("close",c.close,"Chiusura");
     h+=`<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?t2(d.sumBy)+" alle "+hm(d.sumAt):"")}${d.sum?`<p style="white-space:pre-wrap;margin:0">${esc(d.sum)}</p>`:`<p class="mu" style="margin:0">Nessun riepilogo salvato.</p>`}</section>`;
+    if(d.memo&&d.memo.t)h+=`<section class="pn">${ph("Promemoria per domani",t2(d.memo.by)+" alle "+hm(d.memo.at))}<p style="white-space:pre-wrap;margin:0">${esc(d.memo.t)}</p></section>`;
   }
   h+=`<div class="btns" style="justify-content:flex-start;margin-bottom:6px"><button class="b" data-a="sumopen">Apri il giorno</button>${fut?"":`<button class="g" data-a="sumwa">Invia su WhatsApp</button>`}</div></div></div>`;
   return h;
@@ -397,15 +437,15 @@ function sheetHtml(){
 function viewPlanner(){
   const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin(),cells=cellsOf(S.week);
   const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  const cell=k=>{const st=stateOf(cells[k]),l=st==="w"?"Lavoro":st==="r"?"Riposo":"–";return adm?`<button class="sh-c ${st}" data-a="shift" data-c="${k}">${l}</button>`:`<span class="sh-c ${st}">${l}</span>`};
+  const cell=k=>{const st=stateOf(cells[k]),l={w:"Lavoro",r:"Riposo",f:"Ferie",m:"Malattia"}[st]||"–";return adm?`<button class="sh-c ${st}" data-a="shift" data-c="${k}">${l}</button>`:`<span class="sh-c ${st}">${l}</span>`};
   return dayHead(null,"Turni",lab,"wprev","wnext")+
   (S.week!==mondayOf(TODAY)?`<p class="back"><button class="g" data-a="wtoday">Questa settimana</button></p>`:"")+
   `<section class="pn">`+
   (adm?`<label class="fld" style="margin-top:0"><span>Orario di lavoro, uguale per tutti i turni</span><input type="text" data-a="shifttime" placeholder="per esempio 9:00–13:00 e 15:00–19:00" value="${esc(c.shiftTime)}"></label>`:(c.shiftTime?`<p class="mu" style="margin:0 0 10px"><b>Orario di lavoro:</b> ${esc(c.shiftTime)}</p>`:""))+
   `<div class="tw"><table class="pt"><tr><th></th>${days.map((x,i)=>`<th class="${x===TODAY?"t":""}">${GG[i]}<br>${parse(x).getDate()}</th>`).join("")}</tr>
   ${c.staff.map(s=>`<tr><td class="n">${esc(s.n)}</td>${days.map(x=>`<td>${cell(x+"_"+s.id)}</td>`).join("")}</tr>`).join("")}</table></div>
-  <p class="mu" style="margin-bottom:0">${adm?"Tocca una casella per scegliere Lavoro, Riposo o vuoto.":"Solo l’amministratore può modificare i turni."}</p>`+
-  (adm?`<div class="btns" style="justify-content:flex-start"><button class="g" data-a="copyweek">Copia la settimana scorsa</button></div>`:"")+`</section>`;
+  <p class="mu" style="margin-bottom:0">${adm?"Tocca una casella per scegliere Lavoro, Riposo, Ferie, Malattia o vuoto.":"Solo l’amministratore può modificare i turni."}</p>`+
+  ""+`</section>`;
 }
 function recCfg(){
   const rec=eff().rec;
@@ -417,21 +457,30 @@ function recCfg(){
 function budCfg(){
   const ps=people(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.bw,i));
   const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  return `<section class="pn">${ph("Obiettivi budget")}<p class="mu" style="margin-top:0">Quanto deve fatturare ogni persona, giorno per giorno. Ognuno vede solo l’obiettivo del giorno che sta guardando.</p>
+  return `<section class="pn">${ph("Obiettivi budget")}<p class="mu" style="margin-top:0">Quanto deve fatturare ogni persona, giorno per giorno. Ognuno vede solo il proprio obiettivo.</p>
   <div class="wnav"><button class="g sq" data-a="bprev" aria-label="Settimana precedente">‹</button><b>${esc(lab)}</b><button class="g sq" data-a="bnext" aria-label="Settimana successiva">›</button></div>`+
   (ps.length?`<div class="tw"><table class="bt"><tr><th></th>${days.map((x,i)=>`<th class="${x===TODAY?"t":""}">${GG[i]}<br>${parse(x).getDate()}</th>`).join("")}</tr>${ps.map(u=>`<tr><td class="n">${esc(rn(u))}</td>${days.map(x=>`<td><input type="text" inputmode="decimal" data-a="budcell" data-u="${u}" data-d="${x}" placeholder="–" value="${fnum(tg(u,x))}"></td>`).join("")}</tr>`).join("")}</table></div>`:`<p class="mu">Le persone compaiono qui dopo il primo accesso.</p>`)+
-  `<div class="btns" style="justify-content:flex-start"><button class="g" data-a="budcopy">Copia dalla settimana scorsa</button>${S.bw!==mondayOf(TODAY)?`<button class="g" data-a="btoday">Questa settimana</button>`:""}</div></section>`;
+  `${S.bw!==mondayOf(TODAY)?`<div class="btns" style="justify-content:flex-start"><button class="g" data-a="btoday">Questa settimana</button></div>`:""}</section>`;
+}
+function avvisoCfg(){
+  const a=eff().avviso;
+  return `<section class="pn">${ph("Avviso")}<p class="mu" style="margin-top:0">Appare in cima a Oggi per tutti, finché non lo togli.</p><textarea data-a="avviso" placeholder="Scrivi l’avviso">${esc(a?a.t:"")}</textarea>${a&&a.t?`<div class="btns"><button class="g" data-a="avvisoclear">Togli avviso</button></div>`:""}</section>`;
+}
+function peopleCfg(){
+  const ps=people();
+  return `<section class="pn">${ph("Nomi dei colleghi")}<p class="mu" style="margin-top:0">I nomi che vedono tutti nell’app. I colleghi non possono cambiarli.</p><div class="list">${ps.map(u=>`<div class="row"><input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}"></div>`).join("")}</div></section>`;
 }
 function viewSet(){
   const c=eff(),adm=isAdmin();
   const items=(k,title)=>`<section class="pn">${ph(title)}<div class="list">`+c[k].map(i=>`<div class="row"><input type="text" data-a="itemname" data-k="${k}" data-i="${i.id}" value="${esc(i.t)}"><button class="x" data-a="delitem" data-k="${k}" data-i="${i.id}" aria-label="Elimina">✕</button></div>`).join("")+
    `<div class="row"><input type="text" data-d="new_${k}" placeholder="Nuova voce" value="${esc(S.draft["new_"+k]||"")}"><button class="g" data-a="additem" data-k="${k}">Aggiungi</button></div></div></section>`;
-  let h=`<section class="pn">${ph("Il tuo profilo",adm?"amministratore":"")}<label class="fld" style="margin-top:0"><span>Nome visibile ai colleghi</span><input type="text" data-a="myname" value="${esc(S.names[S.uid]||"")}"></label><p class="mu">Accesso con ${esc(S.email)}</p><div class="btns" style="justify-content:flex-start"><button class="g" data-a="logout">Esci</button></div></section>`;
+  let h=`<section class="pn">${ph("Il tuo profilo",adm?"amministratore":"")}<p class="mu" style="margin-top:0"><b>${esc(S.names[S.uid]||"")}</b></p><p class="mu">Accesso con ${esc(S.email)}</p><div class="btns" style="justify-content:flex-start"><button class="g" data-a="logout">Esci</button></div></section>`;
   if(S.adminLoaded&&!S.adminUid)h+=`<section class="pn">${ph("Amministratore")}<p class="mu" style="margin-top:0">Non c’è ancora un amministratore. Solo lui modifica turni, nomi del personale, checklist, cadenze, obiettivi budget ed elimina le attività dei colleghi.</p><p class="mu">Fallo tu per primo, prima di far entrare i colleghi: dopo non si cambia da qui.</p><button class="b" data-a="claimadmin">Imposta me come amministratore</button></section>`;
   if(!adm)return h+(S.adminUid?`<p class="mu">Turni, nomi del personale, checklist, cadenze e obiettivi budget li modifica solo l’amministratore.</p>`:"");
-  return h+budCfg()+`<section class="pn">${ph("Nomi del personale")}<div class="list">`+c.staff.map(s=>`<div class="row"><input type="text" data-a="staffname" data-i="${s.id}" value="${esc(s.n)}"></div>`).join("")+`</div><p class="mu">Compaiono nel planner dei turni.</p></section>`+items("open","Voci checklist apertura")+items("close","Voci checklist chiusura")+recCfg();
+  return h+avvisoCfg()+budCfg()+peopleCfg()+`<section class="pn">${ph("Nomi nel planner turni")}<div class="list">`+c.staff.map(s=>`<div class="row"><input type="text" data-a="staffname" data-i="${s.id}" value="${esc(s.n)}"></div>`).join("")+`</div><p class="mu">Compaiono nel planner dei turni.</p></section>`+items("open","Voci checklist apertura")+items("close","Voci checklist chiusura")+recCfg();
 }
 function render(){
+  migrate();
   const a=document.activeElement;
   if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&$("#app").contains(a)){S.pending=true;return}
   S.pending=false;
@@ -444,7 +493,7 @@ function render(){
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:`<p class="mu">Caricamento…</p>`);return}
-  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<div class="note">Nessun amministratore impostato: vai in Altro.</div>`:"")+({oggi:viewOggi,cal:viewCal,plan:viewPlanner,todo:()=>viewTasks()+viewTodo(),set:viewSet}[S.tab])();
+  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<div class="note">Nessun amministratore impostato: vai in Altro.</div>`:"")+({oggi:viewOggi,cal:viewCal,plan:viewPlanner,todo:()=>viewTasks()+viewTodo()+(isAdmin()?viewAssign():""),set:viewSet}[S.tab])();
   const sh=$("#sheet"),html=(S.tab==="cal"&&S.sumDay)?sheetHtml():"";
   if(html!==S.sheetHtml){
     const sb=sh.querySelector&&sh.querySelector(".sbody"),st=sb?sb.scrollTop:0;
@@ -456,7 +505,7 @@ function render(){
 
 document.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending)render()},60));
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k)S.draft[k]=e.target.value});
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",todo:"addtodo",em:"login",pw:"login",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",todo:"addtodo",em:"login",pw:"login",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_")||k.startsWith("cm_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
 function act(a,el){
   const D2=el.dataset,db=D,i=D2.i,k=D2.k;
   if(a==="login"){
@@ -467,7 +516,7 @@ function act(a,el){
   }
   else if(a==="logout"){signOut(auth).then(()=>location.reload())}
   else if(a==="tab"){if(S.sumDay){S.sumDay="";watchSum("")}S.tab=i;render();scrollTo(0,0)}
-  else if(a==="dprev"||a==="dnext"||a==="dtoday"){S.day=a==="dtoday"?TODAY:addDays(S.day,a==="dprev"?-1:1);delete S.draft.sum;S.confirm="";watchDay();render()}
+  else if(a==="dprev"||a==="dnext"||a==="dtoday"){S.day=a==="dtoday"?TODAY:addDays(S.day,a==="dprev"?-1:1);delete S.draft.sum;delete S.draft.memo;S.confirm="";watchDay();render()}
   else if(a==="wprev"||a==="wnext"||a==="wtoday"){S.week=a==="wtoday"?mondayOf(TODAY):addDays(S.week,a==="wprev"?-7:7);render()}
   else if(a==="bprev"||a==="bnext"||a==="btoday"){S.bw=a==="btoday"?mondayOf(TODAY):addDays(S.bw,a==="bprev"?-7:7);render()}
   else if(a==="goday"){openDay(i)}
@@ -485,22 +534,17 @@ function act(a,el){
   else if(a==="addact"){const t=(S.draft.at||"").trim();if(!t){toast("Scrivi cosa è stato fatto");return}
     const c=(S.draft.ac||"").trim(),id=uid8();S.draft.at="";S.draft.ac="";
     db.doc("days/"+S.day+"/acts/"+id).set({t,c,by:S.uid,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));save(db.doc("days/"+S.day),{hasActs:true});render()}
-  else if(a==="actc"){save(db.doc("days/"+S.day+"/acts/"+i),{c:el.value.trim()})}
+  else if(a==="addcmact"){const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("days/"+S.day+"/acts/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}});render()}
+  else if(a==="addcmrep"){const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("reports/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}});render()}
   else if(a==="askdel"){S.confirm=i;render()}
   else if(a==="delact"){S.confirm="";if(S.acts.length<=1)save(db.doc("days/"+S.day),{hasActs:false});db.doc("days/"+S.day+"/acts/"+i).delete().catch(()=>toast("Operazione non riuscita"));render()}
-  else if(a==="savesum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now()});toast("Riepilogo salvato")}
-  else if(a==="wasum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;
-    save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),waClose:{by:S.uid,at:Date.now()}});
-    sendWa(waText(S.day,{...S.dayDoc,sum:v},S.acts))}
+  else if(a==="savesum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),...memoPatch()});toast("Riepilogo salvato")}
+  else if(a==="wasum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;const mp=memoPatch();
+    save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),waClose:{by:S.uid,at:Date.now()},...mp});
+    sendWa(waText(S.day,{...S.dayDoc,sum:v,...mp},S.acts))}
   else if(a==="shift"){save(db.doc("weeks/"+S.week),{cells:{[D2.c]:nextShift(cellsOf(S.week)[D2.c])}})}
   else if(a==="shifttime"){const v=el.value.trim();editCfg(c=>{c.shiftTime=v})}
-  else if(a==="copyweek"){const prev=cellsOf(addDays(S.week,-7)),out={};
-    Object.keys(prev).forEach(key=>{const p=key.split("_");out[addDays(p[0],7)+"_"+p[1]]=prev[key]});
-    if(!Object.keys(out).length){toast("La settimana scorsa è vuota");return}
-    save(db.doc("weeks/"+S.week),{cells:out});toast("Turni copiati dalla settimana scorsa")}
   else if(a==="budcell"){saveBud(db.doc("budget/"+D2.d),{u:{[D2.u]:num(el.value)}})}
-  else if(a==="budcopy"){let n=0;for(let j=0;j<7;j++){const b=S.budAll[addDays(S.bw,j-7)];if(b&&b.u){n++;saveBud(db.doc("budget/"+addDays(S.bw,j)),{u:{...b.u}})}}
-    toast(n?"Obiettivi copiati dalla settimana scorsa":"La settimana scorsa è vuota")}
   else if(a==="addtodo"){const t=(S.draft.todo||"").trim();if(!t)return;S.draft.todo="";
     db.doc("users/"+S.uid+"/todos/"+uid8()).set({t,done:false,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));render()}
   else if(a==="todo"){save(db.doc("users/"+S.uid+"/todos/"+i),{done:el.checked,doneAt:el.checked?Date.now():0})}
@@ -511,12 +555,16 @@ function act(a,el){
     db.doc("reports/"+uid8()).set({t,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));render()}
   else if(a==="resolve"){save(db.doc("reports/"+i),{res:true,resBy:S.uid,resAt:Date.now()})}
   else if(a==="delreport"){db.doc("reports/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
-  else if(a==="addtask"){const t=(S.draft.tk||"").trim(),to=S.draft.tkto||"";if(!t){toast("Scrivi cosa deve fare");return}if(!to){toast("Scegli il collega");return}
+  else if(a==="addtask"){if(!isAdmin())return;const t=(S.draft.tk||"").trim(),to=S.draft.tkto||"";if(!t){toast("Scrivi cosa deve fare");return}if(!to){toast("Scegli il collega");return}
     S.draft.tk="";db.doc("tasks/"+uid8()).set({t,to,by:S.uid,at:Date.now(),done:false}).catch(()=>toast("Salvataggio non riuscito"));render()}
   else if(a==="taskdone"){save(db.doc("tasks/"+i),{done:el.checked,doneAt:el.checked?Date.now():0,doneBy:el.checked?S.uid:""})}
   else if(a==="deltask"){db.doc("tasks/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="claimadmin"){db.doc("meta/admin").set({uid:S.uid}).then(()=>toast("Ora sei l’amministratore")).catch(()=>toast("Non riuscito: c’è già un amministratore"))}
-  else if(a==="myname"){const v=el.value.trim();if(v)save(db.doc("users/"+S.uid),{name:v})}
+  else if(a==="username"){const v=el.value.trim();if(v)save(db.doc("users/"+D2.u),{name:v})}
+  else if(a==="avviso"){const v=el.value.trim();editCfg(c=>{c.avviso=v?{t:v,by:S.uid,at:Date.now()}:null})}
+  else if(a==="avvisoclear"){editCfg(c=>{c.avviso=null})}
+  else if(a==="savememo"){const mp=memoPatch();if(!Object.keys(mp).length){toast("Scrivi il promemoria");return}save(db.doc("days/"+S.day),mp);toast("Promemoria salvato")}
+  else if(a==="memoread"){save(db.doc("days/"+i),{memoDone:{by:S.uid,at:Date.now()}})}
   else if(a==="staffname"){const v=el.value.trim();if(v)editCfg(c=>{c.staff.find(s=>s.id===i).n=v})}
   else if(a==="itemname"){const v=el.value.trim();if(v)editCfg(c=>{c[k].find(x=>x.id===i).t=v})}
   else if(a==="delitem"){editCfg(c=>{c[k]=c[k].filter(x=>x.id!==i)})}
@@ -525,7 +573,7 @@ function act(a,el){
   else if(a==="delrec"){editCfg(c=>{c.rec=c.rec.filter(x=>x.id!==i)})}
   else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
 }
-const CH=["chk","todo","actc","staffname","itemname","myname","taskdone","recname","budcell","shifttime"];
+const CH=["chk","todo","staffname","itemname","username","avviso","taskdone","recname","budcell","shifttime"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
