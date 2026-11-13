@@ -62,6 +62,7 @@ input[type=date]{min-height:46px;-webkit-appearance:none;appearance:none;text-al
 .dlg h2{margin:0;font:400 30px/1.05 var(--disp);letter-spacing:.01em}
 .dlg p{margin:0 0 6px;color:var(--mu)}
 .dlg .b,.dlg .g{width:100%;padding:14px}
+a.b{display:block;text-align:center;text-decoration:none;border-radius:11px}
 .pn.avv{background:var(--hv);color:var(--hvx);border-color:transparent}
 .pn.avv .ph h2{color:var(--hvx)}
 .ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
@@ -111,6 +112,26 @@ select.sm{width:auto;flex:none;padding:12px 10px}
 .pdh b{font:400 23px/1.1 var(--disp);letter-spacing:.01em}
 .pdh span{color:var(--mu);font-size:14px}
 .pn.today{border:2px solid var(--ink)}
+.pn.bdnow{border:2px solid var(--ink)}
+.bstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.bstats span{display:block;color:var(--mu);font-size:13px}
+.bstats b{font:400 21px/1.2 var(--disp);white-space:nowrap}
+.wgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:8px}
+.wgrid span{display:block;font:600 12px var(--sans);color:var(--mu);text-align:center;margin-bottom:3px}
+.wgrid input[type=text]{padding:10px 0;text-align:center;font-size:15px;min-width:0}
+.pn.bdc{padding:0;overflow:hidden}
+.bdh{display:flex;align-items:center;gap:10px;width:100%;padding:14px 16px;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left}
+.bdn{min-width:58px;font-size:16px}
+.bdm{flex:1;color:var(--mu);font-size:13.5px}
+.bdd{font-weight:700;font-size:14px;white-space:nowrap}
+.bdd.up{color:var(--go)}
+.bdd.dn{color:var(--warn)}
+.bdx{padding:0 16px 14px}
+.bdr{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--ln);font-size:15px}
+.bdr span{color:var(--mu);flex:none}
+.bdr b{text-align:right}
+.rv{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
+.rv input[type=text]{width:130px;text-align:right}
 .pn.today .pdh b{background:var(--hv);color:var(--hvx);padding:2px 9px;border-radius:7px}
 .prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--ln);font-weight:600}
 .pdh+.prow{border-top:0}
@@ -237,7 +258,7 @@ const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Pers
 const defOpen=[{id:"o1",t:"Apertura cassa"},{id:"o3",t:"Ordine e pulizia"},{id:"o4",t:"Gestione OSN"}];
 const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizionatori"},{id:"c1",t:"Chiusura cassa"},{id:"c3",t:"Porte e allarme"}];
 const defRec=[{id:"rc1",d:1,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc3",d:3,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc5",d:5,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rp4",d:4,w:"ch",t:"Plastica: ritiro sabato mattina"},{id:"ri0",d:0,w:"ch",t:"Indifferenziata: ritiro martedì mattina"}];
-const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
+const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},bm:{},rev:{},tgtAll:{},tgt:{},bmo:TODAY.slice(0,7),bexp:{},fl:{},names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
 const subs={};
 const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,avviso:c.avviso||null,cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
@@ -247,7 +268,42 @@ const rday=r=>r.day||ymd(new Date(r.at||0));
 const fmtDay=x=>parse(x).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"});
 const wdi=x=>(parse(x).getDay()+6)%7;
 const people=()=>Object.keys(S.names).filter(u=>S.names[u]).sort((a,b)=>rn(a).localeCompare(rn(b),"it"));
-const tg=(u,x)=>{const b=S.budAll[x||S.day];return(b&&b.u&&+b.u[u])||0};
+const DEFW=[10,10,10,10,15,30,15];
+const MONTHS=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+const actOf=x=>Object.values(((S.rev[x]||{}).u)||{}).reduce((a,v)=>a+(+v||0),0);
+function calcMonth(ym){
+  const [y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate();
+  const b=S.bm[ym]||{},total=+b.total||0,W=(b.w&&b.w.length===7?b.w:DEFW).map(v=>+v||0),closed=b.closed||{};
+  const days=Array.from({length:n},(_,i)=>ym+"-"+pad(i+1));
+  const wt=x=>closed[x]?0:W[wdi(x)];
+  const sumW=days.reduce((a,x)=>a+wt(x),0),tom=addDays(TODAY,1);
+  return days.map(x=>{
+    const cut=x<=TODAY?x:tom,settled=days.filter(z=>z<cut),rem=days.filter(z=>z>=cut);
+    const R=Math.max(0,total-settled.reduce((a,z)=>a+actOf(z),0)),sw=rem.reduce((a,z)=>a+wt(z),0);
+    const target=sw?R*wt(x)/sw:0,base=sumW?total*wt(x)/sumW:0,cells=cellsOf(mondayOf(x));
+    const on=eff().staff.filter(q=>stateOf(cells[x+"_"+q.id])==="w"),act=actOf(x);
+    return{x,wt:wt(x),base,target,act,on,n:on.length,per:on.length&&target?target/on.length:null,diff:act-target,closed:!!closed[x]};
+  });
+}
+function myTarget(x){
+  if(isAdmin()){const r=calcMonth(x.slice(0,7)).find(q=>q.x===x),st=r&&r.on.find(q=>q.uid===S.uid);return st&&r.per?Math.round(r.per):0}
+  return S.tgt[x]||0;
+}
+let pubT=0;
+function schedulePublish(){clearTimeout(pubT);pubT=setTimeout(publishTargets,900)}
+function publishTargets(){
+  if(!isAdmin()||!S.loaded||!(S.fl.bm&&S.fl.rev&&S.fl.t&&S.fl.wk))return;
+  const want={};
+  Object.keys(S.bm).forEach(ym=>{if(!(+S.bm[ym].total>0))return;calcMonth(ym).forEach(r=>{if(!r.per)return;r.on.forEach(q=>{if(q.uid)want[r.x+"_"+q.uid]=Math.round(r.per)})})});
+  Object.entries(want).forEach(([id,v])=>{if(S.tgtAll[id]!==v)D.doc("targets/"+id).set({v,at:Date.now()}).catch(()=>{})});
+  Object.keys(S.tgtAll).forEach(id=>{if(!(id in want))D.doc("targets/"+id).delete().catch(()=>{})});
+}
+function watchAdmin(){
+  if(!isAdmin()||subs.bm)return;
+  subs.bm=D.col("bmonth").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.bm=m;S.fl.bm=1;schedulePublish();render()},fail);
+  subs.rev=D.col("rev").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.rev=m;S.fl.rev=1;schedulePublish();render()},fail);
+  subs.tall=D.col("targets").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data().v);S.tgtAll=m;S.fl.t=1;schedulePublish()},fail);
+}
 const stateOf=v=>{v=String(v||"").trim();if(!v)return "";if(/^(r|riposo)$/i.test(v))return "r";if(/^(f|ferie)$/i.test(v))return "f";if(/^(m|malattia)$/i.test(v))return "m";return "w"};
 const nextShift=v=>({"":"L",w:"R",r:"F",f:"M",m:""})[stateOf(v)];
 const cellsOf=w=>((S.weeksAll[w]||{}).cells)||{};
@@ -270,17 +326,19 @@ const hm=t=>t?new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-d
 let tt;function toast(m){const e=$("#toast");e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>e.hidden=true,3200)}
 const fail=e=>{S.err="Problema di connessione ai dati ("+((e&&e.code)||"errore")+").";render()};
 async function save(ref,data){try{await ref.update(data)}catch(e){toast("Salvataggio non riuscito")}}
-async function saveBud(ref,data){try{await ref.update(data)}catch(e){toast("Non salvato: controlla le regole di Firebase")}}
 function openDay(x){S.day=x;S.tab="oggi";S.confirm="";S.sumDay="";watchSum("");delete S.draft.sum;delete S.draft.memo;watchDay();render();scrollTo(0,0)}
 function watchDay(){
-  ["day","acts"].forEach(k=>subs[k]&&subs[k]());S.dayDoc={};S.acts=[];
+  ["day","acts","tgt"].forEach(k=>subs[k]&&subs[k]());S.dayDoc={};S.acts=[];
   const r=D.doc("days/"+S.day);
+  subs.tgt=D.doc("targets/"+S.day+"_"+S.uid).onSnapshot(t=>{S.tgt[S.day]=t.exists?(t.data().v||0):0;render()},()=>{});
   subs.day=r.onSnapshot(s=>{S.dayDoc=s.exists?s.data():{};render()},fail);
   subs.acts=r.collection("acts").onSnapshot(q=>{S.acts=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));if(S.acts.length&&!S.dayDoc.hasActs&&S.healed!==S.day){S.healed=S.day;save(D.doc("days/"+S.day),{hasActs:true})}render()},fail);
 }
 function watchSum(x){
   subs.sacts&&subs.sacts();subs.sacts=null;S.sa=[];
+  subs.stgt&&subs.stgt();subs.stgt=null;
   if(!x)return;
+  subs.stgt=D.doc("targets/"+x+"_"+S.uid).onSnapshot(t=>{S.tgt[x]=t.exists?(t.data().v||0):0;render()},()=>{});
   subs.sacts=D.doc("days/"+x).collection("acts").onSnapshot(q=>{S.sa=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));render()},fail);
 }
 async function start(u){
@@ -288,13 +346,12 @@ async function start(u){
   try{const r=doc(fdb,"users/"+S.uid);const s=await getDoc(r);
     if(!s.exists()){const n=S.email.split("@")[0];await setDoc(r,{name:n.charAt(0).toUpperCase()+n.slice(1)})}}catch(e){}
   subs.users=D.col("users").onSnapshot(q=>{q.docs.forEach(d=>S.names[d.id]=(d.data()||{}).name);render()},fail);
-  subs.cfg=D.doc("config/main").onSnapshot(s=>{S.cfg=s.exists?s.data():null;S.loaded=true;render()},fail);
-  subs.admin=D.doc("meta/admin").onSnapshot(s=>{S.adminUid=s.exists?(s.data().uid||null):null;S.adminLoaded=true;render()},fail);
+  subs.cfg=D.doc("config/main").onSnapshot(s=>{S.cfg=s.exists?s.data():null;S.loaded=true;schedulePublish();render()},fail);
+  subs.admin=D.doc("meta/admin").onSnapshot(s=>{S.adminUid=s.exists?(s.data().uid||null):null;S.adminLoaded=true;watchAdmin();render()},fail);
   subs.tasks=D.col("tasks").onSnapshot(q=>{S.tasks=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.reports=D.col("reports").onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.days=D.col("days").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.daysAll=m;render()},fail);
-  subs.weeks=D.col("weeks").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.weeksAll=m;render()},fail);
-  subs.bud=D.col("budget").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.budAll=m;S.budErr=false;render()},()=>{S.budErr=true;render()});
+  subs.weeks=D.col("weeks").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.weeksAll=m;S.fl.wk=1;schedulePublish();render()},fail);
   watchDay();
 }
 onAuthStateChanged(auth,u=>{S.authReady=true;if(u)start(u);else{S.uid=null;render()}});
@@ -330,10 +387,13 @@ function waMsg(kind,x,d,reasons,note){
   if(!o)L.push("","*Riepilogo*",d.sum||"(nessun riepilogo)");
   return L.join("\n");
 }
+const isIOS=()=>{const n=typeof navigator!=="undefined"?navigator:{};return /iPhone|iPad|iPod/.test(n.userAgent||"")||(n.platform==="MacIntel"&&n.maxTouchPoints>1)};
 function sendWa(text){
-  const url="https://wa.me/?text="+encodeURIComponent(text);
-  const w=window.open(url,"_blank");
-  if(!w)location.href=url;
+  const enc=encodeURIComponent(text),t0=Date.now();
+  if(isIOS()){
+    location.href="whatsapp://send?text="+enc;
+    setTimeout(()=>{if(document.visibilityState==="visible"&&Date.now()-t0<4500&&!S.modal)openModal({type:"wafall",url:"https://wa.me/?text="+enc})},2200);
+  }else location.href="https://wa.me/?text="+enc;
 }
 
 let mkey="";
@@ -341,7 +401,7 @@ function openModal(m){S.modal={id:uid8(),...m};renderModal()}
 function closeModal(){S.modal=null;renderModal()}
 function renderModal(){const md=$("#modal"),key=S.modal?S.modal.id+(S.modal.v||""):"";if(key===mkey)return;mkey=key;md.innerHTML=modalHtml()}
 function snapItems(kind){const d=S.dayDoc;return(kind==="open"?openItems(S.day):closeItems(S.day)).map(i=>({k:i.k,id:i.id,t:i.t,done:!!((d[i.k]||{})[i.id])}))}
-function clearDrafts(){Object.keys(S.draft).forEach(k=>{if(k.startsWith("pr_")||k==="prnote"||k==="rnname")delete S.draft[k]})}
+function clearDrafts(){Object.keys(S.draft).forEach(k=>{if(k.startsWith("pr_")||k==="prnote"||k==="rnname"||k==="rnuid")delete S.draft[k]})}
 function modalHtml(){
   const m=S.modal;if(!m)return "";
   const dlg=(h,inner)=>`<div class="mbg"></div><div class="dlg" role="dialog" aria-modal="true"><h2>${h}</h2>${inner}</div>`;
@@ -356,7 +416,8 @@ function modalHtml(){
       (o?"":`<p class="mu" style="margin:0">${m.hasSum?"Al messaggio viene aggiunto il riepilogo di fine giornata.":"Il riepilogo di fine giornata non è ancora stato salvato."}</p>`)+
       `<button class="b" data-a="mprob">Invia su WhatsApp</button><button class="g" data-a="mclose">Annulla</button>`);
   }
-  if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><button class="b" data-a="mren">Salva</button><button class="g" data-a="mclose">Annulla</button>`);
+  if(m.type==="wafall")return dlg("WhatsApp non si è aperto?",`<p>Se non si è aperto da solo, tocca qui sotto per aprirlo.</p><a class="b" href="${esc(m.url)}" target="_blank" rel="noopener" data-a="mclose">Apri WhatsApp</a><button class="g" data-a="mclose">Chiudi</button>`);
+  if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><label class="fld" style="margin:0"><span>Account collegato</span><select data-d="rnuid"><option value="">Nessuno</option>${people().map(u=>`<option value="${u}" ${S.draft.rnuid===u?"selected":""}>${esc(rn(u))}</option>`).join("")}</select></label><button class="b" data-a="mren">Salva</button><button class="g" data-a="mclose">Annulla</button>`);
   if(m.type==="menu")return `<div class="mbg clr" data-a="mclose"></div><div class="pop"><button data-a="mopen" data-i="profile">Il tuo profilo</button>${adm?`<button data-a="mopen" data-i="names">Nomi dei colleghi</button>`:""}</div>`;
   if(m.type==="names")return dlg("Nomi dei colleghi",`<p class="mu" style="margin:0">I nomi che vedono tutti nell’app. Si salvano quando esci dal campo.</p>`+people().map(u=>`<input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}" aria-label="Nome">`).join("")+`<button class="g" data-a="mclose">Chiudi</button>`);
   if(m.type==="profile"){
@@ -377,7 +438,7 @@ async function wipeAll(){
   const M=S.modal;if(M){M.busy=true;M.v=(M.v||"")+"b";renderModal()}
   try{
     const delAll=async path=>{const q=await getDocs(collection(fdb,path));await Promise.all(q.docs.map(d=>deleteDoc(d.ref)))};
-    for(const c of ["reports","tasks","weeks","budget"])await delAll(c);
+    for(const c of ["reports","tasks","weeks","bmonth","rev","targets"])await delAll(c);
     const days=await getDocs(collection(fdb,"days"));
     for(const d of days.docs){await delAll("days/"+d.id+"/acts");await deleteDoc(d.ref)}
     await delAll("users/"+S.uid+"/todos");
@@ -394,10 +455,10 @@ function viewLogin(){
   <button class="b" data-a="login">Entra</button></div></section>`;
 }
 function budgetPanel(){
-  const adm=isAdmin(),mt=tg(S.uid);
+  const adm=isAdmin(),mt=myTarget(S.day);
   const lab=S.day===TODAY?"Il tuo obiettivo di oggi":"Il tuo obiettivo del "+fmtDay(S.day);
   return `<section class="gp"><div><div class="gl">${esc(lab)}</div>${mt?`<div class="gbig">${eur(mt)}</div>`:`<div class="gbig none">Non impostato</div>`}</div>`+
-  (S.budErr?`<div><p class="gnote">Obiettivi non disponibili: l’amministratore deve aggiornare le regole di Firebase.</p></div>`:(adm?`<div><button class="g" data-a="budedit">Modifica obiettivi</button></div>`:""))+`</section>`;
+  (adm?`<div><button class="g" data-a="budedit">Vai al budget</button></div>`:"")+`</section>`;
 }
 function openSend(){
   const d=S.dayDoc,its=openItems(S.day),miss=its.filter(i=>!((d[i.k]||{})[i.id])).length;
@@ -509,8 +570,10 @@ function sheetHtml(){
   const sw=shiftWho(x);
   let h=`<div class="shbg" data-a="sumclose"></div><div class="sh" role="dialog" aria-label="Riepilogo del giorno"><div class="shh"><div class="dh" style="margin:0;flex:1"><div class="dnum">${dd.getDate()}</div><div class="dt"><b>${esc(dd.toLocaleDateString("it-IT",{weekday:"long"}))}</b><span>${esc(dd.toLocaleDateString("it-IT",{month:"long",year:"numeric"}))}</span></div></div><button class="g sq" data-a="sumclose" aria-label="Chiudi">✕</button></div><div class="sbody">`;
   if(sw.set)h+=`<p class="mu" style="margin-top:0">${turnoHtml(sw)}</p>`;
-  const bl=(isAdmin()?people():[S.uid]).filter(u=>tg(u,x));
-  if(bl.length)h+=`<section class="pn">${ph("Obiettivi del giorno")}<div class="list">${bl.map(u=>`<div class="row"><span class="tx">${t2(u)}</span><b>${eur(tg(u,x))}</b></div>`).join("")}</div></section>`;
+  let bl=[];
+  if(isAdmin()){const r=calcMonth(x.slice(0,7)).find(q=>q.x===x);if(r&&r.per)bl=r.on.map(q=>[q.n,r.per])}
+  else{const v=myTarget(x);if(v)bl=[["Il tuo obiettivo",v]]}
+  if(bl.length)h+=`<section class="pn">${ph("Obiettivi del giorno")}<div class="list">${bl.map(([n,v])=>`<div class="row"><span class="tx">${esc(n)}</span><b>${eur(Math.round(v))}</b></div>`).join("")}</div></section>`;
   if(fut){h+=`<p class="mu">Giorno futuro: qui compaiono turni e obiettivi.</p>`}
   else{
     const sec=(k,items,title)=>{const mm=i=>d[i.k||k]||{},aa=i=>d[(i.k||k)+"At"]||{},n=items.filter(i=>mm(i)[i.id]).length;
@@ -550,13 +613,95 @@ function recCfg(){
     rec.filter(r=>r.d===w).map(r=>`<div class="row"><input type="text" data-a="recname" data-i="${r.id}" value="${esc(r.t)}">${whSel(`data-a="recwhere" data-i="${r.id}"`,r.w||"oggi")}<button class="x" data-a="delrec" data-i="${r.id}" aria-label="Elimina">✕</button></div>`).join("")+
     `<div class="row" style="flex-wrap:wrap"><input type="text" style="flex:1 1 100%" data-d="newrec_${w}" placeholder="Nuova attività del ${n.toLowerCase()}" value="${esc(S.draft["newrec_"+w]||"")}">${whSel(`data-d="newrecw_${w}" style="flex:1"`,S.draft["newrecw_"+w]||"oggi")}<button class="g" data-a="addrec" data-w="${w}">Aggiungi</button></div></div>`).join("")+`</section>`;
 }
-function budCfg(){
-  const ps=people(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.bw,i));
-  const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  return `<section class="pn">${ph("Obiettivi budget")}<p class="mu" style="margin-top:0">Quanto deve fatturare ogni persona, giorno per giorno. Ognuno vede solo il proprio obiettivo.</p>
-  <div class="wnav"><button class="g sq" data-a="bprev" aria-label="Settimana precedente">‹</button><b>${esc(lab)}</b><button class="g sq" data-a="bnext" aria-label="Settimana successiva">›</button></div>`+
-  (ps.length?`<div class="tw"><table class="bt"><tr><th></th>${days.map((x,i)=>`<th class="${x===TODAY?"t":""}">${GG[i]}<br>${parse(x).getDate()}</th>`).join("")}</tr>${ps.map(u=>`<tr><td class="n">${esc(rn(u))}</td>${days.map(x=>`<td><input type="text" inputmode="decimal" data-a="budcell" data-u="${u}" data-d="${x}" placeholder="–" value="${fnum(tg(u,x))}"></td>`).join("")}</tr>`).join("")}</table></div>`:`<p class="mu">Le persone compaiono qui dopo il primo accesso.</p>`)+
-  `${S.bw!==mondayOf(TODAY)?`<div class="btns" style="justify-content:flex-start"><button class="g" data-a="btoday">Questa settimana</button></div>`:""}</section>`;
+function bdayCard(r){
+  const x=r.x,d=parse(x),ex=S.bexp[x]!==undefined?S.bexp[x]:x===TODAY,hasAct=r.act>0,show=!r.closed&&hasAct;
+  const diff=show?r.act-r.target:null,rv=(S.rev[x]||{}).u||{};
+  return `<section class="pn bdc ${x===TODAY?"bdnow":""}"><button class="bdh" data-a="bday" data-i="${x}"><span class="bdn"><b>${GG[wdi(x)]} ${d.getDate()}</b></span><span class="bdm">${r.closed?"Chiuso":"Budget "+eur(Math.round(r.target))+(hasAct?", incassato "+eur(Math.round(r.act)):"")}</span>${diff!==null?`<span class="bdd ${diff>=0?"up":"dn"}">${diff>=0?"+":"−"}${eur(Math.abs(Math.round(diff)))}</span>`:""}</button>`+
+  (ex?`<div class="bdx"><div class="bdr"><span>Budget iniziale</span><b>${eur(Math.round(r.base))}</b></div><div class="bdr"><span>Budget aggiornato</span><b>${eur(Math.round(r.target))}</b></div><div class="bdr"><span>In turno</span><b>${r.on.length?esc(r.on.map(q=>q.n).join(", ")):"nessuno"}</b></div><div class="bdr"><span>Obiettivo a testa</span><b>${r.per?eur(Math.round(r.per)):"–"}</b></div>`+
+   `<h3 class="sub2">Incassi</h3>`+eff().staff.map(q=>`<label class="rv"><span>${esc(q.n)}${r.on.some(o=>o.id===q.id)?" (in turno)":""}</span><input type="text" inputmode="decimal" data-a="rev" data-day="${x}" data-s="${q.id}" placeholder="0" value="${fnum(+rv[q.id]||0)}"></label>`).join("")+
+   `<div class="btns" style="justify-content:flex-start"><button class="g" data-a="bclose" data-i="${x}">${r.closed?"Riapri il giorno":"Segna come chiuso"}</button></div></div>`:"")+`</section>`;
+}
+function viewBudget(){
+  const ym=S.bmo,[y,mo]=ym.split("-").map(Number),b=S.bm[ym]||{},total=+b.total||0,W=(b.w&&b.w.length===7?b.w:DEFW);
+  const rows=calcMonth(ym),inc=rows.reduce((a,r)=>a+r.act,0),left=Math.max(0,total-inc),pct=total?Math.round(inc/total*100):0;
+  const nolink=eff().staff.filter(q=>!q.uid);
+  return dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+
+  (ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"")+
+  (nolink.length?`<div class="note">Collega al loro account: ${nolink.map(q=>`<button class="g" data-a="ren" data-i="${q.id}">${esc(q.n)}</button>`).join(" ")}<br>Senza collegamento non vedono il proprio obiettivo.</div>`:"")+
+  `<section class="pn">${ph("Budget del mese")}<label class="fld" style="margin-top:0"><span>Budget mensile (€)</span><input type="text" inputmode="decimal" data-a="bmtotal" placeholder="per esempio 30000" value="${fnum(total)}"></label><div class="bstats"><div><span>Incassato</span><b>${eur(Math.round(inc))}</b></div><div><span>Mancano</span><b>${eur(Math.round(left))}</b></div><div><span>Raggiunto</span><b>${pct}%</b></div></div></section>`+
+  `<section class="pn">${ph("Peso dei giorni (%)")}<div class="wgrid">${GG.map((g,i)=>`<label><span>${g}</span><input type="text" inputmode="decimal" data-a="bmw" data-i="${i}" value="${fnum(W[i])}"></label>`).join("")}</div><p class="mu" style="margin-bottom:0">Pesi dentro la settimana: l’app li adatta al mese, così la somma dei giorni resta uguale al budget.</p></section>`+
+  `<section class="pn"><div class="btns" style="margin:0;justify-content:flex-start"><button class="b" data-a="pdf">Esporta PDF</button><button class="g" data-a="pdfmail">Invia per e-mail</button></div></section>`+
+  rows.map(bdayCard).join("");
+}
+
+// ---------- PDF
+class Pg{constructor(){this.o=[]}
+  txt(x,y,s,size,bold){this.o.push(`BT /${bold?"F2":"F1"} ${size||9} Tf ${x.toFixed(1)} ${y.toFixed(1)} Td (${pdfEnc(s)}) Tj ET`)}
+  rt(xr,y,s,size,bold){const w=String(s).length*(size||9)*0.53;this.txt(xr-w,y,s,size,bold)}
+  rect(x,y,w,h,g){this.o.push(`${g} g ${x} ${y} ${w} ${h} re f 0 g`)}
+  line(x1,y1,x2,y2){this.o.push(`0.5 w 0.75 G ${x1} ${y1} m ${x2} ${y2} l S 0 G`)}
+}
+function pdfEnc(t){
+  const map={"€":"\x80","–":"\x96","—":"\x97","’":"\x92","‘":"\x91","“":"\x93","”":"\x94","•":"\x95","…":"\x85","−":"-"};
+  let o="";for(const ch of String(t)){const c=ch.charCodeAt(0);o+=map[ch]!==undefined?map[ch]:(c<256?ch:"?")}
+  return o.replace(/[\\()]/g,m=>"\\"+m);
+}
+function buildPdf(pages){
+  const objs=[],add=q=>{objs.push(q);return objs.length};
+  add("<< /Type /Catalog /Pages 2 0 R >>");add("");
+  add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+  add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+  const kids=[];
+  pages.forEach(pg=>{const c=pg.o.join("\n"),cid=add(`<< /Length ${c.length} >>\nstream\n${c}\nendstream`),pid=add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${cid} 0 R >>`);kids.push(pid+" 0 R")});
+  objs[1]=`<< /Type /Pages /Kids [${kids.join(" ")}] /Count ${kids.length} >>`;
+  let out="%PDF-1.4\n";const offs=[];
+  objs.forEach((o,i)=>{offs.push(out.length);out+=`${i+1} 0 obj\n${o}\nendobj\n`});
+  const xr=out.length;
+  out+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
+  const u=new Uint8Array(out.length);for(let i=0;i<out.length;i++)u[i]=out.charCodeAt(i)&255;return u;
+}
+function pdfMonth(ym){
+  const [y,mo]=ym.split("-").map(Number),rows=calcMonth(ym),b=S.bm[ym]||{},total=+b.total||0,inc=rows.reduce((a,r)=>a+r.act,0);
+  const nf=new Intl.NumberFormat("it-IT",{maximumFractionDigits:0,useGrouping:"always"}),f=n=>nf.format(Math.round(n))+" €",sg=n=>(n>=0?"+":"-")+nf.format(Math.abs(Math.round(n)))+" €";
+  const pages=[],P=()=>{const q=new Pg();pages.push(q);return q};
+  let p=P();
+  p.txt(40,800,"Budget "+MONTHS[mo-1]+" "+y,20,true);
+  p.txt(40,782,"Generato il "+new Date().toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"})+" alle "+hm(Date.now()),9);
+  [["Budget mensile",f(total)],["Incassato",f(inc)],["Mancano",f(Math.max(0,total-inc))],["Raggiunto",(total?Math.round(inc/total*100):0)+"%"]].forEach(([k,v],i)=>{p.txt(40+i*130,752,k,8.5);p.txt(40+i*130,736,v,14,true)});
+  let yy=700;
+  p.rect(40,yy-5,515,16,0.9);
+  [["Giorno",40,0],["Iniziale",140,1],["Aggiornato",205,1],["In turno",215,0],["A testa",400,1],["Incassato",470,1],["Scarto",545,1]].forEach(([t,x,r])=>r?p.rt(x,yy,t,8,true):p.txt(x,yy,t,8,true));
+  yy-=17;
+  rows.forEach((r,i)=>{
+    if(i%2)p.rect(40,yy-5,515,16,0.96);
+    const d=parse(r.x),names=r.on.map(q=>q.n).join(", "),show=!r.closed&&r.act>0;
+    p.txt(42,yy,GG[wdi(r.x)]+" "+d.getDate()+(r.closed?" (chiuso)":""),8.5);
+    if(!r.closed){p.rt(140,yy,f(r.base),8.5);p.rt(205,yy,f(r.target),8.5);p.txt(215,yy,names.length>30?names.slice(0,29)+"…":names||"-",8.5);p.rt(400,yy,r.per?f(r.per):"-",8.5);p.rt(470,yy,r.act?f(r.act):"-",8.5);if(show)p.rt(545,yy,sg(r.act-r.target),8.5)}
+    yy-=17;
+  });
+  p.line(40,yy+12,555,yy+12);
+  p.txt(42,yy-2,"Totale",8.5,true);p.rt(140,yy-2,f(total),8.5,true);p.rt(470,yy-2,f(inc),8.5,true);
+  p=P();
+  p.txt(40,800,"Incassato per persona",16,true);
+  let y2=770;p.rect(40,y2-5,515,16,0.9);
+  [["Persona",40,0],["Giorni in turno",330,1],["Incassato",440,1],["Media a giorno",545,1]].forEach(([t,x,r])=>r?p.rt(x,y2,t,8,true):p.txt(x,y2,t,8,true));
+  y2-=17;
+  eff().staff.forEach(q=>{
+    const dd=rows.filter(r=>r.on.some(o=>o.id===q.id)).length,tot=rows.reduce((a,r)=>a+((+((S.rev[r.x]||{}).u||{})[q.id])||0),0);
+    p.txt(42,y2,q.n,9);p.rt(330,y2,String(dd),9);p.rt(440,y2,f(tot),9);p.rt(545,y2,dd?f(tot/dd):"-",9);y2-=17;
+  });
+  return buildPdf(pages);
+}
+async function exportPdf(ym,mode){
+  const bytes=pdfMonth(ym),name="Budget-"+ym+".pdf",mo=+ym.slice(5),yr=ym.slice(0,4);
+  const file=typeof File!=="undefined"?new File([bytes],name,{type:"application/pdf"}):null;
+  const subj="Budget "+MONTHS[mo-1]+" "+yr;
+  if(mode==="mail"&&file&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:subj,text:subj});return}catch(e){if(e&&e.name==="AbortError")return}
+  }
+  const url=URL.createObjectURL(file||new Blob([bytes],{type:"application/pdf"})),a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  if(mode==="mail"){toast("PDF scaricato: allegalo alla mail");setTimeout(()=>{location.href="mailto:?subject="+encodeURIComponent(subj)},900)}
 }
 function avvisoCfg(){
   const a=eff().avviso,v=S.draft.avv!==undefined?S.draft.avv:(a?a.t:"");
@@ -567,7 +712,6 @@ function itemsCfg(k,title){
   return `<section class="pn">${ph(title)}<div class="list">`+c[k].map(i=>`<div class="row"><input type="text" data-a="itemname" data-k="${k}" data-i="${i.id}" value="${esc(i.t)}"><button class="x" data-a="delitem" data-k="${k}" data-i="${i.id}" aria-label="Elimina">✕</button></div>`).join("")+
    `<div class="row"><input type="text" data-d="new_${k}" placeholder="Nuova voce" value="${esc(S.draft["new_"+k]||"")}"><button class="g" data-a="additem" data-k="${k}">Aggiungi</button></div></div></section>`;
 }
-const viewBudget=()=>budCfg();
 const viewAvviso=()=>avvisoCfg();
 const viewLista=()=>itemsCfg("open","Voci checklist apertura")+itemsCfg("close","Voci checklist chiusura")+recCfg();
 function render(){
@@ -598,6 +742,7 @@ function render(){
 }
 
 document.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending)render()},60));
+document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k&&e.target.tagName==="SELECT")S.draft[k]=e.target.value});
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k)S.draft[k]=e.target.value});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",em:"login",pw:"login",rnname:"mren",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_")||k.startsWith("cm_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
 function act(a,el){
@@ -612,9 +757,16 @@ function act(a,el){
   else if(a==="tab"){if(S.sumDay){S.sumDay="";watchSum("")}S.tab=i;render();scrollTo(0,0);const on=$("#nav").querySelector&&$("#nav").querySelector(".on");if(on&&on.scrollIntoView)on.scrollIntoView({inline:"center",block:"nearest"})}
   else if(a==="dprev"||a==="dnext"||a==="dtoday"){S.day=a==="dtoday"?TODAY:addDays(S.day,a==="dprev"?-1:1);delete S.draft.sum;delete S.draft.memo;S.confirm="";watchDay();render()}
   else if(a==="wprev"||a==="wnext"||a==="wtoday"){S.week=a==="wtoday"?mondayOf(TODAY):addDays(S.week,a==="wprev"?-7:7);render()}
-  else if(a==="bprev"||a==="bnext"||a==="btoday"){S.bw=a==="btoday"?mondayOf(TODAY):addDays(S.bw,a==="bprev"?-7:7);render()}
+  else if(a==="bmprev"||a==="bmnext"||a==="bmtoday"){if(a==="bmtoday")S.bmo=TODAY.slice(0,7);else{const m=parse(S.bmo+"-01");m.setMonth(m.getMonth()+(a==="bmprev"?-1:1));S.bmo=ymd(m).slice(0,7)}render()}
+  else if(a==="bmtotal"){save(db.doc("bmonth/"+S.bmo),{total:num(el.value)||0})}
+  else if(a==="bmw"){const W=((S.bm[S.bmo]||{}).w||DEFW).slice();W[+i]=num(el.value)||0;save(db.doc("bmonth/"+S.bmo),{w:W})}
+  else if(a==="bday"){S.bexp[i]=!(S.bexp[i]!==undefined?S.bexp[i]:i===TODAY);render()}
+  else if(a==="bclose"){const cur=!!(((S.bm[S.bmo]||{}).closed||{})[i]);save(db.doc("bmonth/"+S.bmo),{closed:{[i]:!cur}})}
+  else if(a==="rev"){save(db.doc("rev/"+D2.day),{u:{[D2.s]:num(el.value)}})}
+  else if(a==="pdf"){exportPdf(S.bmo,"file")}
+  else if(a==="pdfmail"){exportPdf(S.bmo,"mail")}
   else if(a==="goday"){openDay(i)}
-  else if(a==="budedit"){S.bw=mondayOf(S.day);S.tab="budget";render();scrollTo(0,0)}
+  else if(a==="budedit"){S.bmo=S.day.slice(0,7);S.tab="budget";render();scrollTo(0,0)}
   else if(a==="mprev"||a==="mnext"||a==="mtoday"){if(a==="mtoday")S.month=TODAY.slice(0,8)+"01";else{const m=parse(S.month);m.setMonth(m.getMonth()+(a==="mprev"?-1:1));S.month=ymd(m)}render()}
   else if(a==="sumday"){S.sumDay=i;watchSum(i);render()}
   else if(a==="sumclose"){S.sumDay="";watchSum("");render()}
@@ -649,13 +801,12 @@ function act(a,el){
     save(db.doc("days/"+S.day),m.kind==="open"?{waOpenP:{by:S.uid,at:Date.now()}}:{waCloseP:{by:S.uid,at:Date.now()}})}
   else if(a==="menu"){if(S.modal&&S.modal.type==="menu")closeModal();else openModal({type:"menu"})}
   else if(a==="mopen"){closeModal();openModal({type:i})}
-  else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;openModal({type:"rename",sid:i})}
-  else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim();clearDrafts();closeModal();if(m&&v)editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q)q.n=v})}
+  else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;S.draft.rnuid=q.uid||"";openModal({type:"rename",sid:i})}
+  else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim(),lk=S.draft.rnuid||"";clearDrafts();closeModal();if(m&&v)editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q){q.n=v;if(lk)q.uid=lk;else delete q.uid}})}
   else if(a==="wipeask"){S.modal.confirm=true;S.modal.v=(S.modal.v||"")+"c";renderModal()}
   else if(a==="wipeno"){S.modal.confirm=false;S.modal.v=(S.modal.v||"")+"n";renderModal()}
   else if(a==="wipego"){wipeAll()}
   else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value}})}
-  else if(a==="budcell"){saveBud(db.doc("budget/"+D2.d),{u:{[D2.u]:num(el.value)}})}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     S.draft.rp="";
     db.doc("reports/"+uid8()).set({t,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));render()}
@@ -679,7 +830,7 @@ function act(a,el){
   else if(a==="recwhere"){const v=el.value;editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.w=v})}
   else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
 }
-const CH=["chk","itemname","username","taskdone","recname","recwhere","budcell","shiftset"];
+const CH=["chk","itemname","username","taskdone","recname","recwhere","bmtotal","bmw","rev","shiftset"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
