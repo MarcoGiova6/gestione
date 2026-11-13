@@ -106,6 +106,7 @@ select.sm{width:auto;flex:none;padding:12px 10px}
 .prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--ln);font-weight:600}
 .pdh+.prow{border-top:0}
 .sp{min-width:112px;border:1px dashed var(--ln2);border-radius:10px;padding:10px 12px;font:600 14px var(--sans);background:transparent;color:var(--mu);text-align:center}
+select.sp{-webkit-appearance:none;appearance:none;text-align:center;text-align-last:center;cursor:pointer;width:auto}
 .sp.w{background:var(--hv);color:var(--hvx);border-color:transparent}
 .sp.r{background:var(--fill);color:var(--mu);border-color:transparent}
 .sp.f{background:var(--warnbg);color:var(--warn);border-color:transparent}
@@ -227,7 +228,7 @@ const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Pers
 const defOpen=[{id:"o1",t:"Apertura cassa"},{id:"o3",t:"Ordine e pulizia"},{id:"o4",t:"Gestione OSN"}];
 const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizionatori"},{id:"c1",t:"Chiusura cassa"},{id:"c3",t:"Porte e allarme"}];
 const defRec=[{id:"rc1",d:1,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc3",d:3,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc5",d:5,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rp4",d:4,w:"ch",t:"Plastica: ritiro sabato mattina"},{id:"ri0",d:0,w:"ch",t:"Indifferenziata: ritiro martedì mattina"}];
-const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
+const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
 const subs={};
 const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,shiftTime:c.shiftTime||"",avviso:c.avviso||null,cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
@@ -279,7 +280,6 @@ async function start(u){
     if(!s.exists()){const n=S.email.split("@")[0];await setDoc(r,{name:n.charAt(0).toUpperCase()+n.slice(1)})}}catch(e){}
   subs.users=D.col("users").onSnapshot(q=>{q.docs.forEach(d=>S.names[d.id]=(d.data()||{}).name);render()},fail);
   subs.cfg=D.doc("config/main").onSnapshot(s=>{S.cfg=s.exists?s.data():null;S.loaded=true;render()},fail);
-  subs.todos=D.col("users/"+S.uid+"/todos").onSnapshot(q=>{S.todos=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));render()},fail);
   subs.admin=D.doc("meta/admin").onSnapshot(s=>{S.adminUid=s.exists?(s.data().uid||null):null;S.adminLoaded=true;render()},fail);
   subs.tasks=D.col("tasks").onSnapshot(q=>{S.tasks=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.reports=D.col("reports").onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
@@ -398,12 +398,6 @@ function viewAssign(){
   return `<section class="pn">${ph("Assegna a un collega","solo amministratore")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option>${opts}</select><label class="fld" style="margin:4px 0 0"><span>Per il giorno</span><input type="date" data-d="tkday" value="${esc(S.draft.tkday||TODAY)}"></label><button class="b" data-a="addtask">Assegna</button></div><p class="mu">Il collega la vede in Oggi, nel giorno scelto.</p><div class="list">`+
   given.map(t=>`<div class="row"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}<small class="sub">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}, ${esc(fmtDay(tfor(t)))}</small></span><button class="x" data-a="deltask" data-i="${t.id}" aria-label="Elimina">✕</button></div>`).join("")+`</div></section>`;
 }
-function viewTodo(){
-  const done=S.todos.filter(t=>t.done).length;
-  return `<section class="pn">${ph("La mia lista","solo tu la vedi")}<div class="stack"><input type="text" data-d="todo" placeholder="Nuova cosa da fare" value="${esc(S.draft.todo||"")}"><button class="b" data-a="addtodo">Aggiungi</button></div><div class="list">`+
-  S.todos.map(t=>`<label class="row ck ${t.done?"dn":""}">${ck(`data-a="todo" data-i="${t.id}"`,t.done)}<span class="tx">${esc(t.t)}</span><button class="x" data-a="deltodo" data-i="${t.id}" aria-label="Elimina">✕</button></label>`).join("")+`</div>`+
-  (done?`<p><button class="g" data-a="cleardone">Elimina le completate (${done})</button></p>`:"")+`</section>`;
-}
 function chkCard(k,items,title){
   const mp=i=>S.dayDoc[i.k||k]||{},n=items.filter(i=>mp(i)[i.id]).length;
   return `<section class="pn">${ph(title,n+" di "+items.length)}${seg(n,items.length)}<div class="list">`+
@@ -485,10 +479,11 @@ function viewPlanner(){
   const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin(),cells=cellsOf(S.week);
   const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
   const LB={w:"Lavoro",r:"Riposo",f:"Ferie",m:"Malattia"};
-  const pill=k=>{const st=stateOf(cells[k]),l=LB[st]||"–";return adm?`<button class="sp ${st}" data-a="shift" data-c="${k}">${l}</button>`:`<span class="sp ${st}">${l}</span>`};
+  const VAL={w:"L",r:"R",f:"F",m:"M"};
+  const pill=k=>{const st=stateOf(cells[k]),l=LB[st]||"–";return adm?`<select class="sp ${st}" data-a="shiftset" data-c="${k}" aria-label="Turno">${[["","–"],["L","Lavoro"],["R","Riposo"],["F","Ferie"],["M","Malattia"]].map(([v,t])=>`<option value="${v}" ${(VAL[st]||"")===v?"selected":""}>${t}</option>`).join("")}</select>`:`<span class="sp ${st}">${l}</span>`};
   return dayHead(null,"Turni",lab,"wprev","wnext")+
   (S.week!==mondayOf(TODAY)?`<p class="back"><button class="g" data-a="wtoday">Questa settimana</button></p>`:"")+
-  (adm?`<section class="pn"><label class="fld" style="margin:0"><span>Orario di lavoro, uguale per tutti i turni</span><input type="text" data-a="shifttime" placeholder="per esempio 9:00–13:00 e 15:00–19:00" value="${esc(c.shiftTime)}"></label><p class="mu" style="margin-bottom:0">Tocca un turno per scegliere Lavoro, Riposo, Ferie, Malattia o vuoto.</p></section>`:(c.shiftTime?`<p class="mu" style="margin:0 0 12px"><b>Orario di lavoro:</b> ${esc(c.shiftTime)}</p>`:""))+
+  (adm?`<section class="pn"><label class="fld" style="margin:0"><span>Orario di lavoro, uguale per tutti i turni</span><input type="text" data-a="shifttime" placeholder="per esempio 9:00–13:00 e 15:00–19:00" value="${esc(c.shiftTime)}"></label><p class="mu" style="margin-bottom:0">Scegli dal menu: Lavoro, Riposo, Ferie, Malattia o vuoto.</p></section>`:(c.shiftTime?`<p class="mu" style="margin:0 0 12px"><b>Orario di lavoro:</b> ${esc(c.shiftTime)}</p>`:""))+
   `<div class="pgrid">`+days.map((x,i)=>`<section class="pn ${x===TODAY?"today":""}"><div class="pdh"><b>${GGL[i]}</b><span>${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</span></div>${c.staff.map(q=>`<div class="prow"><span>${esc(q.n)}</span>${pill(x+"_"+q.id)}</div>`).join("")}</section>`).join("")+`</div>`;
 }
 const WH={oggi:"Oggi",ap:"Apertura",ch:"Chiusura"};
@@ -540,7 +535,7 @@ function render(){
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:`<p class="mu">Caricamento…</p>`);return}
-  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<div class="note">Nessun amministratore impostato: vai in Altro.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,todo:()=>viewTodo()+(isAdmin()?viewAssign():""),set:viewSet}[S.tab])();
+  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<div class="note">Nessun amministratore impostato: vai in Altro.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,todo:()=>isAdmin()?viewAssign():"",set:viewSet}[S.tab])();
   const sh=$("#sheet"),html=(S.tab==="cal"&&S.sumDay)?sheetHtml():"";
   if(html!==S.sheetHtml){
     const sb=sh.querySelector&&sh.querySelector(".sbody"),st=sb?sb.scrollTop:0;
@@ -552,7 +547,7 @@ function render(){
 
 document.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending)render()},60));
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k)S.draft[k]=e.target.value});
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",todo:"addtodo",em:"login",pw:"login",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_")||k.startsWith("cm_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",em:"login",pw:"login",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_")||k.startsWith("cm_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
 function act(a,el){
   const D2=el.dataset,db=D,i=D2.i,k=D2.k;
   if(a==="login"){
@@ -593,14 +588,9 @@ function act(a,el){
     if(m.type==="open"){const lab=parse(S.day).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
       sendWa("Apertura OK\n"+lab+", "+hm(Date.now()));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
     else{sendWa(waText(S.day,S.dayDoc,S.acts));save(db.doc("days/"+S.day),{waClose:{by:S.uid,at:Date.now()}})}}
-  else if(a==="shift"){save(db.doc("weeks/"+S.week),{cells:{[D2.c]:nextShift(cellsOf(S.week)[D2.c])}})}
+  else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value}})}
   else if(a==="shifttime"){const v=el.value.trim();editCfg(c=>{c.shiftTime=v})}
   else if(a==="budcell"){saveBud(db.doc("budget/"+D2.d),{u:{[D2.u]:num(el.value)}})}
-  else if(a==="addtodo"){const t=(S.draft.todo||"").trim();if(!t)return;S.draft.todo="";
-    db.doc("users/"+S.uid+"/todos/"+uid8()).set({t,done:false,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));render()}
-  else if(a==="todo"){save(db.doc("users/"+S.uid+"/todos/"+i),{done:el.checked,doneAt:el.checked?Date.now():0})}
-  else if(a==="deltodo"){db.doc("users/"+S.uid+"/todos/"+i).delete().catch(()=>{})}
-  else if(a==="cleardone"){S.todos.filter(t=>t.done).forEach(t=>db.doc("users/"+S.uid+"/todos/"+t.id).delete().catch(()=>{}))}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     S.draft.rp="";
     db.doc("reports/"+uid8()).set({t,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));render()}
@@ -625,7 +615,7 @@ function act(a,el){
   else if(a==="recwhere"){const v=el.value;editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.w=v})}
   else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
 }
-const CH=["chk","todo","staffname","itemname","username","avviso","taskdone","recname","recwhere","budcell","shifttime"];
+const CH=["chk","staffname","itemname","username","avviso","taskdone","recname","recwhere","budcell","shifttime","shiftset"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
