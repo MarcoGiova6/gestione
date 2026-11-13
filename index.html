@@ -51,6 +51,13 @@ td.n{text-align:left;font-weight:600;padding:6px 8px;white-space:nowrap}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20}
 .err{background:var(--ok);padding:14px;border-radius:12px}
 .login{max-width:420px;margin:30px auto}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .h{font-size:13px;color:var(--mu);text-align:center;padding:4px 0}
+.cal button{min-height:64px;border:1px solid var(--br);border-radius:10px;background:var(--card);color:var(--tx);font:inherit;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.cal button.t{border-color:var(--ac);background:var(--ok)}
+.dots{display:flex;gap:3px;height:8px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle}
+.d-a{background:#2e9e6b}.d-s{background:#3b7dd8}.d-r{background:#e08a1e}.d-u{background:#c0392b}
 </style>
 </head>
 <body>
@@ -95,11 +102,16 @@ const TODAY=ymd(new Date());
 const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Persona 3"}];
 const defOpen=["Accendere luci e impianti","Controllare la cassa","Controllare ordini e consegne","Verificare pulizia e ordine"].map((t,i)=>({id:"o"+i,t}));
 const defClose=["Spegnere luci e impianti","Chiusura cassa","Pulizia e riordino","Chiudere porte e inserire l’allarme"].map((t,i)=>({id:"c"+i,t}));
-const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],wk:{},todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[]};
+const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],wk:{},todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:""};
 const subs={};
-const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose}};
+const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||[]}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
 const isAdmin=()=>!!S.uid&&S.adminUid===S.uid;
+const rday=r=>r.day||ymd(new Date(r.at||0));
+const fmtDay=x=>parse(x).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"});
+const GGL=["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
+const wdi=x=>(parse(x).getDay()+6)%7;
+function openDay(x){S.day=x;S.tab="oggi";S.confirm="";delete S.draft.sum;watchDay();render();scrollTo(0,0)}
 const hm=t=>t?new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"";
 let tt;function toast(m){const e=$("#toast");e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>e.hidden=true,2500)}
 const fail=e=>{S.err="Problema di connessione ai dati ("+((e&&e.code)||"errore")+").";render()};
@@ -108,7 +120,7 @@ function watchDay(){
   ["day","acts"].forEach(k=>subs[k]&&subs[k]());S.dayDoc={};S.acts=[];
   const r=D.doc("days/"+S.day);
   subs.day=r.onSnapshot(s=>{S.dayDoc=s.exists?s.data():{};render()},fail);
-  subs.acts=r.collection("acts").onSnapshot(q=>{S.acts=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));render()},fail);
+  subs.acts=r.collection("acts").onSnapshot(q=>{S.acts=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));if(S.acts.length&&!S.dayDoc.hasActs&&S.healed!==S.day){S.healed=S.day;save(D.doc("days/"+S.day),{hasActs:true})}render()},fail);
 }
 function watchWeek(){
   subs.wk&&subs.wk();S.wk={};
@@ -124,6 +136,7 @@ async function start(u){
   subs.admin=D.doc("meta/admin").onSnapshot(s=>{S.adminUid=s.exists?(s.data().uid||null):null;S.adminLoaded=true;render()},fail);
   subs.tasks=D.col("tasks").onSnapshot(q=>{S.tasks=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.reports=D.col("reports").onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
+  subs.days=D.col("days").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.daysAll=m;render()},fail);
   watchDay();watchWeek();
 }
 onAuthStateChanged(auth,u=>{S.authReady=true;if(u)start(u);else{S.uid=null;render()}});
@@ -139,13 +152,20 @@ function viewLogin(){
   <button class="b" data-a="login">Entra</button></div></section>`;
 }
 function reportsCard(){
-  const open=S.reports.filter(r=>!r.res).sort((a,b)=>(b.u?1:0)-(a.u?1:0)||(b.at||0)-(a.at||0));
-  const fmt=t=>t?new Date(t).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" "+hm(t):"";
-  return `<section class="card" ${open.some(r=>r.u)?'style="border-color:#c0392b"':""}><h2>Segnalazioni<small>${open.length} aperte</small></h2><div class="stack">
+  const list=S.reports.filter(r=>rday(r)===S.day).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(b.u?1:0)-(a.u?1:0)||(a.at||0)-(b.at||0));
+  const open=list.filter(r=>!r.res);
+  return `<section class="card" ${open.some(r=>r.u)?'style="border-color:#c0392b"':""}><h2>Segnalazioni<small>${list.length}${open.length?" · "+open.length+" aperte":""}</small></h2><div class="stack">
    <input type="text" data-d="rp" placeholder="Cosa non va? Cosa serve?" value="${esc(S.draft.rp||"")}">
    <label class="row ck" style="border:0;padding:0"><input type="checkbox" data-a="rpu" ${S.draft.rpu?"checked":""}><span>Urgente</span></label>
    <button class="b" data-a="addreport">Invia segnalazione</button></div>`+
-  open.map(r=>`<div class="act"><div style="display:flex;justify-content:space-between;gap:8px"><strong>${r.u?"⚠ ":""}${esc(r.t)}</strong>${(isAdmin()||r.by===S.uid)?`<button class="x" data-a="delreport" data-i="${r.id}">✕</button>`:""}</div><small>${esc(nm(r.by))} · ${fmt(r.at)}</small><div style="margin-top:6px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button></div></div>`).join("")+`</section>`;
+  list.map(r=>`<div class="act"><div style="display:flex;justify-content:space-between;gap:8px"><strong class="${r.res?"done":""}">${r.u?"⚠ ":""}${esc(r.t)}</strong>${(isAdmin()||r.by===S.uid)?`<button class="x" data-a="delreport" data-i="${r.id}">✕</button>`:""}</div><small>${esc(nm(r.by))} · ${hm(r.at)}${r.res?" · risolta da "+esc(nm(r.resBy)):""}</small>${r.res?"":`<div style="margin-top:6px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button></div>`}</div>`).join("")+`</section>`;
+}
+function carryCard(){
+  if(S.day!==TODAY)return "";
+  const old=S.reports.filter(r=>!r.res&&rday(r)<TODAY).sort((a,b)=>(b.u?1:0)-(a.u?1:0)||(a.at||0)-(b.at||0));
+  if(!old.length)return "";
+  return `<section class="card" style="border-color:#c0392b"><h2>Segnalazioni ancora aperte<small>giorni precedenti</small></h2>`+
+  old.map(r=>`<div class="act"><strong>${r.u?"⚠ ":""}${esc(r.t)}</strong><br><small>${esc(nm(r.by))} · ${esc(fmtDay(rday(r)))}</small><div style="margin-top:6px;display:flex;gap:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button><button class="g" data-a="goday" data-i="${rday(r)}">Apri giorno</button></div></div>`).join("")+`</section>`;
 }
 function viewTasks(){
   const recent=t=>!t.done||(Date.now()-(t.doneAt||0)<2.592e8);
@@ -164,9 +184,12 @@ function viewOggi(){
     (items.map(i=>`<label class="row ck"><input type="checkbox" data-a="chk" data-k="${k}" data-i="${i.id}" ${m[i.id]?"checked":""}><span class="${m[i.id]?"done":""}">${esc(i.t)}</span>${m[i.id]?`<em>${esc(nm(m[i.id]))}</em>`:""}</label>`).join("")||`<p class="mu">Nessuna voce: l’amministratore le aggiunge da Impostazioni.</p>`)+`</section>`};
   const label=parse(S.day).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   const sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||"");
-  return reportsCard()+`<div class="bar"><button class="g" data-a="dprev">‹</button><strong>${esc(label)}</strong><button class="g" data-a="dnext">›</button></div>`+
+  const rec=c.rec.filter(r=>r.d===wdi(S.day)).map(r=>({id:r.id,t:r.t}));
+  return `<div class="bar"><button class="g" data-a="dprev">‹</button><strong>${esc(label)}</strong><button class="g" data-a="dnext">›</button></div>`+
   (S.day!==TODAY?`<p style="text-align:center;margin-top:-6px"><button class="g" data-a="dtoday">Torna a oggi</button></p>`:"")+
+  carryCard()+
   chk("open",c.open,"Apertura")+
+  (rec.length?chk("rec",rec,"Attività fisse · "+GGL[wdi(S.day)]):"")+
   `<section class="card"><h2>Attività svolte<small>${S.acts.length}</small></h2><div class="stack">
     <input type="text" data-d="at" placeholder="Cosa è stato fatto?" value="${esc(S.draft.at||"")}">
     <input type="text" data-d="ac" placeholder="Commento (facoltativo)" value="${esc(S.draft.ac||"")}">
@@ -174,9 +197,26 @@ function viewOggi(){
   S.acts.map(a=>`<div class="act"><div style="display:flex;justify-content:space-between;gap:8px"><strong>${esc(a.t)}</strong>${!(isAdmin()||a.by===S.uid)?"":S.confirm===a.id?`<button class="g" data-a="delact" data-i="${a.id}">Elimina?</button>`:`<button class="x" data-a="askdel" data-i="${a.id}">✕</button>`}</div>
     <small>${esc(nm(a.by))} · ${hm(a.at)}</small>
     <input type="text" style="margin-top:6px" data-a="actc" data-i="${a.id}" placeholder="Aggiungi un commento…" value="${esc(a.c||"")}"></div>`).join("")+`</section>`+
+  reportsCard()+
   chk("close",c.close,"Chiusura")+
   `<section class="card"><h2>Riepilogo di fine giornata</h2><textarea data-d="sum" placeholder="Com’è andata la giornata?">${esc(sum)}</textarea>
    <div class="bar" style="margin:10px 0 0"><span class="mu">${d.sumBy?"Ultimo salvataggio: "+esc(nm(d.sumBy))+" alle "+hm(d.sumAt):""}</span><button class="b" data-a="savesum">Salva riepilogo</button></div></section>`;
+}
+function viewCal(){
+  const first=parse(S.month),y=first.getFullYear(),mo=first.getMonth();
+  const dim=new Date(y,mo+1,0).getDate(),off=(first.getDay()+6)%7,rows=Math.ceil((off+dim)/7);
+  const lab=first.toLocaleDateString("it-IT",{month:"long",year:"numeric"});
+  const rd={};S.reports.forEach(r=>{const k=rday(r);const o=rd[k]||(rd[k]={n:0,u:0});o.n++;if(!r.res&&r.u)o.u++});
+  let cells=GG.map(g=>`<div class="h">${g}</div>`).join("");
+  for(let i=0;i<rows*7;i++){
+    const n=i-off+1;
+    if(n<1||n>dim){cells+=`<div></div>`;continue}
+    const x=y+"-"+pad(mo+1)+"-"+pad(n),da=S.daysAll[x]||{},r=rd[x];
+    cells+=`<button data-a="goday" data-i="${x}" class="${x===TODAY?"t":""}"><span>${n}</span><span class="dots">${da.hasActs?'<i class="dot d-a"></i>':""}${da.sum?'<i class="dot d-s"></i>':""}${r?`<i class="dot ${r.u?"d-u":"d-r"}"></i>`:""}</span></button>`;
+  }
+  return `<div class="bar"><button class="g" data-a="mprev">‹</button><strong>${esc(lab)}</strong><button class="g" data-a="mnext">›</button></div>`+
+  (S.month!==TODAY.slice(0,8)+"01"?`<p style="text-align:center;margin-top:-6px"><button class="g" data-a="mtoday">Questo mese</button></p>`:"")+
+  `<section class="card"><div class="cal">${cells}</div><p class="mu" style="margin-bottom:0"><i class="dot d-a"></i> attività · <i class="dot d-s"></i> riepilogo · <i class="dot d-r"></i> segnalazioni (<i class="dot d-u"></i> urgente ancora aperta)</p><p class="mu">Tocca un giorno per vedere attività, segnalazioni e riepilogo.</p></section>`;
 }
 function viewPlanner(){
   const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i));
@@ -194,6 +234,13 @@ function viewTodo(){
   S.todos.map(t=>`<label class="row ck"><input type="checkbox" data-a="todo" data-i="${t.id}" ${t.done?"checked":""}><span class="${t.done?"done":""}">${esc(t.t)}</span><button class="x" data-a="deltodo" data-i="${t.id}">✕</button></label>`).join("")+
   (done?`<p><button class="g" data-a="cleardone">Elimina completate (${done})</button></p>`:"")+`</section>`;
 }
+function recCfg(){
+  const rec=eff().rec;
+  return `<section class="card"><h2>Cadenze fisse<small>ogni settimana</small></h2><p class="mu" style="margin-top:0">Attività che compaiono ogni settimana nel giorno indicato. In Oggi tutti possono spuntarle.</p>`+
+  GGL.map((n,w)=>`<h3 style="font-size:16px;margin:14px 0 4px">${n}</h3>`+
+    rec.filter(r=>r.d===w).map(r=>`<div class="row"><input type="text" data-a="recname" data-i="${r.id}" value="${esc(r.t)}"><button class="x" data-a="delrec" data-i="${r.id}">✕</button></div>`).join("")+
+    `<div class="row"><input type="text" data-d="newrec_${w}" placeholder="Nuova attività del ${n.toLowerCase()}" value="${esc(S.draft["newrec_"+w]||"")}"><button class="g" data-a="addrec" data-w="${w}">Aggiungi</button></div>`).join("")+`</section>`;
+}
 function viewSet(){
   const c=eff(),adm=isAdmin();
   const items=(k,title)=>`<section class="card"><h2>${title}</h2>`+c[k].map(i=>`<div class="row"><input type="text" data-a="itemname" data-k="${k}" data-i="${i.id}" value="${esc(i.t)}"><button class="x" data-a="delitem" data-k="${k}" data-i="${i.id}">✕</button></div>`).join("")+
@@ -201,7 +248,7 @@ function viewSet(){
   let h=`<section class="card"><h2>Il tuo nome</h2><input type="text" data-a="myname" value="${esc(S.names[S.uid]||"")}"><p class="mu">È il nome che vedono i colleghi accanto alle tue azioni. Accesso: ${esc(S.email)}${adm?" · Amministratore":""}</p></section>`;
   if(S.adminLoaded&&!S.adminUid)h+=`<section class="card"><h2>Amministratore</h2><p>Non c’è ancora un amministratore. Solo l’amministratore può modificare planner, nomi del personale, voci delle checklist ed eliminare le attività dei colleghi.</p><p class="mu">Fallo tu per primo, prima di far entrare i colleghi: dopo non si cambia da qui.</p><button class="b" data-a="claimadmin">Imposta me come amministratore</button></section>`;
   if(!adm)return h+(S.adminUid?`<p class="mu">Planner, nomi del personale e voci delle checklist le modifica solo l’amministratore.</p>`:"");
-  return h+`<section class="card"><h2>Nomi del personale</h2>`+c.staff.map(s=>`<div class="row"><input type="text" data-a="staffname" data-i="${s.id}" value="${esc(s.n)}"></div>`).join("")+`<p class="mu">Compaiono nel planner dei turni.</p></section>`+items("open","Voci checklist apertura")+items("close","Voci checklist chiusura");
+  return h+`<section class="card"><h2>Nomi del personale</h2>`+c.staff.map(s=>`<div class="row"><input type="text" data-a="staffname" data-i="${s.id}" value="${esc(s.n)}"></div>`).join("")+`<p class="mu">Compaiono nel planner dei turni.</p></section>`+items("open","Voci checklist apertura")+items("close","Voci checklist chiusura")+recCfg();
 }
 function render(){
   const a=document.activeElement;
@@ -210,15 +257,15 @@ function render(){
   const app=$("#app"),logged=!!S.uid;
   const urg=S.reports.filter(r=>!r.res&&r.u).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
   $("#out").hidden=!logged;
-  $("#nav").innerHTML=logged?[["oggi","Oggi"+(urg?" ⚠":"")],["plan","Planner"],["todo","Todo"+(mine?" ("+mine+")":"")],["set","Impostazioni"]].map(([k,l])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}">${l}</button>`).join(""):"";
+  $("#nav").innerHTML=logged?[["oggi","Oggi"+(urg?" ⚠":"")],["cal","Calendario"],["plan","Planner"],["todo","Todo"+(mine?" ("+mine+")":"")],["set","Impostazioni"]].map(([k,l])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}">${l}</button>`).join(""):"";
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<p class="err">${esc(S.err)}</p>`:`<p class="mu">Caricamento…</p>`);return}
-  app.innerHTML=(S.err?`<p class="err">${esc(S.err)}</p>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<p class="err">Nessun amministratore impostato: vai in Impostazioni.</p>`:"")+({oggi:viewOggi,plan:viewPlanner,todo:()=>viewTasks()+viewTodo(),set:viewSet}[S.tab])();
+  app.innerHTML=(S.err?`<p class="err">${esc(S.err)}</p>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<p class="err">Nessun amministratore impostato: vai in Impostazioni.</p>`:"")+({oggi:viewOggi,cal:viewCal,plan:viewPlanner,todo:()=>viewTasks()+viewTodo(),set:viewSet}[S.tab])();
 }
 document.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending)render()},60));
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k)S.draft[k]=e.target.value});
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",todo:"addtodo",em:"login",pw:"login",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;const a=m[k]||(k.startsWith("new_")?"additem":"");if(a){e.preventDefault();act(a,e.target)}}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",todo:"addtodo",em:"login",pw:"login",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
 function act(a,el){
   const D2=el.dataset,db=D,i=D2.i,k=D2.k;
   if(a==="login"){
@@ -234,10 +281,10 @@ function act(a,el){
   else if(a==="chk"){save(db.doc("days/"+S.day),{[k]:{[i]:el.checked?S.uid:""}})}
   else if(a==="addact"){const t=(S.draft.at||"").trim();if(!t){toast("Scrivi cosa è stato fatto");return}
     const c=(S.draft.ac||"").trim(),id=uid8();S.draft.at="";S.draft.ac="";
-    db.doc("days/"+S.day+"/acts/"+id).set({t,c,by:S.uid,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));render()}
+    db.doc("days/"+S.day+"/acts/"+id).set({t,c,by:S.uid,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));save(db.doc("days/"+S.day),{hasActs:true});render()}
   else if(a==="actc"){save(db.doc("days/"+S.day+"/acts/"+i),{c:el.value.trim()})}
   else if(a==="askdel"){S.confirm=i;render()}
-  else if(a==="delact"){S.confirm="";db.doc("days/"+S.day+"/acts/"+i).delete().catch(()=>toast("Operazione non riuscita"));render()}
+  else if(a==="delact"){S.confirm="";if(S.acts.length<=1)save(db.doc("days/"+S.day),{hasActs:false});db.doc("days/"+S.day+"/acts/"+i).delete().catch(()=>toast("Operazione non riuscita"));render()}
   else if(a==="savesum"){const v=S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"");delete S.draft.sum;save(db.doc("days/"+S.day),{sum:v.trim(),sumBy:S.uid,sumAt:Date.now()});toast("Riepilogo salvato")}
   else if(a==="cell"){save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value.trim()}})}
   else if(a==="addtodo"){const t=(S.draft.todo||"").trim();if(!t)return;S.draft.todo="";
@@ -248,7 +295,7 @@ function act(a,el){
   else if(a==="rpu"){S.draft.rpu=el.checked}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     const u=!!S.draft.rpu;S.draft.rp="";S.draft.rpu=false;
-    db.doc("reports/"+uid8()).set({t,u,by:S.uid,at:Date.now(),res:false}).catch(()=>toast("Salvataggio non riuscito"));render()}
+    db.doc("reports/"+uid8()).set({t,u,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));render()}
   else if(a==="resolve"){save(db.doc("reports/"+i),{res:true,resBy:S.uid,resAt:Date.now()})}
   else if(a==="delreport"){db.doc("reports/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="addtask"){const t=(S.draft.tk||"").trim(),to=S.draft.tkto||"";if(!t){toast("Scrivi cosa deve fare");return}if(!to){toast("Scegli il collega");return}
@@ -256,13 +303,18 @@ function act(a,el){
   else if(a==="taskdone"){save(db.doc("tasks/"+i),{done:el.checked,doneAt:el.checked?Date.now():0})}
   else if(a==="deltask"){db.doc("tasks/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="claimadmin"){db.doc("meta/admin").set({uid:S.uid}).then(()=>toast("Ora sei l’amministratore")).catch(()=>toast("Non riuscito: c’è già un amministratore"))}
+  else if(a==="goday"){openDay(i)}
+  else if(a==="mprev"||a==="mnext"||a==="mtoday"){if(a==="mtoday")S.month=TODAY.slice(0,8)+"01";else{const m=parse(S.month);m.setMonth(m.getMonth()+(a==="mprev"?-1:1));S.month=ymd(m)}render()}
+  else if(a==="addrec"){const w=D2.w,v=(S.draft["newrec_"+w]||"").trim();if(!v)return;S.draft["newrec_"+w]="";editCfg(c=>{c.rec.push({id:uid8(),d:+w,t:v})})}
+  else if(a==="delrec"){editCfg(c=>{c.rec=c.rec.filter(x=>x.id!==i)})}
+  else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
   else if(a==="myname"){const v=el.value.trim();if(v)save(db.doc("users/"+S.uid),{name:v})}
   else if(a==="staffname"){const v=el.value.trim();if(v)editCfg(c=>{c.staff.find(s=>s.id===i).n=v})}
   else if(a==="itemname"){const v=el.value.trim();if(v)editCfg(c=>{c[k].find(x=>x.id===i).t=v})}
   else if(a==="delitem"){editCfg(c=>{c[k]=c[k].filter(x=>x.id!==i)})}
   else if(a==="additem"){const v=(S.draft["new_"+k]||"").trim();if(!v)return;S.draft["new_"+k]="";editCfg(c=>{c[k].push({id:uid8(),t:v})})}
 }
-const CH=["chk","todo","cell","actc","staffname","itemname","myname","rpu","taskdone"];
+const CH=["chk","todo","cell","actc","staffname","itemname","myname","rpu","taskdone","recname"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
