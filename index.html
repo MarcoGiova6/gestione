@@ -130,6 +130,15 @@ select.sm{width:auto;flex:none;padding:12px 10px}
 .bdr{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--ln);font-size:15px}
 .bdr span{color:var(--mu);flex:none}
 .bdr b{text-align:right}
+
+.mc .ph h2,.pn.mc h2{font-size:21px}.mbar{height:10px;border-radius:6px;background:var(--fill);margin-top:12px;overflow:hidden}
+.mbar i{display:block;height:100%;border-radius:6px;background:var(--ink)}
+.mbar i.full{background:var(--go)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpis span{display:block;color:var(--mu);font-size:13px}
+.kpis b{font:400 30px/1.15 var(--disp);white-space:nowrap}
+.krh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.krh span{color:var(--mu);font-size:13px}
 .rv{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
 .rv input[type=text]{width:130px;text-align:right}
 .pn.today .pdh b{background:var(--hv);color:var(--hvx);padding:2px 9px;border-radius:7px}
@@ -258,7 +267,7 @@ const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Pers
 const defOpen=[{id:"o1",t:"Apertura cassa"},{id:"o3",t:"Ordine e pulizia"},{id:"o4",t:"Gestione OSN"}];
 const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizionatori"},{id:"c1",t:"Chiusura cassa"},{id:"c3",t:"Porte e allarme"}];
 const defRec=[{id:"rc1",d:1,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc3",d:3,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc5",d:5,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rp4",d:4,w:"ch",t:"Plastica: ritiro sabato mattina"},{id:"ri0",d:0,w:"ch",t:"Indifferenziata: ritiro martedì mattina"}];
-const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},bm:{},rev:{},tgtAll:{},tgt:{},bmo:TODAY.slice(0,7),bexp:{},fl:{},names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
+const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},bm:{},rev:{},msum:{},mpers:{},sumAll:{},persAll:{},tgtAll:{},tgt:{},bmo:TODAY.slice(0,7),bexp:{},fl:{},names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
 const subs={};
 const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,avviso:c.avviso||null,cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
@@ -270,19 +279,22 @@ const wdi=x=>(parse(x).getDay()+6)%7;
 const people=()=>Object.keys(S.names).filter(u=>S.names[u]).sort((a,b)=>rn(a).localeCompare(rn(b),"it"));
 const DEFW=[10,10,10,10,15,30,15];
 const MONTHS=["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
-const actOf=x=>Object.values(((S.rev[x]||{}).u)||{}).reduce((a,v)=>a+(+v||0),0);
+const actOf=x=>Object.values(((S.rev[x]||{}).u)||{}).reduce((a,v)=>a+(+v||0),0)+(+((S.rev[x]||{}).other)||0);
+const nm2=v=>new Intl.NumberFormat('it-IT',{maximumFractionDigits:1,useGrouping:'always'}).format(v||0);
+const eur2=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:'always'}).format(n||0);
+const pc1=v=>(v==null?'–':(v*100).toFixed(1).replace('.',',')+'%');
 function calcMonth(ym){
   const [y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate();
   const b=S.bm[ym]||{},total=+b.total||0,W=(b.w&&b.w.length===7?b.w:DEFW).map(v=>+v||0),closed=b.closed||{};
   const days=Array.from({length:n},(_,i)=>ym+"-"+pad(i+1));
-  const wt=x=>closed[x]?0:W[wdi(x)];
+  const wt=x=>closed[x]?0:W[wdi(x)],doneM=b.done||{};
   const sumW=days.reduce((a,x)=>a+wt(x),0),tom=addDays(TODAY,1);
   return days.map(x=>{
     const cut=x<=TODAY?x:tom,settled=days.filter(z=>z<cut),rem=days.filter(z=>z>=cut);
     const R=Math.max(0,total-settled.reduce((a,z)=>a+actOf(z),0)),sw=rem.reduce((a,z)=>a+wt(z),0);
     const target=sw?R*wt(x)/sw:0,base=sumW?total*wt(x)/sumW:0,cells=cellsOf(mondayOf(x));
     const on=eff().staff.filter(q=>stateOf(cells[x+"_"+q.id])==="w"),act=actOf(x);
-    return{x,wt:wt(x),base,target,act,on,n:on.length,per:on.length&&target?target/on.length:null,diff:act-target,closed:!!closed[x]};
+    return{x,wt:wt(x),base,target,act,on,n:on.length,per:on.length&&target?target/on.length:null,diff:act-target,closed:!!closed[x],done:!!doneM[x]};
   });
 }
 function myTarget(x){
@@ -292,17 +304,28 @@ function myTarget(x){
 let pubT=0;
 function schedulePublish(){clearTimeout(pubT);pubT=setTimeout(publishTargets,900)}
 function publishTargets(){
-  if(!isAdmin()||!S.loaded||!(S.fl.bm&&S.fl.rev&&S.fl.t&&S.fl.wk))return;
+  if(!isAdmin()||!S.loaded||!(S.fl.bm&&S.fl.rev&&S.fl.t&&S.fl.wk&&S.fl.s&&S.fl.p))return;
   const want={};
   Object.keys(S.bm).forEach(ym=>{if(!(+S.bm[ym].total>0))return;calcMonth(ym).forEach(r=>{if(!r.per)return;r.on.forEach(q=>{if(q.uid)want[r.x+"_"+q.uid]=Math.round(r.per)})})});
   Object.entries(want).forEach(([id,v])=>{if(S.tgtAll[id]!==v)D.doc("targets/"+id).set({v,at:Date.now()}).catch(()=>{})});
   Object.keys(S.tgtAll).forEach(id=>{if(!(id in want))D.doc("targets/"+id).delete().catch(()=>{})});
+  const wS={},wP={},r2=v=>Math.round(v*100)/100,st=eff().staff;
+  Object.keys(S.bm).forEach(ym=>{const tot=+S.bm[ym].total||0;if(!(tot>0))return;
+    const ds=Object.keys(S.rev).filter(x=>x.startsWith(ym));
+    wS[ym]={total:r2(tot),inc:r2(ds.reduce((a,x)=>a+actOf(x),0))};
+    st.forEach(q=>{if(q.uid)wP[ym+"_"+q.uid]={obj:r2(tot/st.length),inc:r2(ds.reduce((a,x)=>a+(+(((S.rev[x]||{}).u||{})[q.id])||0),0))}})});
+  const sync=(col,w,cur)=>{
+    Object.entries(w).forEach(([id,v])=>{const c=cur[id];if(!c||Object.keys(v).some(k=>c[k]!==v[k]))D.doc(col+"/"+id).set({...v,at:Date.now()}).catch(()=>{})});
+    Object.keys(cur).forEach(id=>{if(!(id in w))D.doc(col+"/"+id).delete().catch(()=>{})})};
+  sync("bsum",wS,S.sumAll);sync("bpers",wP,S.persAll);
 }
 function watchAdmin(){
   if(!isAdmin()||subs.bm)return;
   subs.bm=D.col("bmonth").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.bm=m;S.fl.bm=1;schedulePublish();render()},fail);
   subs.rev=D.col("rev").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.rev=m;S.fl.rev=1;schedulePublish();render()},fail);
   subs.tall=D.col("targets").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data().v);S.tgtAll=m;S.fl.t=1;schedulePublish()},fail);
+  subs.sall=D.col("bsum").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.sumAll=m;S.fl.s=1;schedulePublish()},fail);
+  subs.pall=D.col("bpers").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.persAll=m;S.fl.p=1;schedulePublish()},fail);
 }
 const stateOf=v=>{v=String(v||"").trim();if(!v)return "";if(/^(r|riposo)$/i.test(v))return "r";if(/^(f|ferie)$/i.test(v))return "f";if(/^(m|malattia)$/i.test(v))return "m";return "w"};
 const nextShift=v=>({"":"L",w:"R",r:"F",f:"M",m:""})[stateOf(v)];
@@ -328,9 +351,12 @@ const fail=e=>{S.err="Problema di connessione ai dati ("+((e&&e.code)||"errore")
 async function save(ref,data){try{await ref.update(data)}catch(e){toast("Salvataggio non riuscito")}}
 function openDay(x){S.day=x;S.tab="oggi";S.confirm="";S.sumDay="";watchSum("");delete S.draft.sum;delete S.draft.memo;watchDay();render();scrollTo(0,0)}
 function watchDay(){
-  ["day","acts","tgt"].forEach(k=>subs[k]&&subs[k]());S.dayDoc={};S.acts=[];
+  ["day","acts","tgt","msum","mpers"].forEach(k=>subs[k]&&subs[k]());S.dayDoc={};S.acts=[];
   const r=D.doc("days/"+S.day);
   subs.tgt=D.doc("targets/"+S.day+"_"+S.uid).onSnapshot(t=>{S.tgt[S.day]=t.exists?(t.data().v||0):0;render()},()=>{});
+  if(!isAdmin()){const ym=S.day.slice(0,7);
+    subs.msum=D.doc("bsum/"+ym).onSnapshot(t=>{S.msum[ym]=t.exists?t.data():{};render()},()=>{});
+    subs.mpers=D.doc("bpers/"+ym+"_"+S.uid).onSnapshot(t=>{S.mpers[ym]=t.exists?t.data():{};render()},()=>{})}
   subs.day=r.onSnapshot(s=>{S.dayDoc=s.exists?s.data():{};render()},fail);
   subs.acts=r.collection("acts").onSnapshot(q=>{S.acts=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));if(S.acts.length&&!S.dayDoc.hasActs&&S.healed!==S.day){S.healed=S.day;save(D.doc("days/"+S.day),{hasActs:true})}render()},fail);
 }
@@ -369,6 +395,7 @@ const IC={
   ch:'<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
   cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
   plan:'<svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="7" height="7" rx="2"/><rect x="13.5" y="4" width="7" height="7" rx="2"/><rect x="3.5" y="13" width="7" height="7" rx="2"/><rect x="13.5" y="13" width="7" height="7" rx="2"/></svg>',
+  kpi:'<svg viewBox="0 0 24 24"><path d="M4 20V11M10 20V4M16 20v-6M21 20H3"/></svg>',
   todo:'<svg viewBox="0 0 24 24"><path d="M10 7h10M10 12h10M10 17h10"/><path d="M3.8 7l1 1 2-2M3.8 12l1 1 2-2M3.8 17l1 1 2-2"/></svg>',
   set:'<svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>'
 };
@@ -438,7 +465,7 @@ async function wipeAll(){
   const M=S.modal;if(M){M.busy=true;M.v=(M.v||"")+"b";renderModal()}
   try{
     const delAll=async path=>{const q=await getDocs(collection(fdb,path));await Promise.all(q.docs.map(d=>deleteDoc(d.ref)))};
-    for(const c of ["reports","tasks","weeks","bmonth","rev","targets"])await delAll(c);
+    for(const c of ["reports","tasks","weeks","bmonth","rev","targets","bsum","bpers"])await delAll(c);
     const days=await getDocs(collection(fdb,"days"));
     for(const d of days.docs){await delAll("days/"+d.id+"/acts");await deleteDoc(d.ref)}
     await delAll("users/"+S.uid+"/todos");
@@ -454,7 +481,20 @@ function viewLogin(){
   ${S.loginErr?`<div class="note" style="margin:0">${esc(S.loginErr)}</div>`:""}
   <button class="b" data-a="login">Entra</button></div></section>`;
 }
-function budgetPanel(){
+const mBar=(a,b)=>{const p=b>0?Math.min(100,a/b*100):0;return `<div class="mbar"><i class="${b>0&&a>=b?"full":""}" style="width:${p.toFixed(1)}%"></i></div>`};
+const mStat=(a,b)=>`<div class="bstats"><div><span>Incassato</span><b>${eur(Math.round(a))}</b></div><div><span>Mancano</span><b>${eur(Math.round(Math.max(0,b-a)))}</b></div><div><span>Raggiunto</span><b>${b>0?Math.round(a/b*100):0}%</b></div></div>`+mBar(a,b);
+function monthCard(){
+  const ym=S.day.slice(0,7),mo=+ym.slice(5);let tot=0,inc=0,obj=0,pinc=0;
+  if(isAdmin()){
+    tot=+((S.bm[ym]||{}).total)||0;const ds=Object.keys(S.rev).filter(x=>x.startsWith(ym));inc=ds.reduce((a,x)=>a+actOf(x),0);
+    const st=eff().staff,me=st.find(q=>q.uid===S.uid);
+    if(me&&st.length){obj=tot/st.length;pinc=ds.reduce((a,x)=>a+(+(((S.rev[x]||{}).u||{})[me.id])||0),0)}
+  }else{const a=S.msum[ym]||{},b=S.mpers[ym]||{};tot=+a.total||0;inc=+a.inc||0;obj=+b.obj||0;pinc=+b.inc||0}
+  if(!(tot>0))return "";
+  return `<section class="pn mc">${ph("Budget di "+MONTHS[mo-1],eur(Math.round(tot)))}${mStat(inc,tot)}`+(obj>0?`<div style="margin-top:20px">${ph("Il tuo obiettivo del mese",eur(Math.round(obj)))}</div>${mStat(pinc,obj)}`:"")+`</section>`;
+}
+function budgetPanel(){return monthCard()+dayGoal()}
+function dayGoal(){
   const adm=isAdmin(),mt=myTarget(S.day);
   const lab=S.day===TODAY?"Il tuo obiettivo di oggi":"Il tuo obiettivo del "+fmtDay(S.day);
   return `<section class="gp"><div><div class="gl">${esc(lab)}</div>${mt?`<div class="gbig">${eur(mt)}</div>`:`<div class="gbig none">Non impostato</div>`}</div>`+
@@ -615,11 +655,30 @@ function recCfg(){
 }
 function bdayCard(r){
   const x=r.x,d=parse(x),ex=S.bexp[x]!==undefined?S.bexp[x]:x===TODAY,hasAct=r.act>0,show=!r.closed&&hasAct;
-  const diff=show?r.act-r.target:null,rv=(S.rev[x]||{}).u||{};
-  return `<section class="pn bdc ${x===TODAY?"bdnow":""}"><button class="bdh" data-a="bday" data-i="${x}"><span class="bdn"><b>${GG[wdi(x)]} ${d.getDate()}</b></span><span class="bdm">${r.closed?"Chiuso":"Budget "+eur(Math.round(r.target))+(hasAct?", incassato "+eur(Math.round(r.act)):"")}</span>${diff!==null?`<span class="bdd ${diff>=0?"up":"dn"}">${diff>=0?"+":"−"}${eur(Math.abs(Math.round(diff)))}</span>`:""}</button>`+
+  const diff=show?r.act-r.target:null,rv0=S.rev[x]||{},rv=rv0.u||{};
+  const sub=r.closed&&!hasAct?"Festivo, peso 0":"Budget "+eur(Math.round(r.target))+(hasAct?", incassato "+eur(Math.round(r.act)):"");
+  const row=(lab,f,v,mode)=>`<label class="rv"><span>${lab}</span><input type="text" inputmode="${mode||"decimal"}" data-a="revx" data-day="${x}" data-f="${f}" placeholder="0" value="${fnum(v)}"></label>`;
+  return `<section class="pn bdc ${x===TODAY?"bdnow":""}"><button class="bdh" data-a="bday" data-i="${x}"><span class="bdn"><b>${GG[wdi(x)]} ${d.getDate()}</b></span><span class="bdm">${r.done?"✓ ":""}${sub}</span>${diff!==null?`<span class="bdd ${diff>=0?"up":"dn"}">${diff>=0?"+":"−"}${eur(Math.abs(Math.round(diff)))}</span>`:""}</button>`+
   (ex?`<div class="bdx"><div class="bdr"><span>Budget iniziale</span><b>${eur(Math.round(r.base))}</b></div><div class="bdr"><span>Budget aggiornato</span><b>${eur(Math.round(r.target))}</b></div><div class="bdr"><span>In turno</span><b>${r.on.length?esc(r.on.map(q=>q.n).join(", ")):"nessuno"}</b></div><div class="bdr"><span>Obiettivo a testa</span><b>${r.per?eur(Math.round(r.per)):"–"}</b></div>`+
+   (hasAct?`<div class="bdr"><span>Incasso del giorno</span><b>${eur(Math.round(r.act))}</b></div><div class="bdr"><span>Scarto dal budget</span><b>${r.act-r.target>=0?"+":"−"}${eur(Math.abs(Math.round(r.act-r.target)))}</b></div>`:"")+
    `<h3 class="sub2">Incassi</h3>`+eff().staff.map(q=>`<label class="rv"><span>${esc(q.n)}${r.on.some(o=>o.id===q.id)?" (in turno)":""}</span><input type="text" inputmode="decimal" data-a="rev" data-day="${x}" data-s="${q.id}" placeholder="0" value="${fnum(+rv[q.id]||0)}"></label>`).join("")+
-   `<div class="btns" style="justify-content:flex-start"><button class="g" data-a="bclose" data-i="${x}">${r.closed?"Riapri il giorno":"Segna come chiuso"}</button></div></div>`:"")+`</section>`;
+   row("Altro (aggiustamenti)","other",+rv0.other||0,"text")+
+   `<h3 class="sub2">Dati del giorno</h3>`+row("N. scontrini","rc",+rv0.rc||0,"numeric")+row("Ingressi","en",+rv0.en||0,"numeric")+
+   `<div class="btns" style="justify-content:flex-start"><button class="${r.done?"g":"b"}" data-a="bdone" data-i="${x}">${r.done?"Riapri il giorno":"Chiudi il giorno"}</button><button class="g" data-a="bclose" data-i="${x}">${r.closed?"Togli festivo":"Giorno festivo (peso 0)"}</button></div></div>`:"")+`</section>`;
+}
+function kpiRows(ym){
+  const C={inc:0,rc:0,en:0};
+  return calcMonth(ym).filter(r=>r.done).map(r=>{const rv=S.rev[r.x]||{},rc=+rv.rc||0,en=+rv.en||0;C.inc+=r.act;C.rc+=rc;C.en+=en;
+    return{x:r.x,act:r.act,rc,en,cv:en?rc/en:null,sm:rc?r.act/rc:null,ccv:C.en?C.rc/C.en:null,csm:C.rc?C.inc/C.rc:null,C:{...C}}});
+}
+function viewKpi(){
+  const ym=S.bmo,[y,mo]=ym.split("-").map(Number),rows=kpiRows(ym),last=rows[rows.length-1];
+  let h=dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"");
+  if(!last)return h+`<section class="pn">${ph("KPI")}<p class="mu" style="margin:0">Nessun giorno chiuso in questo mese. Nel tab Budget inserisci incassi, scontrini e ingressi, poi premi “Chiudi il giorno”.</p></section>`;
+  h+=`<section class="pn">${ph("Progressivo del mese",rows.length+(rows.length===1?" giorno chiuso":" giorni chiusi"))}<div class="kpis"><div><span>Conversion rate</span><b>${pc1(last.ccv)}</b></div><div><span>Scontrino medio</span><b>${last.csm==null?"–":eur2(last.csm)}</b></div></div>`+
+    `<div class="bstats" style="margin-top:14px"><div><span>Scontrini</span><b>${nm2(last.C.rc)}</b></div><div><span>Ingressi</span><b>${nm2(last.C.en)}</b></div><div><span>Incassi</span><b>${eur(Math.round(last.C.inc))}</b></div></div></section>`;
+  h+=rows.slice().reverse().map(r=>`<section class="pn kr"><div class="krh"><b>${GG[wdi(r.x)]} ${parse(r.x).getDate()}</b><span>Progressivo</span></div><div class="kpis"><div><span>Conversion rate</span><b>${pc1(r.ccv)}</b></div><div><span>Scontrino medio</span><b>${r.csm==null?"–":eur2(r.csm)}</b></div></div><p class="mu" style="margin:10px 0 0">Del giorno: conversion ${pc1(r.cv)}, scontrino medio ${r.sm==null?"–":eur2(r.sm)} (${nm2(r.rc)} scontrini, ${nm2(r.en)} ingressi)</p></section>`).join("");
+  return h;
 }
 function viewBudget(){
   const ym=S.bmo,[y,mo]=ym.split("-").map(Number),b=S.bm[ym]||{},total=+b.total||0,W=(b.w&&b.w.length===7?b.w:DEFW);
@@ -690,6 +749,8 @@ function pdfMonth(ym){
     const dd=rows.filter(r=>r.on.some(o=>o.id===q.id)).length,tot=rows.reduce((a,r)=>a+((+((S.rev[r.x]||{}).u||{})[q.id])||0),0);
     p.txt(42,y2,q.n,9);p.rt(330,y2,String(dd),9);p.rt(440,y2,f(tot),9);p.rt(545,y2,dd?f(tot/dd):"-",9);y2-=17;
   });
+  const alt=rows.reduce((a,r)=>a+(+((S.rev[r.x]||{}).other)||0),0);
+  if(alt){p.txt(42,y2,"Altro (aggiustamenti)",9);p.rt(440,y2,f(alt),9)}
   return buildPdf(pages);
 }
 async function exportPdf(ym,mode){
@@ -722,8 +783,8 @@ function render(){
   const app=$("#app"),logged=!!S.uid;
   const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
   const who=$("#who");who.hidden=!logged;who.textContent=String(S.names[S.uid]||S.email||"?").charAt(0).toUpperCase();
-  if(["todo","budget","avviso","lista"].includes(S.tab)&&!isAdmin())S.tab="oggi";
-  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0],["budget","Budget",0],["avviso","Avviso",0],["lista","Check-list",0]]:[])];
+  if(["todo","budget","avviso","lista","kpi"].includes(S.tab)&&!isAdmin())S.tab="oggi";
+  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0],["avviso","Avviso",0],["lista","Check-list",0],["budget","Budget",0],["kpi","KPI",0]]:[])];
   const nv=$("#nav"),sl=nv.scrollLeft||0;
   nv.innerHTML=logged?tabs.map(([k,l,b])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}"><span class="ic">${IC[k]}</span>${l}${b?`<b class="bd">${b}</b>`:""}</button>`).join(""):"";
   nv.scrollLeft=sl;
@@ -731,7 +792,7 @@ function render(){
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:`<p class="mu">Caricamento…</p>`);return}
-  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid?`<div class="note">Nessun amministratore impostato: apri il menu (cerchio in alto a destra) e scegli Il tuo profilo.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,todo:()=>isAdmin()?viewAssign():"",budget:viewBudget,avviso:viewAvviso,lista:viewLista}[S.tab])();
+  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid?`<div class="note">Nessun amministratore impostato: apri il menu (cerchio in alto a destra) e scegli Il tuo profilo.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,todo:()=>isAdmin()?viewAssign():"",budget:viewBudget,kpi:viewKpi,avviso:viewAvviso,lista:viewLista}[S.tab])();
   const sh=$("#sheet"),html=(S.tab==="cal"&&S.sumDay)?sheetHtml():"";
   if(html!==S.sheetHtml){
     const sb=sh.querySelector&&sh.querySelector(".sbody"),st=sb?sb.scrollTop:0;
@@ -763,6 +824,8 @@ function act(a,el){
   else if(a==="bday"){S.bexp[i]=!(S.bexp[i]!==undefined?S.bexp[i]:i===TODAY);render()}
   else if(a==="bclose"){const cur=!!(((S.bm[S.bmo]||{}).closed||{})[i]);save(db.doc("bmonth/"+S.bmo),{closed:{[i]:!cur}})}
   else if(a==="rev"){save(db.doc("rev/"+D2.day),{u:{[D2.s]:num(el.value)}})}
+  else if(a==="revx"){const f=D2.f;if(["other","rc","en"].includes(f)){const t=String(el.value||"").trim(),neg=/^[-−–]/.test(t),n0=num(t.replace(/^[-−–]\s*/,"")),n=n0==null?0:(neg&&f==="other"?-n0:n0);save(db.doc("rev/"+D2.day),{[f]:n})}}
+  else if(a==="bdone"){const cur=!!(((S.bm[S.bmo]||{}).done||{})[i]);save(db.doc("bmonth/"+S.bmo),{done:{[i]:!cur}})}
   else if(a==="pdf"){exportPdf(S.bmo,"file")}
   else if(a==="pdfmail"){exportPdf(S.bmo,"mail")}
   else if(a==="goday"){openDay(i)}
@@ -830,7 +893,7 @@ function act(a,el){
   else if(a==="recwhere"){const v=el.value;editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.w=v})}
   else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
 }
-const CH=["chk","itemname","username","taskdone","recname","recwhere","bmtotal","bmw","rev","shiftset"];
+const CH=["chk","itemname","username","taskdone","recname","recwhere","bmtotal","bmw","rev","revx","shiftset"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
