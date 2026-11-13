@@ -36,9 +36,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .chip{width:36px;height:36px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font:700 15px var(--sans)}
 main{max-width:760px;margin:0 auto;padding:6px 16px calc(100px + env(safe-area-inset-bottom))}
 main.wide{max-width:1100px}
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--bgf);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border-top:1px solid var(--ln)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--bgf);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border-top:1px solid var(--ln)}
 .tabs:empty{display:none}
-.tabs button{position:relative;flex:1;min-width:0;max-width:120px;border:0;background:transparent;color:var(--mu);font:600 10.5px var(--sans);display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 0}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{position:relative;flex:1 0 64px;min-width:0;max-width:130px;border:0;background:transparent;color:var(--mu);font:600 10.5px var(--sans);display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 0}
 .tabs .ic{width:44px;height:29px;border-radius:15px;display:grid;place-items:center;transition:background .2s}
 .tabs svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button.on{color:var(--ink)}
@@ -49,7 +50,15 @@ main.wide{max-width:1100px}
 .pn.ok{border:1.5px solid var(--go)}
 input[type=date]{min-height:46px;-webkit-appearance:none;appearance:none;text-align:left}
 .mbg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50}
-.dlg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,380px);background:var(--sf);border:1px solid var(--ln);border-radius:22px;padding:24px 22px 20px;z-index:51;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.dlg{max-height:86vh;overflow:auto;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,380px);background:var(--sf);border:1px solid var(--ln);border-radius:22px;padding:24px 22px 20px;z-index:51;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.mbg.clr{background:transparent}
+.pop{position:fixed;top:calc(56px + env(safe-area-inset-top));right:14px;z-index:51;background:var(--sf);border:1px solid var(--ln);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:6px;min-width:210px;display:flex;flex-direction:column}
+.pop button{border:0;background:transparent;color:var(--ink);font:600 16px var(--sans);text-align:left;padding:13px 14px;border-radius:9px}
+.pop button:active{background:var(--fill)}
+.pli{padding:9px 0;border-top:1px solid var(--ln);font-weight:600}
+.pli:first-child{border-top:0}
+.pli input{margin-top:6px;font-weight:400}
+.nmb{border:0;background:transparent;font:inherit;font-weight:600;color:var(--ink);padding:6px 0;text-align:left;text-decoration:underline dotted;text-underline-offset:4px}
 .dlg h2{margin:0;font:400 30px/1.05 var(--disp);letter-spacing:.01em}
 .dlg p{margin:0 0 6px;color:var(--mu)}
 .dlg .b,.dlg .g{width:100%;padding:14px}
@@ -179,7 +188,7 @@ h3.sub2{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
 </style>
 </head>
 <body>
-<header class="top"><h1>Gestione</h1><button class="chip" id="who" data-a="tab" data-i="set" aria-label="Altro" hidden></button></header>
+<header class="top"><h1>Gestione</h1><button class="chip" id="who" data-a="menu" aria-label="Menu" hidden></button></header>
 <main id="app"><p class="mu">Caricamento…</p></main>
 <nav class="tabs" id="nav"></nav>
 <div id="sheet"></div>
@@ -188,7 +197,7 @@ h3.sub2{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {getFirestore,doc,collection,onSnapshot,setDoc,getDoc,deleteDoc} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {getFirestore,doc,collection,onSnapshot,setDoc,getDoc,getDocs,deleteDoc} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyDypaXlE3mPUjSf9GUQPbHSBOHZ_TBa_PM",
@@ -230,7 +239,7 @@ const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizi
 const defRec=[{id:"rc1",d:1,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc3",d:3,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc5",d:5,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rp4",d:4,w:"ch",t:"Plastica: ritiro sabato mattina"},{id:"ri0",d:0,w:"ch",t:"Indifferenziata: ritiro martedì mattina"}];
 const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
 const subs={};
-const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,shiftTime:c.shiftTime||"",avviso:c.avviso||null,cfgv:c.cfgv||0}};
+const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,avviso:c.avviso||null,cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
 const rn=id=>S.names[id]||"Collega";
 const isAdmin=()=>!!S.uid&&S.adminUid===S.uid;
@@ -296,6 +305,9 @@ function editCfg(fn){
 
 const IC={
   oggi:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>',
+  budget:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.2 9.2a3.6 3.6 0 1 0 0 5.6M7.6 11h5.2M7.6 13h5.2"/></svg>',
+  avviso:'<svg viewBox="0 0 24 24"><path d="M4 10v4h3l7 4V6L7 10H4z"/><path d="M17.5 9a4 4 0 0 1 0 6"/></svg>',
+  lista:'<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4h6v2.6H9zM9 11h6M9 15h6"/></svg>',
   ap:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg>',
   ch:'<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
   cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
@@ -308,20 +320,14 @@ const ph=(t,r)=>`<div class="ph"><h2>${t}</h2>${r!=null&&r!==""?`<small>${r}</sm
 const seg=(n,t)=>`<div class="seg ${t&&n>=t?"all":""}">${Array.from({length:t},(_,i)=>`<i class="${i<n?"f":""}"></i>`).join("")}</div>`;
 const dayHead=(big,t1,t2,prev,next)=>`<div class="dh">${big!=null?`<div class="dnum">${big}</div>`:""}<div class="dt"><b>${esc(t1)}</b><span>${esc(t2)}</span></div><button class="g sq" data-a="${prev}" aria-label="Precedente">‹</button><button class="g sq" data-a="${next}" aria-label="Successivo">›</button></div>`;
 
-function waText(x,d,acts){
-  const c=eff(),lab=parse(x).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
-  const L=["*Chiusura, "+lab+"*"];
-  const cl=(items,name)=>{const miss=items.filter(i=>!((d[i.k]||{})[i.id]));return name+": "+(items.length-miss.length)+" su "+items.length+(miss.length?" (mancano: "+miss.map(i=>i.t).join(", ")+")":"")};
-  L.push("","*Checklist*",cl(openItems(x),"Apertura"),cl(closeItems(x),"Chiusura"));
-  const rec=recFor(x,"oggi"),rm=d.rec||{};
-  if(rec.length){L.push("","*Attività fisse*");rec.forEach(r=>L.push((rm[r.id]?"✅ ":"⬜ ")+r.t+(rm[r.id]?" ("+rn(rm[r.id])+")":"")))}
-  if(acts.length){L.push("","*Attività svolte*");acts.forEach(a=>{L.push("• "+a.t+" ("+rn(a.by)+")");cmAll(a,a.by,a.at).forEach(c=>L.push("   ↳ "+rn(c.by)+": "+c.t))})}
-  const td=S.tasks.filter(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===x);
-  if(td.length){L.push("","*ToDo completate*");td.forEach(t=>L.push("• "+t.t+" ("+rn(t.doneBy||t.to)+")"))}
-  const rp=S.reports.filter(r=>rday(r)===x);
-  if(rp.length){L.push("","*Segnalazioni*");rp.forEach(r=>{L.push("• "+r.t+" ("+rn(r.by)+"), "+(r.res?"risolta":"aperta"));cmAll(r,r.by,r.at).forEach(c=>L.push("   ↳ "+rn(c.by)+": "+c.t))})}
-  L.push("","*Riepilogo*",d.sum||"(nessun riepilogo)");
-  if(d.memo&&d.memo.t)L.push("","*Promemoria per domani*",d.memo.t);
+function waMsg(kind,x,d,reasons,note){
+  const o=kind==="open",items=o?openItems(x):closeItems(x),rs=reasons||{};
+  const lab=parse(x).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+(x===TODAY?", "+hm(Date.now()):"");
+  const miss=items.filter(i=>!((d[i.k]||{})[i.id]));
+  const L=["*"+(o?"Apertura":"Chiusura")+(miss.length?": problema":" OK")+"*",lab,""];
+  items.forEach(i=>{const w=(d[i.k]||{})[i.id],r=rs[i.k+"_"+i.id];L.push(w?"✅ "+i.t+" ("+rn(w)+")":"❌ "+i.t+(r?": "+r:""))});
+  if(note)L.push("",note);
+  if(!o)L.push("","*Riepilogo*",d.sum||"(nessun riepilogo)");
   return L.join("\n");
 }
 function sendWa(text){
@@ -330,11 +336,56 @@ function sendWa(text){
   if(!w)location.href=url;
 }
 
+let mkey="";
+function openModal(m){S.modal={id:uid8(),...m};renderModal()}
+function closeModal(){S.modal=null;renderModal()}
+function renderModal(){const md=$("#modal"),key=S.modal?S.modal.id+(S.modal.v||""):"";if(key===mkey)return;mkey=key;md.innerHTML=modalHtml()}
+function snapItems(kind){const d=S.dayDoc;return(kind==="open"?openItems(S.day):closeItems(S.day)).map(i=>({k:i.k,id:i.id,t:i.t,done:!!((d[i.k]||{})[i.id])}))}
+function clearDrafts(){Object.keys(S.draft).forEach(k=>{if(k.startsWith("pr_")||k==="prnote"||k==="rnname")delete S.draft[k]})}
 function modalHtml(){
-  const m=S.modal;if(!m)return "";const o=m.type==="open";
-  return `<div class="mbg"></div><div class="dlg" role="dialog" aria-modal="true"><h2>${o?"Apertura completa":"Riepilogo salvato"}</h2><p>${o?"Hai completato tutte le voci di apertura. Vuoi avvisare il gruppo su WhatsApp?":"Vuoi inviare il riepilogo di fine giornata su WhatsApp?"}</p><button class="b" data-a="mwa">Invia su WhatsApp</button><button class="g" data-a="mclose">Non ora</button></div>`;
+  const m=S.modal;if(!m)return "";
+  const dlg=(h,inner)=>`<div class="mbg"></div><div class="dlg" role="dialog" aria-modal="true"><h2>${h}</h2>${inner}</div>`;
+  const adm=isAdmin();
+  if(m.type==="open")return dlg("Apertura completa",`<p>Tutte le voci di apertura sono completate. Vuoi inviare “Apertura OK” su WhatsApp?</p><button class="b" data-a="mwa">Invia su WhatsApp</button><button class="g" data-a="mclose">Non ora</button>`);
+  if(m.type==="close")return dlg("Riepilogo salvato",`<p>Tutte le voci di chiusura sono completate. Vuoi inviare “Chiusura OK” con il riepilogo su WhatsApp?</p><button class="b" data-a="mwa">Invia su WhatsApp</button><button class="g" data-a="mclose">Non ora</button>`);
+  if(m.type==="prob"){
+    const o=m.kind==="open";
+    return dlg(o?"Problema in apertura":"Problema in chiusura",`<p>Controlla l’elenco e scrivi il motivo delle voci non completate.</p><div>`+
+      m.items.map(it=>it.done?`<div class="pli">✅ ${esc(it.t)}</div>`:`<div class="pli">❌ ${esc(it.t)}<input type="text" data-d="pr_${it.k}_${it.id}" placeholder="Motivo (facoltativo)" value="${esc(S.draft["pr_"+it.k+"_"+it.id]||"")}"></div>`).join("")+`</div>`+
+      `<input type="text" data-d="prnote" placeholder="Nota aggiuntiva (facoltativa)" value="${esc(S.draft.prnote||"")}">`+
+      (o?"":`<p class="mu" style="margin:0">${m.hasSum?"Al messaggio viene aggiunto il riepilogo di fine giornata.":"Il riepilogo di fine giornata non è ancora stato salvato."}</p>`)+
+      `<button class="b" data-a="mprob">Invia su WhatsApp</button><button class="g" data-a="mclose">Annulla</button>`);
+  }
+  if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><button class="b" data-a="mren">Salva</button><button class="g" data-a="mclose">Annulla</button>`);
+  if(m.type==="menu")return `<div class="mbg clr" data-a="mclose"></div><div class="pop"><button data-a="mopen" data-i="profile">Il tuo profilo</button>${adm?`<button data-a="mopen" data-i="names">Nomi dei colleghi</button>`:""}</div>`;
+  if(m.type==="names")return dlg("Nomi dei colleghi",`<p class="mu" style="margin:0">I nomi che vedono tutti nell’app. Si salvano quando esci dal campo.</p>`+people().map(u=>`<input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}" aria-label="Nome">`).join("")+`<button class="g" data-a="mclose">Chiudi</button>`);
+  if(m.type==="profile"){
+    const c=eff(),nameTxt=esc(S.names[S.uid]||"");
+    let h=`<p class="mu" style="margin:0"><b>${nameTxt}</b>${adm?" (amministratore)":""}</p><p class="mu" style="margin:0">Accesso con ${esc(S.email)}</p>`;
+    if(S.adminLoaded&&!S.adminUid)h+=`<p class="mu" style="margin:0">Non c’è ancora un amministratore. Solo lui modifica turni, checklist, cadenze, budget e avvisi.</p><button class="b" data-a="claimadmin">Imposta me come amministratore</button>`;
+    if(adm&&!(S.cfg&&S.cfg.resetDone)){
+      h+=m.busy?`<p class="mu" style="margin:0"><b>Cancellazione in corso…</b></p>`:m.confirm?
+        `<p style="margin:0"><b>Sei sicuro? Non si può annullare.</b></p><button class="b" data-a="wipego">Sì, cancella tutto</button><button class="g" data-a="wipeno">Annulla</button>`:
+        `<p class="mu" style="margin:0">Azzera i dati inseriti finora: attività, segnalazioni, spunte, riepiloghi, turni, obiettivi e avviso. Restano account, nomi, voci delle checklist e cadenze.</p><button class="g" data-a="wipeask">Azzera tutti i dati</button>`;
+    }
+    h+=`<button class="g" data-a="logout">Esci</button><button class="g" data-a="mclose">Chiudi</button>`;
+    return dlg("Il tuo profilo",h);
+  }
+  return "";
 }
-function renderModal(){const md=$("#modal"),h=modalHtml();if(md.innerHTML!==h)md.innerHTML=h}
+async function wipeAll(){
+  const M=S.modal;if(M){M.busy=true;M.v=(M.v||"")+"b";renderModal()}
+  try{
+    const delAll=async path=>{const q=await getDocs(collection(fdb,path));await Promise.all(q.docs.map(d=>deleteDoc(d.ref)))};
+    for(const c of ["reports","tasks","weeks","budget"])await delAll(c);
+    const days=await getDocs(collection(fdb,"days"));
+    for(const d of days.docs){await delAll("days/"+d.id+"/acts");await deleteDoc(d.ref)}
+    await delAll("users/"+S.uid+"/todos");
+    await D.doc("config/main").update({avviso:null,resetDone:true});
+    toast("Dati azzerati");
+  }catch(e){toast("Azzeramento non riuscito ("+((e&&e.code)||"errore")+")")}
+  closeModal();
+}
 function viewLogin(){
   return `<section class="pn login">${ph("Gestione")}<p class="mu" style="margin-top:0">Accedi con l’email e la password che ti ha dato l’amministratore.</p><div class="stack">
   <input type="email" autocapitalize="off" autocomplete="username" data-d="em" placeholder="Email" value="${esc(S.draft.em||"")}">
@@ -349,11 +400,13 @@ function budgetPanel(){
   (S.budErr?`<div><p class="gnote">Obiettivi non disponibili: l’amministratore deve aggiornare le regole di Firebase.</p></div>`:(adm?`<div><button class="g" data-a="budedit">Modifica obiettivi</button></div>`:""))+`</section>`;
 }
 function openSend(){
-  const d=S.dayDoc,its=openItems(S.day);
-  const all=its.length&&its.every(i=>(d[i.k]||{})[i.id]);
-  if(d.waOpen)return `<p class="mu">WhatsApp aperto alle ${hm(d.waOpen.at)} da ${esc(nm(d.waOpen.by))}</p>`;
-  if(S.day!==TODAY||!all)return "";
-  return `<section class="pn ok">${ph("Apertura completa")}<button class="b" data-a="waopen">Invia “Apertura OK” su WhatsApp</button></section>`;
+  const d=S.dayDoc,its=openItems(S.day),miss=its.filter(i=>!((d[i.k]||{})[i.id])).length;
+  let h="";
+  if(S.day===TODAY&&miss)h+=`<p><button class="g" style="width:100%" data-a="probopen">Invia messaggio problema apertura</button></p>`;
+  if(d.waOpenP)h+=`<p class="mu">Messaggio problema inviato alle ${hm(d.waOpenP.at)} da ${esc(nm(d.waOpenP.by))}</p>`;
+  if(d.waOpen)return h+`<p class="mu">WhatsApp aperto alle ${hm(d.waOpen.at)} da ${esc(nm(d.waOpen.by))}</p>`;
+  if(S.day!==TODAY||miss||!its.length)return h;
+  return h+`<section class="pn ok">${ph("Apertura completa")}<button class="b" data-a="waopen">Invia “Apertura OK” su WhatsApp</button></section>`;
 }
 function avvisoCard(){
   const a=eff().avviso;
@@ -427,10 +480,12 @@ function viewApertura(){
   return dayBar()+chkCard("open",openItems(S.day),"Apertura")+openSend();
 }
 function viewChiusura(){
-  const d=S.dayDoc,sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||"");
-  return dayBar()+chkCard("close",closeItems(S.day),"Chiusura")+
+  const d=S.dayDoc,sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||""),its=closeItems(S.day),miss=its.filter(i=>!((d[i.k]||{})[i.id])).length;
+  return dayBar()+chkCard("close",its,"Chiusura")+
+  (S.day===TODAY&&miss?`<p><button class="g" style="width:100%" data-a="probclose">Invia messaggio problema chiusura</button></p>`:"")+
+  (d.waCloseP?`<p class="mu">Messaggio problema inviato alle ${hm(d.waCloseP.at)} da ${esc(nm(d.waCloseP.by))}</p>`:"")+
   `<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?"salvato da "+esc(nm(d.sumBy))+" alle "+hm(d.sumAt):"")}<textarea data-d="sum" placeholder="Com’è andata la giornata?">${esc(sum)}</textarea>
-   <div class="btns">${d.sumBy&&!d.waClose?`<button class="g" data-a="wasend">Invia su WhatsApp</button>`:""}<button class="b" data-a="savesum">Salva riepilogo</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`+memoPanel(d);
+   <div class="btns">${d.sumBy&&!miss&&!d.waClose?`<button class="g" data-a="wasend">Invia su WhatsApp</button>`:""}<button class="b" data-a="savesum">Salva riepilogo</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`+memoPanel(d);
 }
 function viewCal(){
   const first=parse(S.month),y=first.getFullYear(),mo=first.getMonth();
@@ -478,13 +533,13 @@ function sheetHtml(){
 function viewPlanner(){
   const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin(),cells=cellsOf(S.week);
   const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  const LB={w:"Lavoro",r:"Riposo",f:"Ferie",m:"Malattia"};
-  const VAL={w:"L",r:"R",f:"F",m:"M"};
+  const LB={w:"Lavoro",r:"Riposo",f:"Ferie",m:"Malattia"},VAL={w:"L",r:"R",f:"F",m:"M"};
   const pill=k=>{const st=stateOf(cells[k]),l=LB[st]||"–";return adm?`<select class="sp ${st}" data-a="shiftset" data-c="${k}" aria-label="Turno">${[["","–"],["L","Lavoro"],["R","Riposo"],["F","Ferie"],["M","Malattia"]].map(([v,t])=>`<option value="${v}" ${(VAL[st]||"")===v?"selected":""}>${t}</option>`).join("")}</select>`:`<span class="sp ${st}">${l}</span>`};
+  const who=q=>adm?`<button class="nmb" data-a="ren" data-i="${q.id}">${esc(q.n)}</button>`:`<span>${esc(q.n)}</span>`;
   return dayHead(null,"Turni",lab,"wprev","wnext")+
   (S.week!==mondayOf(TODAY)?`<p class="back"><button class="g" data-a="wtoday">Questa settimana</button></p>`:"")+
-  (adm?`<section class="pn"><label class="fld" style="margin:0"><span>Orario di lavoro, uguale per tutti i turni</span><input type="text" data-a="shifttime" placeholder="per esempio 9:00–13:00 e 15:00–19:00" value="${esc(c.shiftTime)}"></label><p class="mu" style="margin-bottom:0">Scegli dal menu: Lavoro, Riposo, Ferie, Malattia o vuoto.</p></section>`:(c.shiftTime?`<p class="mu" style="margin:0 0 12px"><b>Orario di lavoro:</b> ${esc(c.shiftTime)}</p>`:""))+
-  `<div class="pgrid">`+days.map((x,i)=>`<section class="pn ${x===TODAY?"today":""}"><div class="pdh"><b>${GGL[i]}</b><span>${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</span></div>${c.staff.map(q=>`<div class="prow"><span>${esc(q.n)}</span>${pill(x+"_"+q.id)}</div>`).join("")}</section>`).join("")+`</div>`;
+  (adm?`<p class="mu" style="margin:0 0 12px">Tocca un nome per cambiarlo. Scegli il turno dal menu.</p>`:"")+
+  `<div class="pgrid">`+days.map((x,i)=>`<section class="pn ${x===TODAY?"today":""}"><div class="pdh"><b>${GGL[i]}</b><span>${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</span></div>${c.staff.map(q=>`<div class="prow">${who(q)}${pill(x+"_"+q.id)}</div>`).join("")}</section>`).join("")+`</div>`;
 }
 const WH={oggi:"Oggi",ap:"Apertura",ch:"Chiusura"};
 const whSel=(attrs,v)=>`<select class="sm" ${attrs}>${Object.entries(WH).map(([k,l])=>`<option value="${k}" ${k===v?"selected":""}>${l}</option>`).join("")}</select>`;
@@ -504,22 +559,17 @@ function budCfg(){
   `${S.bw!==mondayOf(TODAY)?`<div class="btns" style="justify-content:flex-start"><button class="g" data-a="btoday">Questa settimana</button></div>`:""}</section>`;
 }
 function avvisoCfg(){
-  const a=eff().avviso;
-  return `<section class="pn">${ph("Avviso")}<p class="mu" style="margin-top:0">Appare in cima a Oggi per tutti, finché non lo togli.</p><textarea data-a="avviso" placeholder="Scrivi l’avviso">${esc(a?a.t:"")}</textarea>${a&&a.t?`<div class="btns"><button class="g" data-a="avvisoclear">Togli avviso</button></div>`:""}</section>`;
+  const a=eff().avviso,v=S.draft.avv!==undefined?S.draft.avv:(a?a.t:"");
+  return `<section class="pn">${ph("Avviso")}<p class="mu" style="margin-top:0">Appare in cima a Oggi per tutti, finché non lo togli.</p><textarea data-d="avv" placeholder="Scrivi l’avviso">${esc(v)}</textarea><div class="btns">${a&&a.t?`<button class="g" data-a="avvisoclear">Togli avviso</button>`:""}<button class="b" data-a="avvisosave">Salva avviso</button></div></section>`;
 }
-function peopleCfg(){
-  const ps=people();
-  return `<section class="pn">${ph("Nomi dei colleghi")}<p class="mu" style="margin-top:0">I nomi che vedono tutti nell’app. I colleghi non possono cambiarli.</p><div class="list">${ps.map(u=>`<div class="row"><input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}"></div>`).join("")}</div></section>`;
-}
-function viewSet(){
-  const c=eff(),adm=isAdmin();
-  const items=(k,title)=>`<section class="pn">${ph(title)}<div class="list">`+c[k].map(i=>`<div class="row"><input type="text" data-a="itemname" data-k="${k}" data-i="${i.id}" value="${esc(i.t)}"><button class="x" data-a="delitem" data-k="${k}" data-i="${i.id}" aria-label="Elimina">✕</button></div>`).join("")+
+function itemsCfg(k,title){
+  const c=eff();
+  return `<section class="pn">${ph(title)}<div class="list">`+c[k].map(i=>`<div class="row"><input type="text" data-a="itemname" data-k="${k}" data-i="${i.id}" value="${esc(i.t)}"><button class="x" data-a="delitem" data-k="${k}" data-i="${i.id}" aria-label="Elimina">✕</button></div>`).join("")+
    `<div class="row"><input type="text" data-d="new_${k}" placeholder="Nuova voce" value="${esc(S.draft["new_"+k]||"")}"><button class="g" data-a="additem" data-k="${k}">Aggiungi</button></div></div></section>`;
-  let h=`<section class="pn">${ph("Il tuo profilo",adm?"amministratore":"")}<p class="mu" style="margin-top:0"><b>${esc(S.names[S.uid]||"")}</b></p><p class="mu">Accesso con ${esc(S.email)}</p><div class="btns" style="justify-content:flex-start"><button class="g" data-a="logout">Esci</button></div></section>`;
-  if(S.adminLoaded&&!S.adminUid)h+=`<section class="pn">${ph("Amministratore")}<p class="mu" style="margin-top:0">Non c’è ancora un amministratore. Solo lui modifica turni, nomi del personale, checklist, cadenze, obiettivi budget ed elimina le attività dei colleghi.</p><p class="mu">Fallo tu per primo, prima di far entrare i colleghi: dopo non si cambia da qui.</p><button class="b" data-a="claimadmin">Imposta me come amministratore</button></section>`;
-  if(!adm)return h+(S.adminUid?`<p class="mu">Turni, nomi del personale, checklist, cadenze e obiettivi budget li modifica solo l’amministratore.</p>`:"");
-  return h+avvisoCfg()+budCfg()+peopleCfg()+`<section class="pn">${ph("Nomi nel planner turni")}<div class="list">`+c.staff.map(s=>`<div class="row"><input type="text" data-a="staffname" data-i="${s.id}" value="${esc(s.n)}"></div>`).join("")+`</div><p class="mu">Compaiono nel planner dei turni.</p></section>`+items("open","Voci checklist apertura")+items("close","Voci checklist chiusura")+recCfg();
 }
+const viewBudget=()=>budCfg();
+const viewAvviso=()=>avvisoCfg();
+const viewLista=()=>itemsCfg("open","Voci checklist apertura")+itemsCfg("close","Voci checklist chiusura")+recCfg();
 function render(){
   migrate();renderModal();
   const a=document.activeElement;
@@ -528,14 +578,16 @@ function render(){
   const app=$("#app"),logged=!!S.uid;
   const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
   const who=$("#who");who.hidden=!logged;who.textContent=String(S.names[S.uid]||S.email||"?").charAt(0).toUpperCase();
-  if(S.tab==="todo"&&!isAdmin())S.tab="oggi";
-  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0],["set","Altro",0]]:[])];
-  $("#nav").innerHTML=logged?tabs.map(([k,l,b])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}"><span class="ic">${IC[k]}</span>${l}${b?`<b class="bd">${b}</b>`:""}</button>`).join(""):"";
+  if(["todo","budget","avviso","lista"].includes(S.tab)&&!isAdmin())S.tab="oggi";
+  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0],["budget","Budget",0],["avviso","Avviso",0],["lista","Check-list",0]]:[])];
+  const nv=$("#nav"),sl=nv.scrollLeft||0;
+  nv.innerHTML=logged?tabs.map(([k,l,b])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}"><span class="ic">${IC[k]}</span>${l}${b?`<b class="bd">${b}</b>`:""}</button>`).join(""):"";
+  nv.scrollLeft=sl;
   app.className=S.tab==="plan"?"wide":"";
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:`<p class="mu">Caricamento…</p>`);return}
-  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<div class="note">Nessun amministratore impostato: vai in Altro.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,todo:()=>isAdmin()?viewAssign():"",set:viewSet}[S.tab])();
+  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid?`<div class="note">Nessun amministratore impostato: apri il menu (cerchio in alto a destra) e scegli Il tuo profilo.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,todo:()=>isAdmin()?viewAssign():"",budget:viewBudget,avviso:viewAvviso,lista:viewLista}[S.tab])();
   const sh=$("#sheet"),html=(S.tab==="cal"&&S.sumDay)?sheetHtml():"";
   if(html!==S.sheetHtml){
     const sb=sh.querySelector&&sh.querySelector(".sbody"),st=sb?sb.scrollTop:0;
@@ -547,7 +599,7 @@ function render(){
 
 document.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending)render()},60));
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k)S.draft[k]=e.target.value});
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",em:"login",pw:"login",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_")||k.startsWith("cm_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",em:"login",pw:"login",rnname:"mren",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_")||k.startsWith("cm_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
 function act(a,el){
   const D2=el.dataset,db=D,i=D2.i,k=D2.k;
   if(a==="login"){
@@ -557,22 +609,23 @@ function act(a,el){
       S.loginErr=/invalid|wrong|user-not-found/.test(e.code||"")?"Email o password errati.":"Accesso non riuscito ("+(e.code||"errore")+").";render()});
   }
   else if(a==="logout"){signOut(auth).then(()=>location.reload())}
-  else if(a==="tab"){if(S.sumDay){S.sumDay="";watchSum("")}S.tab=i;render();scrollTo(0,0)}
+  else if(a==="tab"){if(S.sumDay){S.sumDay="";watchSum("")}S.tab=i;render();scrollTo(0,0);const on=$("#nav").querySelector&&$("#nav").querySelector(".on");if(on&&on.scrollIntoView)on.scrollIntoView({inline:"center",block:"nearest"})}
   else if(a==="dprev"||a==="dnext"||a==="dtoday"){S.day=a==="dtoday"?TODAY:addDays(S.day,a==="dprev"?-1:1);delete S.draft.sum;delete S.draft.memo;S.confirm="";watchDay();render()}
   else if(a==="wprev"||a==="wnext"||a==="wtoday"){S.week=a==="wtoday"?mondayOf(TODAY):addDays(S.week,a==="wprev"?-7:7);render()}
   else if(a==="bprev"||a==="bnext"||a==="btoday"){S.bw=a==="btoday"?mondayOf(TODAY):addDays(S.bw,a==="bprev"?-7:7);render()}
   else if(a==="goday"){openDay(i)}
-  else if(a==="budedit"){S.bw=mondayOf(S.day);S.tab="set";render();scrollTo(0,0)}
+  else if(a==="budedit"){S.bw=mondayOf(S.day);S.tab="budget";render();scrollTo(0,0)}
   else if(a==="mprev"||a==="mnext"||a==="mtoday"){if(a==="mtoday")S.month=TODAY.slice(0,8)+"01";else{const m=parse(S.month);m.setMonth(m.getMonth()+(a==="mprev"?-1:1));S.month=ymd(m)}render()}
   else if(a==="sumday"){S.sumDay=i;watchSum(i);render()}
   else if(a==="sumclose"){S.sumDay="";watchSum("");render()}
   else if(a==="sumopen"){openDay(S.sumDay)}
-  else if(a==="sumwa"){sendWa(waText(S.sumDay,S.daysAll[S.sumDay]||{},S.sa))}
+  else if(a==="sumwa"){sendWa(waMsg("close",S.sumDay,S.daysAll[S.sumDay]||{}))}
   else if(a==="chk"){const on=el.checked;
     save(db.doc("days/"+S.day),{[k]:{[i]:on?S.uid:""},[k+"At"]:{[i]:on?Date.now():0}});
-    if(on){const items=openItems(S.day),same=it=>it.k===k&&it.id===i;if(items.some(same)&&items.every(it=>same(it)||(S.dayDoc[it.k]||{})[it.id])&&S.day===TODAY&&!S.dayDoc.waOpen){S.modal={type:"open"};renderModal()}}}
-  else if(a==="waopen"){const lab=parse(S.day).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
-    sendWa("Apertura OK\n"+lab+", "+hm(Date.now()));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
+    if(on){const items=openItems(S.day),same=it=>it.k===k&&it.id===i;if(items.some(same)&&items.every(it=>same(it)||(S.dayDoc[it.k]||{})[it.id])&&S.day===TODAY&&!S.dayDoc.waOpen){openModal({type:"open"})}}}
+  else if(a==="waopen"){sendWa(waMsg("open",S.day,S.dayDoc));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
+  else if(a==="probopen"){openModal({type:"prob",kind:"open",items:snapItems("open")})}
+  else if(a==="probclose"){openModal({type:"prob",kind:"close",items:snapItems("close"),hasSum:!!S.dayDoc.sum})}
   else if(a==="addact"){const t=(S.draft.at||"").trim();if(!t){toast("Scrivi cosa è stato fatto");return}
     const c=(S.draft.ac||"").trim(),id=uid8();S.draft.at="";S.draft.ac="";
     db.doc("days/"+S.day+"/acts/"+id).set({t,c,by:S.uid,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));save(db.doc("days/"+S.day),{hasActs:true});render()}
@@ -581,15 +634,27 @@ function act(a,el){
   else if(a==="rtog"){S.exp[i]=!S.exp[i];render()}
   else if(a==="askdel"){S.confirm=i;render()}
   else if(a==="delact"){S.confirm="";if(S.acts.length<=1)save(db.doc("days/"+S.day),{hasActs:false});db.doc("days/"+S.day+"/acts/"+i).delete().catch(()=>toast("Operazione non riuscita"));render()}
-  else if(a==="savesum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;const mp=memoPatch();save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),...mp});S.dayDoc={...S.dayDoc,sum:v,sumBy:S.uid,sumAt:Date.now(),...mp};S.modal={type:"close"};renderModal()}
-  else if(a==="wasend"){sendWa(waText(S.day,S.dayDoc,S.acts));save(db.doc("days/"+S.day),{waClose:{by:S.uid,at:Date.now()}})}
-  else if(a==="mclose"){S.modal=null;renderModal()}
-  else if(a==="mwa"){const m=S.modal;S.modal=null;renderModal();if(!m)return;
-    if(m.type==="open"){const lab=parse(S.day).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
-      sendWa("Apertura OK\n"+lab+", "+hm(Date.now()));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
-    else{sendWa(waText(S.day,S.dayDoc,S.acts));save(db.doc("days/"+S.day),{waClose:{by:S.uid,at:Date.now()}})}}
+  else if(a==="savesum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;const mp=memoPatch();save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),...mp});S.dayDoc={...S.dayDoc,sum:v,sumBy:S.uid,sumAt:Date.now(),...mp};
+    const dd=S.dayDoc,miss=closeItems(S.day).some(it=>!((dd[it.k]||{})[it.id]));
+    if(miss)openModal({type:"prob",kind:"close",items:snapItems("close"),hasSum:!!v});else openModal({type:"close"})}
+  else if(a==="wasend"){sendWa(waMsg("close",S.day,S.dayDoc));save(db.doc("days/"+S.day),{waClose:{by:S.uid,at:Date.now()}})}
+  else if(a==="mclose"){clearDrafts();closeModal()}
+  else if(a==="mwa"){const m=S.modal;closeModal();if(!m)return;
+    if(m.type==="open"){sendWa(waMsg("open",S.day,S.dayDoc));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
+    else{sendWa(waMsg("close",S.day,S.dayDoc));save(db.doc("days/"+S.day),{waClose:{by:S.uid,at:Date.now()}})}}
+  else if(a==="mprob"){const m=S.modal;if(!m||m.type!=="prob")return;const rs={};
+    m.items.forEach(it=>{const r=(S.draft["pr_"+it.k+"_"+it.id]||"").trim();if(r&&!it.done)rs[it.k+"_"+it.id]=r});
+    const note=(S.draft.prnote||"").trim();clearDrafts();closeModal();
+    sendWa(waMsg(m.kind,S.day,S.dayDoc,rs,note));
+    save(db.doc("days/"+S.day),m.kind==="open"?{waOpenP:{by:S.uid,at:Date.now()}}:{waCloseP:{by:S.uid,at:Date.now()}})}
+  else if(a==="menu"){if(S.modal&&S.modal.type==="menu")closeModal();else openModal({type:"menu"})}
+  else if(a==="mopen"){closeModal();openModal({type:i})}
+  else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;openModal({type:"rename",sid:i})}
+  else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim();clearDrafts();closeModal();if(m&&v)editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q)q.n=v})}
+  else if(a==="wipeask"){S.modal.confirm=true;S.modal.v=(S.modal.v||"")+"c";renderModal()}
+  else if(a==="wipeno"){S.modal.confirm=false;S.modal.v=(S.modal.v||"")+"n";renderModal()}
+  else if(a==="wipego"){wipeAll()}
   else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value}})}
-  else if(a==="shifttime"){const v=el.value.trim();editCfg(c=>{c.shiftTime=v})}
   else if(a==="budcell"){saveBud(db.doc("budget/"+D2.d),{u:{[D2.u]:num(el.value)}})}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     S.draft.rp="";
@@ -602,11 +667,10 @@ function act(a,el){
   else if(a==="deltask"){db.doc("tasks/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="claimadmin"){db.doc("meta/admin").set({uid:S.uid}).then(()=>toast("Ora sei l’amministratore")).catch(()=>toast("Non riuscito: c’è già un amministratore"))}
   else if(a==="username"){const v=el.value.trim();if(v)save(db.doc("users/"+D2.u),{name:v})}
-  else if(a==="avviso"){const v=el.value.trim();editCfg(c=>{c.avviso=v?{t:v,by:S.uid,at:Date.now()}:null})}
-  else if(a==="avvisoclear"){editCfg(c=>{c.avviso=null})}
+  else if(a==="avvisosave"){const cur=eff().avviso,v=(S.draft.avv!==undefined?S.draft.avv:(cur?cur.t:"")).trim();delete S.draft.avv;editCfg(c=>{c.avviso=v?{t:v,by:S.uid,at:Date.now()}:null});toast(v?"Avviso salvato":"Avviso tolto")}
+  else if(a==="avvisoclear"){delete S.draft.avv;editCfg(c=>{c.avviso=null});toast("Avviso tolto")}
   else if(a==="savememo"){const mp=memoPatch();if(!Object.keys(mp).length){toast("Scrivi il promemoria");return}save(db.doc("days/"+S.day),mp);toast("Promemoria salvato")}
   else if(a==="memoread"){save(db.doc("days/"+i),{memoDone:{by:S.uid,at:Date.now()}})}
-  else if(a==="staffname"){const v=el.value.trim();if(v)editCfg(c=>{c.staff.find(s=>s.id===i).n=v})}
   else if(a==="itemname"){const v=el.value.trim();if(v)editCfg(c=>{c[k].find(x=>x.id===i).t=v})}
   else if(a==="delitem"){editCfg(c=>{c[k]=c[k].filter(x=>x.id!==i)})}
   else if(a==="additem"){const v=(S.draft["new_"+k]||"").trim();if(!v)return;S.draft["new_"+k]="";editCfg(c=>{c[k].push({id:uid8(),t:v})})}
@@ -615,7 +679,7 @@ function act(a,el){
   else if(a==="recwhere"){const v=el.value;editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.w=v})}
   else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
 }
-const CH=["chk","staffname","itemname","username","avviso","taskdone","recname","recwhere","budcell","shifttime","shiftset"];
+const CH=["chk","itemname","username","taskdone","recname","recwhere","budcell","shiftset"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
