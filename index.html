@@ -85,6 +85,8 @@ input[type=date]{min-height:46px;-webkit-appearance:none;appearance:none;text-al
 .meta b{color:var(--ink);font-weight:600}
 .act input[type=text]{margin-top:8px}
 .cmadd{display:flex;gap:8px;margin-top:8px}
+select.sm{width:auto;flex:none;padding:12px 10px}
+.row input[type=text]{min-width:0}
 .cmadd input[type=text]{flex:1;min-width:0}
 .rp{padding:12px 0;border-top:1px solid var(--ln)}
 .list>.rp:first-child{border-top:0}
@@ -224,9 +226,10 @@ const fnum=n=>n?String(n).replace(".",","):"";
 const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Persona 3"}];
 const defOpen=[{id:"o1",t:"Apertura cassa"},{id:"o3",t:"Ordine e pulizia"},{id:"o4",t:"Gestione OSN"}];
 const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizionatori"},{id:"c1",t:"Chiusura cassa"},{id:"c3",t:"Porte e allarme"}];
+const defRec=[{id:"rc1",d:1,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc3",d:3,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc5",d:5,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rp4",d:4,w:"ch",t:"Plastica: ritiro sabato mattina"},{id:"ri0",d:0,w:"ch",t:"Indifferenziata: ritiro martedì mattina"}];
 const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
 const subs={};
-const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||[],shiftTime:c.shiftTime||"",avviso:c.avviso||null,cfgv:c.cfgv||0}};
+const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,shiftTime:c.shiftTime||"",avviso:c.avviso||null,cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
 const rn=id=>S.names[id]||"Collega";
 const isAdmin=()=>!!S.uid&&S.adminUid===S.uid;
@@ -244,10 +247,15 @@ const cmAll=(o,by,at)=>{const a=[];if(o.c)a.push({t:o.c,by,at});Object.values(o.
 const cmBlock=(o,key,id)=>cmAll(o,o.by,o.at).map(c=>`<div class="cm"><b>${esc(nm(c.by))}</b><small>${hm(c.at)}</small><br>${esc(c.t)}</div>`).join("")+`<div class="cmadd"><input type="text" data-d="cm_${id}" placeholder="Aggiungi un commento…" value="${esc(S.draft["cm_"+id]||"")}"><button class="g" data-a="${key}" data-i="${id}">Aggiungi</button></div>`;
 const memoPatch=()=>{if(S.draft.memo===undefined)return {};const t=S.draft.memo.trim();delete S.draft.memo;return {memo:t?{t,by:S.uid,at:Date.now()}:null,memoDone:null}};
 function migrate(){
-  if(S.mig||!S.loaded||!S.adminLoaded||!isAdmin()||!S.cfg||(S.cfg.cfgv||0)>=7)return;
+  if(S.mig||!S.loaded||!S.adminLoaded||!isAdmin()||!S.cfg||(S.cfg.cfgv||0)>=8)return;
   S.mig=true;
-  D.doc("config/main").update({open:defOpen,close:defClose,cfgv:7}).catch(()=>{});
+  const have=new Set((S.cfg.rec||[]).map(r=>r.id)),patch={rec:[...(S.cfg.rec||[]),...defRec.filter(r=>!have.has(r.id))],cfgv:8};
+  if((S.cfg.cfgv||0)<7){patch.open=defOpen;patch.close=defClose}
+  D.doc("config/main").update(patch).catch(()=>{});
 }
+const recFor=(x,w)=>eff().rec.filter(r=>r.d===wdi(x)&&(r.w||"oggi")===w).map(r=>({id:r.id,t:r.t,k:"rec"}));
+const openItems=x=>[...eff().open.map(i=>({id:i.id,t:i.t,k:"open"})),...recFor(x,"ap")];
+const closeItems=x=>[...eff().close.map(i=>({id:i.id,t:i.t,k:"close"})),...recFor(x,"ch")];
 const hm=t=>t?new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"";
 let tt;function toast(m){const e=$("#toast");e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>e.hidden=true,3200)}
 const fail=e=>{S.err="Problema di connessione ai dati ("+((e&&e.code)||"errore")+").";render()};
@@ -282,7 +290,7 @@ async function start(u){
 }
 onAuthStateChanged(auth,u=>{S.authReady=true;if(u)start(u);else{S.uid=null;render()}});
 function editCfg(fn){
-  const nocfg=!S.cfg;const c=JSON.parse(JSON.stringify(eff()));fn(c);if(nocfg)c.cfgv=7;S.cfg=c;
+  const nocfg=!S.cfg;const c=JSON.parse(JSON.stringify(eff()));fn(c);if(nocfg)c.cfgv=8;S.cfg=c;
   D.doc("config/main").set(c).catch(()=>toast("Solo l’amministratore può modificarlo"));render();
 }
 
@@ -303,9 +311,9 @@ const dayHead=(big,t1,t2,prev,next)=>`<div class="dh">${big!=null?`<div class="d
 function waText(x,d,acts){
   const c=eff(),lab=parse(x).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
   const L=["*Chiusura, "+lab+"*"];
-  const cl=(k,items,name)=>{const m=d[k]||{},miss=items.filter(i=>!m[i.id]);return name+": "+(items.length-miss.length)+" su "+items.length+(miss.length?" (mancano: "+miss.map(i=>i.t).join(", ")+")":"")};
-  L.push("","*Checklist*",cl("open",c.open,"Apertura"),cl("close",c.close,"Chiusura"));
-  const rec=c.rec.filter(r=>r.d===wdi(x)),rm=d.rec||{};
+  const cl=(items,name)=>{const miss=items.filter(i=>!((d[i.k]||{})[i.id]));return name+": "+(items.length-miss.length)+" su "+items.length+(miss.length?" (mancano: "+miss.map(i=>i.t).join(", ")+")":"")};
+  L.push("","*Checklist*",cl(openItems(x),"Apertura"),cl(closeItems(x),"Chiusura"));
+  const rec=recFor(x,"oggi"),rm=d.rec||{};
   if(rec.length){L.push("","*Attività fisse*");rec.forEach(r=>L.push((rm[r.id]?"✅ ":"⬜ ")+r.t+(rm[r.id]?" ("+rn(rm[r.id])+")":"")))}
   if(acts.length){L.push("","*Attività svolte*");acts.forEach(a=>{L.push("• "+a.t+" ("+rn(a.by)+")");cmAll(a,a.by,a.at).forEach(c=>L.push("   ↳ "+rn(c.by)+": "+c.t))})}
   const td=S.tasks.filter(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===x);
@@ -341,8 +349,8 @@ function budgetPanel(){
   (S.budErr?`<div><p class="gnote">Obiettivi non disponibili: l’amministratore deve aggiornare le regole di Firebase.</p></div>`:(adm?`<div><button class="g" data-a="budedit">Modifica obiettivi</button></div>`:""))+`</section>`;
 }
 function openSend(){
-  const c=eff(),d=S.dayDoc,m=d.open||{};
-  const all=c.open.length&&c.open.every(i=>m[i.id]);
+  const d=S.dayDoc,its=openItems(S.day);
+  const all=its.length&&its.every(i=>(d[i.k]||{})[i.id]);
   if(d.waOpen)return `<p class="mu">WhatsApp aperto alle ${hm(d.waOpen.at)} da ${esc(nm(d.waOpen.by))}</p>`;
   if(S.day!==TODAY||!all)return "";
   return `<section class="pn ok">${ph("Apertura completa")}<button class="b" data-a="waopen">Invia “Apertura OK” su WhatsApp</button></section>`;
@@ -397,9 +405,9 @@ function viewTodo(){
   (done?`<p><button class="g" data-a="cleardone">Elimina le completate (${done})</button></p>`:"")+`</section>`;
 }
 function chkCard(k,items,title){
-  const m=S.dayDoc[k]||{},n=items.filter(i=>m[i.id]).length;
+  const mp=i=>S.dayDoc[i.k||k]||{},n=items.filter(i=>mp(i)[i.id]).length;
   return `<section class="pn">${ph(title,n+" di "+items.length)}${seg(n,items.length)}<div class="list">`+
-  (items.map(i=>`<label class="row ck ${m[i.id]?"dn":""}">${ck(`data-a="chk" data-k="${k}" data-i="${i.id}"`,m[i.id])}<span class="tx">${esc(i.t)}</span>${m[i.id]?`<span class="who">${esc(nm(m[i.id]))}</span>`:""}</label>`).join("")||`<p class="mu">Nessuna voce. L’amministratore le aggiunge da Altro.</p>`)+`</div></section>`;
+  (items.map(i=>`<label class="row ck ${mp(i)[i.id]?"dn":""}">${ck(`data-a="chk" data-k="${i.k||k}" data-i="${i.id}"`,mp(i)[i.id])}<span class="tx">${esc(i.t)}</span>${mp(i)[i.id]?`<span class="who">${esc(nm(mp(i)[i.id]))}</span>`:""}</label>`).join("")||`<p class="mu">Nessuna voce. L’amministratore le aggiunge da Altro.</p>`)+`</div></section>`;
 }
 function dayBar(){
   const dd=parse(S.day),sw=shiftWho(S.day);
@@ -409,8 +417,8 @@ function dayBar(){
 }
 function viewOggi(){
   const c=eff();
-  const rec=c.rec.filter(r=>r.d===wdi(S.day)).map(r=>({id:r.id,t:r.t}));
-  return dayBar()+avvisoCard()+memoCard()+myTasksCard()+budgetPanel()+
+  const rec=recFor(S.day,"oggi");
+  return dayBar()+budgetPanel()+avvisoCard()+memoCard()+myTasksCard()+
   (rec.length?chkCard("rec",rec,"Attività fisse del "+GGL[wdi(S.day)].toLowerCase()):"")+
   `<section class="pn">${ph("Attività svolte",S.acts.length||"")}<div class="stack">
     <input type="text" data-d="at" placeholder="Cosa è stato fatto?" value="${esc(S.draft.at||"")}">
@@ -422,11 +430,11 @@ function viewOggi(){
   reportsCard();
 }
 function viewApertura(){
-  return dayBar()+chkCard("open",eff().open,"Apertura")+openSend();
+  return dayBar()+chkCard("open",openItems(S.day),"Apertura")+openSend();
 }
 function viewChiusura(){
   const d=S.dayDoc,sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||"");
-  return dayBar()+chkCard("close",eff().close,"Chiusura")+
+  return dayBar()+chkCard("close",closeItems(S.day),"Chiusura")+
   `<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?"salvato da "+esc(nm(d.sumBy))+" alle "+hm(d.sumAt):"")}<textarea data-d="sum" placeholder="Com’è andata la giornata?">${esc(sum)}</textarea>
    <div class="btns">${d.sumBy&&!d.waClose?`<button class="g" data-a="wasend">Invia su WhatsApp</button>`:""}<button class="b" data-a="savesum">Salva riepilogo</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`+memoPanel(d);
 }
@@ -456,17 +464,17 @@ function sheetHtml(){
   if(bl.length)h+=`<section class="pn">${ph("Obiettivi del giorno")}<div class="list">${bl.map(u=>`<div class="row"><span class="tx">${t2(u)}</span><b>${eur(tg(u,x))}</b></div>`).join("")}</div></section>`;
   if(fut){h+=`<p class="mu">Giorno futuro: qui compaiono turni e obiettivi.</p>`}
   else{
-    const sec=(k,items,title)=>{const m=d[k]||{},at=d[k+"At"]||{},n=items.filter(i=>m[i.id]).length;
-      return `<section class="pn">${ph(title,n+" di "+items.length)}${seg(n,items.length)}<div class="list">${items.map(i=>row(!!m[i.id],i.t,m[i.id]?t2(m[i.id])+(at[i.id]?" alle "+hm(at[i.id]):""):"non fatta")).join("")}</div></section>`};
-    h+=sec("open",c.open,"Apertura");
-    const rec=c.rec.filter(r=>r.d===wdi(x)).map(r=>({id:r.id,t:r.t}));
+    const sec=(k,items,title)=>{const mm=i=>d[i.k||k]||{},aa=i=>d[(i.k||k)+"At"]||{},n=items.filter(i=>mm(i)[i.id]).length;
+      return `<section class="pn">${ph(title,n+" di "+items.length)}${seg(n,items.length)}<div class="list">${items.map(i=>row(!!mm(i)[i.id],i.t,mm(i)[i.id]?t2(mm(i)[i.id])+(aa(i)[i.id]?" alle "+hm(aa(i)[i.id]):""):"non fatta")).join("")}</div></section>`};
+    h+=sec("open",openItems(x),"Apertura");
+    const rec=recFor(x,"oggi");
     if(rec.length)h+=sec("rec",rec,"Attività fisse");
     if(acts.length)h+=`<section class="pn">${ph("Attività svolte",acts.length)}<div class="list">${acts.map(a=>row(true,a.t,t2(a.by)+" alle "+hm(a.at),cmAll(a,a.by,a.at).map(c=>"↳ "+rn(c.by)+": "+c.t).join("\n"))).join("")}</div></section>`;
     const td=S.tasks.filter(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===x);
     if(td.length)h+=`<section class="pn">${ph("ToDo completate",td.length)}<div class="list">${td.map(t=>row(true,t.t,t2(t.doneBy||t.to)+" alle "+hm(t.doneAt),"Assegnata da "+rn(t.by)+" a "+rn(t.to))).join("")}</div></section>`;
     const rp=S.reports.filter(r=>rday(r)===x).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(a.at||0)-(b.at||0));
     if(rp.length)h+=`<section class="pn">${ph("Segnalazioni",rp.length)}<div class="list">${rp.map(r=>row(!!r.res,r.t,t2(r.by)+" alle "+hm(r.at),(r.res?"Risolta da "+rn(r.resBy):"Ancora aperta")+cmAll(r,r.by,r.at).map(c=>"\n↳ "+rn(c.by)+": "+c.t).join(""))).join("")}</div></section>`;
-    h+=sec("close",c.close,"Chiusura");
+    h+=sec("close",closeItems(x),"Chiusura");
     h+=`<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?t2(d.sumBy)+" alle "+hm(d.sumAt):"")}${d.sum?`<p style="white-space:pre-wrap;margin:0">${esc(d.sum)}</p>`:`<p class="mu" style="margin:0">Nessun riepilogo salvato.</p>`}</section>`;
     if(d.memo&&d.memo.t)h+=`<section class="pn">${ph("Promemoria per domani",t2(d.memo.by)+" alle "+hm(d.memo.at))}<p style="white-space:pre-wrap;margin:0">${esc(d.memo.t)}</p></section>`;
   }
@@ -483,12 +491,14 @@ function viewPlanner(){
   (adm?`<section class="pn"><label class="fld" style="margin:0"><span>Orario di lavoro, uguale per tutti i turni</span><input type="text" data-a="shifttime" placeholder="per esempio 9:00–13:00 e 15:00–19:00" value="${esc(c.shiftTime)}"></label><p class="mu" style="margin-bottom:0">Tocca un turno per scegliere Lavoro, Riposo, Ferie, Malattia o vuoto.</p></section>`:(c.shiftTime?`<p class="mu" style="margin:0 0 12px"><b>Orario di lavoro:</b> ${esc(c.shiftTime)}</p>`:""))+
   `<div class="pgrid">`+days.map((x,i)=>`<section class="pn ${x===TODAY?"today":""}"><div class="pdh"><b>${GGL[i]}</b><span>${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</span></div>${c.staff.map(q=>`<div class="prow"><span>${esc(q.n)}</span>${pill(x+"_"+q.id)}</div>`).join("")}</section>`).join("")+`</div>`;
 }
+const WH={oggi:"Oggi",ap:"Apertura",ch:"Chiusura"};
+const whSel=(attrs,v)=>`<select class="sm" ${attrs}>${Object.entries(WH).map(([k,l])=>`<option value="${k}" ${k===v?"selected":""}>${l}</option>`).join("")}</select>`;
 function recCfg(){
   const rec=eff().rec;
-  return `<section class="pn">${ph("Cadenze fisse","ogni settimana")}<p class="mu" style="margin-top:0">Attività che compaiono ogni settimana nel giorno indicato. In Oggi tutti possono spuntarle.</p>`+
+  return `<section class="pn">${ph("Cadenze fisse","ogni settimana")}<p class="mu" style="margin-top:0">Attività che si ripetono ogni settimana nel giorno indicato. Scegli dove compaiono: in Oggi, nella checklist di Apertura o in quella di Chiusura. Per la Chiusura scegli il giorno della sera: se il ritiro è martedì mattina, scegli lunedì.</p>`+
   GGL.map((n,w)=>`<h3 class="sub2">${n}</h3><div class="list">`+
-    rec.filter(r=>r.d===w).map(r=>`<div class="row"><input type="text" data-a="recname" data-i="${r.id}" value="${esc(r.t)}"><button class="x" data-a="delrec" data-i="${r.id}" aria-label="Elimina">✕</button></div>`).join("")+
-    `<div class="row"><input type="text" data-d="newrec_${w}" placeholder="Nuova attività del ${n.toLowerCase()}" value="${esc(S.draft["newrec_"+w]||"")}"><button class="g" data-a="addrec" data-w="${w}">Aggiungi</button></div></div>`).join("")+`</section>`;
+    rec.filter(r=>r.d===w).map(r=>`<div class="row"><input type="text" data-a="recname" data-i="${r.id}" value="${esc(r.t)}">${whSel(`data-a="recwhere" data-i="${r.id}"`,r.w||"oggi")}<button class="x" data-a="delrec" data-i="${r.id}" aria-label="Elimina">✕</button></div>`).join("")+
+    `<div class="row" style="flex-wrap:wrap"><input type="text" style="flex:1 1 100%" data-d="newrec_${w}" placeholder="Nuova attività del ${n.toLowerCase()}" value="${esc(S.draft["newrec_"+w]||"")}">${whSel(`data-d="newrecw_${w}" style="flex:1"`,S.draft["newrecw_"+w]||"oggi")}<button class="g" data-a="addrec" data-w="${w}">Aggiungi</button></div></div>`).join("")+`</section>`;
 }
 function budCfg(){
   const ps=people(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.bw,i));
@@ -524,7 +534,7 @@ function render(){
   const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
   const who=$("#who");who.hidden=!logged;who.textContent=String(S.names[S.uid]||S.email||"?").charAt(0).toUpperCase();
   if(S.tab==="todo"&&!isAdmin())S.tab="oggi";
-  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0]]:[]),["set","Altro",0]];
+  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0],["set","Altro",0]]:[])];
   $("#nav").innerHTML=logged?tabs.map(([k,l,b])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}"><span class="ic">${IC[k]}</span>${l}${b?`<b class="bd">${b}</b>`:""}</button>`).join(""):"";
   app.className=S.tab==="plan"?"wide":"";
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
@@ -565,7 +575,7 @@ function act(a,el){
   else if(a==="sumwa"){sendWa(waText(S.sumDay,S.daysAll[S.sumDay]||{},S.sa))}
   else if(a==="chk"){const on=el.checked;
     save(db.doc("days/"+S.day),{[k]:{[i]:on?S.uid:""},[k+"At"]:{[i]:on?Date.now():0}});
-    if(k==="open"&&on){const items=eff().open,m={...(S.dayDoc.open||{}),[i]:S.uid};if(items.length&&items.every(it=>m[it.id])&&S.day===TODAY&&!S.dayDoc.waOpen){S.modal={type:"open"};renderModal()}}}
+    if(on){const items=openItems(S.day),same=it=>it.k===k&&it.id===i;if(items.some(same)&&items.every(it=>same(it)||(S.dayDoc[it.k]||{})[it.id])&&S.day===TODAY&&!S.dayDoc.waOpen){S.modal={type:"open"};renderModal()}}}
   else if(a==="waopen"){const lab=parse(S.day).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
     sendWa("Apertura OK\n"+lab+", "+hm(Date.now()));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
   else if(a==="addact"){const t=(S.draft.at||"").trim();if(!t){toast("Scrivi cosa è stato fatto");return}
@@ -610,11 +620,12 @@ function act(a,el){
   else if(a==="itemname"){const v=el.value.trim();if(v)editCfg(c=>{c[k].find(x=>x.id===i).t=v})}
   else if(a==="delitem"){editCfg(c=>{c[k]=c[k].filter(x=>x.id!==i)})}
   else if(a==="additem"){const v=(S.draft["new_"+k]||"").trim();if(!v)return;S.draft["new_"+k]="";editCfg(c=>{c[k].push({id:uid8(),t:v})})}
-  else if(a==="addrec"){const w=D2.w,v=(S.draft["newrec_"+w]||"").trim();if(!v)return;S.draft["newrec_"+w]="";editCfg(c=>{c.rec.push({id:uid8(),d:+w,t:v})})}
+  else if(a==="addrec"){const w=D2.w,v=(S.draft["newrec_"+w]||"").trim();if(!v)return;S.draft["newrec_"+w]="";editCfg(c=>{c.rec.push({id:uid8(),d:+w,t:v,w:S.draft["newrecw_"+w]||"oggi"})})}
   else if(a==="delrec"){editCfg(c=>{c.rec=c.rec.filter(x=>x.id!==i)})}
+  else if(a==="recwhere"){const v=el.value;editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.w=v})}
   else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
 }
-const CH=["chk","todo","staffname","itemname","username","avviso","taskdone","recname","budcell","shifttime"];
+const CH=["chk","todo","staffname","itemname","username","avviso","taskdone","recname","recwhere","budcell","shifttime"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
