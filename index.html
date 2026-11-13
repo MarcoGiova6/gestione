@@ -45,7 +45,8 @@ main.wide{max-width:1100px}
 .tabs button.on .ic{background:var(--hv);color:var(--hvx)}
 .bd{position:absolute;top:-1px;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font:700 11px/18px var(--sans);text-align:center}
 .pn{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:16px 18px;margin-bottom:14px}
-.pn.alert{border:1.5px solid var(--bad)}
+.pn.alert{border:1.5px solid var(--warn)}
+.pn.ok{border:1.5px solid var(--go)}
 .ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
 .ph h2{margin:0;font:400 24px/1.1 var(--disp);letter-spacing:.01em}
 .ph small{font:600 13.5px var(--sans);color:var(--mu);text-align:right}
@@ -65,7 +66,11 @@ main.wide{max-width:1100px}
 .ck input:focus-visible+.bx{outline:3px solid var(--foc);outline-offset:2px}
 .tx{flex:1}
 .ck.dn .tx{color:var(--mu);text-decoration:line-through}
-.who{font-size:13px;color:var(--mu)}
+.who{font-size:13px;color:var(--mu);text-align:right}
+.sub{display:block;color:var(--mu);font-size:13px;margin-top:2px}
+.sr{align-items:flex-start;padding:10px 0}
+.mk{flex:none;width:20px;text-align:center;font-weight:700;color:var(--mu)}
+.mk.ok{color:var(--go)}
 .act{padding:12px 0;border-top:1px solid var(--ln)}
 .act .line{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .meta{display:flex;gap:8px;font-size:13px;color:var(--mu)}
@@ -86,7 +91,6 @@ textarea{min-height:100px;resize:vertical}
 .dt span{color:var(--mu);font-size:14.5px;text-transform:capitalize}
 .back{margin:-6px 0 14px}
 .note{background:var(--warnbg);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:15px}
-.note.bad{background:var(--badbg)}
 .fld{display:block;margin:12px 0}
 .fld span{display:block;font:600 13.5px var(--sans);color:var(--mu);margin-bottom:5px}
 .login{max-width:420px;margin:40px auto}
@@ -98,49 +102,46 @@ textarea{min-height:100px;resize:vertical}
 .dots{display:flex;gap:4px;height:7px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;vertical-align:middle}
 .d-a{background:var(--ink)}.cal .t .d-a{background:var(--bg)}
-.d-s{background:var(--go)}.d-r{background:var(--warn)}.d-u{background:var(--bad)}
+.d-s{background:var(--go)}.d-r{background:var(--warn)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;color:var(--mu);margin:14px 0 4px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .tw{overflow-x:auto}
 table{border-collapse:collapse;width:100%}
-.pt{min-width:700px}.bt{min-width:560px}
+.pt{min-width:700px}.bt{min-width:620px}
 th,td{border:1px solid var(--ln);padding:3px;text-align:center}
 th{font:600 13.5px/1.25 var(--sans);background:var(--fill);padding:8px 4px}
 th.t{background:var(--hv);color:var(--hvx)}
 td.n{text-align:left;font-weight:600;padding:6px 10px;white-space:nowrap;position:sticky;left:0;background:var(--sf)}
 td input{width:100%;min-width:64px;border:0;background:transparent;padding:10px 4px;text-align:center;border-radius:8px}
 td input:focus{background:var(--fill)}
-td input[readonly]{opacity:.9}
-h3.sub{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
-.gp{background:var(--panel);color:var(--panelx);border:1px solid var(--panelln);border-radius:20px;padding:20px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px 30px;align-items:center}
-.gl{font:600 14px var(--sans);color:var(--panelmu);text-align:center;margin-bottom:8px}
-.gw{position:relative;max-width:300px;margin:0 auto}
-.gsvg{display:block;width:100%;height:auto}
-.gt line{stroke:var(--panelmu);stroke-width:1.6;stroke-linecap:round}
-.gtrack,.gfill{fill:none;stroke-width:13;stroke-linecap:round}
-.gtrack{stroke:var(--panelfill)}
-.gfill{stroke:var(--hv);transition:stroke-dasharray .8s cubic-bezier(.2,.7,.2,1)}
-.gn{position:absolute;left:0;right:0;bottom:8%;text-align:center;font:400 46px/1 var(--disp);letter-spacing:.01em;font-variant-numeric:tabular-nums}
-.gs{text-align:center;font:600 14px var(--sans);margin-top:10px}
-.tr{display:grid;grid-template-columns:1fr 96px 96px;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--panelln)}
-.tr.hd{border-top:0;padding:0 0 4px;font:600 12.5px var(--sans);color:var(--panelmu);text-align:right}
-.tr.tot{border-top:2px solid var(--panelln);margin-top:2px}
-.nmc{display:flex;align-items:baseline;gap:8px;min-width:0}
-.nmc b{font-weight:700;overflow:hidden;text-overflow:ellipsis}
-.nmc em{font-style:normal;font-size:12.5px;color:var(--hv)}
-.num{text-align:right;font:600 15px var(--sans);font-variant-numeric:tabular-nums}
-.gp input{background:var(--panelfill);color:var(--panelx);padding:9px 10px;text-align:right;font:600 15px var(--sans);border-radius:9px;min-width:0}
-.gp input:focus-visible{outline-color:var(--hv)}
-.mb{grid-column:1/-1;height:4px;border-radius:2px;background:var(--panelfill);overflow:hidden}
-.mb i{display:block;height:100%;background:var(--hv);transition:width .6s cubic-bezier(.2,.7,.2,1)}
-#toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font:600 14.5px var(--sans);z-index:20;max-width:90vw;text-align:center}
+.sh-c{display:block;width:100%;border:0;border-radius:9px;padding:11px 4px;font:600 13.5px var(--sans);background:transparent;color:var(--mu);text-align:center}
+.sh-c.w{background:var(--hv);color:var(--hvx)}
+.sh-c.r{background:var(--fill);color:var(--mu)}
+h3.sub2{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
+.wnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px}
+.wnav b{font-weight:700}
+.gp{background:var(--panel);color:var(--panelx);border:1px solid var(--panelln);border-radius:20px;padding:20px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px 30px;align-items:end}
+.gl{font:600 14px var(--sans);color:var(--panelmu);margin-bottom:6px}
+.gbig{font:400 74px/.95 var(--disp);letter-spacing:.005em;font-variant-numeric:tabular-nums;color:var(--hv)}
+.gbig.none{font:600 20px var(--sans);color:var(--panelmu)}
+.trow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--panelln);font-size:15px}
+.trow b{font-variant-numeric:tabular-nums}
+.gnote{margin:0;color:var(--panelmu);font-size:14px}
+.gp .g{background:var(--panelfill);color:var(--panelx);margin-top:12px}
+#sheet:empty{display:none}
+.shbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:30}
+.sh{position:fixed;left:0;right:0;bottom:0;z-index:31;max-height:90vh;max-width:760px;margin:0 auto;background:var(--bg);border-radius:22px 22px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+.shh{display:flex;align-items:center;gap:10px;padding:16px 16px 8px}
+.sbody{overflow:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 24px}
+#toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font:600 14.5px var(--sans);z-index:40;max-width:90vw;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<header class="top"><h1>Gestione</h1><button class="chip" id="who" data-a="tab" data-i="set" aria-label="Impostazioni" hidden></button></header>
+<header class="top"><h1>Gestione</h1><button class="chip" id="who" data-a="tab" data-i="set" aria-label="Altro" hidden></button></header>
 <main id="app"><p class="mu">Caricamento…</p></main>
 <nav class="tabs" id="nav"></nav>
+<div id="sheet"></div>
 <div id="toast" hidden></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -184,9 +185,9 @@ const fnum=n=>n?String(n).replace(".",","):"";
 const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Persona 3"}];
 const defOpen=["Accendere luci e impianti","Controllare la cassa","Controllare ordini e consegne","Verificare pulizia e ordine"].map((t,i)=>({id:"o"+i,t}));
 const defClose=["Spegnere luci e impianti","Chiusura cassa","Pulizia e riordino","Chiudere porte e inserire l’allarme"].map((t,i)=>({id:"c"+i,t}));
-const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],wk:{},todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:""};
+const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:""};
 const subs={};
-const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||[],bud:c.bud||{}}};
+const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||[],shiftTime:c.shiftTime||""}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
 const rn=id=>S.names[id]||"Collega";
 const isAdmin=()=>!!S.uid&&S.adminUid===S.uid;
@@ -194,21 +195,27 @@ const rday=r=>r.day||ymd(new Date(r.at||0));
 const fmtDay=x=>parse(x).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"});
 const wdi=x=>(parse(x).getDay()+6)%7;
 const people=()=>Object.keys(S.names).filter(u=>S.names[u]).sort((a,b)=>rn(a).localeCompare(rn(b),"it"));
-const tg=u=>{const o=(S.dayDoc.bud||{})[u];if(o!=null&&o!=="")return +o||0;const a=(eff().bud||{})[u];return a?(+a[wdi(S.day)]||0):0};
+const tg=(u,x)=>{const b=S.budAll[x||S.day];return(b&&b.u&&+b.u[u])||0};
+const stateOf=v=>{v=String(v||"").trim();if(!v)return "";return /^(r|riposo)$/i.test(v)?"r":"w"};
+const nextShift=v=>{const s=stateOf(v);return s===""?"L":s==="w"?"R":""};
+const cellsOf=w=>((S.weeksAll[w]||{}).cells)||{};
+const shiftWho=x=>{const cells=cellsOf(mondayOf(x)),st=eff().staff;return{on:st.filter(s=>stateOf(cells[x+"_"+s.id])==="w").map(s=>s.n),set:st.some(s=>stateOf(cells[x+"_"+s.id]))}};
 const hm=t=>t?new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"";
 let tt;function toast(m){const e=$("#toast");e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>e.hidden=true,3200)}
 const fail=e=>{S.err="Problema di connessione ai dati ("+((e&&e.code)||"errore")+").";render()};
 async function save(ref,data){try{await ref.update(data)}catch(e){toast("Salvataggio non riuscito")}}
-function openDay(x){S.day=x;S.tab="oggi";S.confirm="";delete S.draft.sum;watchDay();render();scrollTo(0,0)}
+async function saveBud(ref,data){try{await ref.update(data)}catch(e){toast("Non salvato: controlla le regole di Firebase")}}
+function openDay(x){S.day=x;S.tab="oggi";S.confirm="";S.sumDay="";watchSum("");delete S.draft.sum;watchDay();render();scrollTo(0,0)}
 function watchDay(){
   ["day","acts"].forEach(k=>subs[k]&&subs[k]());S.dayDoc={};S.acts=[];
   const r=D.doc("days/"+S.day);
   subs.day=r.onSnapshot(s=>{S.dayDoc=s.exists?s.data():{};render()},fail);
   subs.acts=r.collection("acts").onSnapshot(q=>{S.acts=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));if(S.acts.length&&!S.dayDoc.hasActs&&S.healed!==S.day){S.healed=S.day;save(D.doc("days/"+S.day),{hasActs:true})}render()},fail);
 }
-function watchWeek(){
-  subs.wk&&subs.wk();S.wk={};
-  subs.wk=D.doc("weeks/"+S.week).onSnapshot(s=>{S.wk=s.exists?(s.data().cells||{}):{};render()},fail);
+function watchSum(x){
+  subs.sacts&&subs.sacts();subs.sacts=null;S.sa=[];
+  if(!x)return;
+  subs.sacts=D.doc("days/"+x).collection("acts").onSnapshot(q=>{S.sa=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));render()},fail);
 }
 async function start(u){
   S.uid=u.uid;S.email=u.email||"";
@@ -221,7 +228,9 @@ async function start(u){
   subs.tasks=D.col("tasks").onSnapshot(q=>{S.tasks=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.reports=D.col("reports").onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.days=D.col("days").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.daysAll=m;render()},fail);
-  watchDay();watchWeek();
+  subs.weeks=D.col("weeks").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.weeksAll=m;render()},fail);
+  subs.bud=D.col("budget").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.budAll=m;S.budErr=false;render()},()=>{S.budErr=true;render()});
+  watchDay();
 }
 onAuthStateChanged(auth,u=>{S.authReady=true;if(u)start(u);else{S.uid=null;render()}});
 function editCfg(fn){
@@ -241,48 +250,64 @@ const ph=(t,r)=>`<div class="ph"><h2>${t}</h2>${r!=null&&r!==""?`<small>${r}</sm
 const seg=(n,t)=>`<div class="seg ${t&&n>=t?"all":""}">${Array.from({length:t},(_,i)=>`<i class="${i<n?"f":""}"></i>`).join("")}</div>`;
 const dayHead=(big,t1,t2,prev,next)=>`<div class="dh">${big!=null?`<div class="dnum">${big}</div>`:""}<div class="dt"><b>${esc(t1)}</b><span>${esc(t2)}</span></div><button class="g sq" data-a="${prev}" aria-label="Precedente">‹</button><button class="g sq" data-a="${next}" aria-label="Successivo">›</button></div>`;
 
+function waText(x,d,acts){
+  const c=eff(),lab=parse(x).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
+  const L=["*Chiusura, "+lab+"*"];
+  const cl=(k,items,name)=>{const m=d[k]||{},miss=items.filter(i=>!m[i.id]);return name+": "+(items.length-miss.length)+" su "+items.length+(miss.length?" (mancano: "+miss.map(i=>i.t).join(", ")+")":"")};
+  L.push("","*Checklist*",cl("open",c.open,"Apertura"),cl("close",c.close,"Chiusura"));
+  const rec=c.rec.filter(r=>r.d===wdi(x)),rm=d.rec||{};
+  if(rec.length){L.push("","*Attività fisse*");rec.forEach(r=>L.push((rm[r.id]?"✅ ":"⬜ ")+r.t+(rm[r.id]?" ("+rn(rm[r.id])+")":"")))}
+  if(acts.length){L.push("","*Attività svolte*");acts.forEach(a=>L.push("• "+a.t+" ("+rn(a.by)+")"+(a.c?": "+a.c:"")))}
+  const td=S.tasks.filter(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===x);
+  if(td.length){L.push("","*ToDo completate*");td.forEach(t=>L.push("• "+t.t+" ("+rn(t.doneBy||t.to)+")"))}
+  const rp=S.reports.filter(r=>rday(r)===x);
+  if(rp.length){L.push("","*Segnalazioni*");rp.forEach(r=>L.push("• "+r.t+" ("+rn(r.by)+"), "+(r.res?"risolta":"aperta")))}
+  L.push("","*Riepilogo*",d.sum||"(nessun riepilogo)");
+  return L.join("\n");
+}
+function sendWa(text){
+  const url="https://wa.me/?text="+encodeURIComponent(text);
+  const w=window.open(url,"_blank");
+  if(!w)location.href=url;
+}
+
 function viewLogin(){
   return `<section class="pn login">${ph("Gestione")}<p class="mu" style="margin-top:0">Accedi con l’email e la password che ti ha dato l’amministratore.</p><div class="stack">
   <input type="email" autocapitalize="off" autocomplete="username" data-d="em" placeholder="Email" value="${esc(S.draft.em||"")}">
   <input type="password" autocomplete="current-password" data-d="pw" placeholder="Password" value="${esc(S.draft.pw||"")}">
-  ${S.loginErr?`<div class="note bad" style="margin:0">${esc(S.loginErr)}</div>`:""}
+  ${S.loginErr?`<div class="note" style="margin:0">${esc(S.loginErr)}</div>`:""}
   <button class="b" data-a="login">Entra</button></div></section>`;
 }
-function gauge(r,t){
-  const p=t>0?Math.min(r/t,1):0;
-  let ticks="";
-  for(let i=0;i<=10;i++){const a=Math.PI*(1-i/10),o=i%5?93:97;
-    ticks+=`<line x1="${(100+86*Math.cos(a)).toFixed(1)}" y1="${(100-86*Math.sin(a)).toFixed(1)}" x2="${(100+o*Math.cos(a)).toFixed(1)}" y2="${(100-o*Math.sin(a)).toFixed(1)}"/>`}
-  return `<svg class="gsvg" viewBox="0 0 200 112" role="img" aria-label="Avanzamento dell’obiettivo"><g class="gt">${ticks}</g><path class="gtrack" d="M20 100A80 80 0 0 1 180 100" pathLength="100"/><path class="gfill" d="M20 100A80 80 0 0 1 180 100" pathLength="100" stroke-dasharray="${(p*100).toFixed(1)} 100" style="opacity:${p>0?1:0}"/></svg>`;
-}
 function budgetPanel(){
-  const ps=people(),rev=S.dayDoc.rev||{},adm=isAdmin(),me=S.uid;
-  const mt=tg(me),mr=+rev[me]||0;
-  const totT=ps.reduce((s,u)=>s+tg(u),0),totR=ps.reduce((s,u)=>s+(+rev[u]||0),0);
-  const pc=(r,t)=>t>0?Math.min(100,Math.round(r/t*100)):0;
-  const st=!mt?"Nessun obiettivo impostato per oggi":mr>=mt?"Obiettivo raggiunto"+(mr>mt?", "+eur(mr-mt)+" oltre":""):Math.round(mr/mt*100)+"% fatto, mancano "+eur(mt-mr);
-  const row=u=>{const t=tg(u),r=+rev[u]||0,mine=u===me;
-    const tc=adm?`<input type="text" inputmode="decimal" data-a="budset" data-u="${u}" value="${fnum(t)}" placeholder="0" aria-label="Obiettivo di ${esc(rn(u))}">`:`<span class="num">${t?eur(t):"–"}</span>`;
-    const rc=(mine||adm)?`<input type="text" inputmode="decimal" data-a="revset" data-u="${u}" value="${fnum(r)}" placeholder="0" aria-label="Fatturato di ${esc(rn(u))}">`:`<span class="num">${r?eur(r):"–"}</span>`;
-    return `<div class="tr"><span class="nmc"><b>${esc(rn(u))}</b>${mine?"<em>tu</em>":""}</span>${tc}${rc}<div class="mb"><i style="width:${pc(r,t)}%"></i></div></div>`};
-  return `<section class="gp"><div><div class="gl">Il tuo obiettivo di oggi</div><div class="gw">${gauge(mr,mt)}<div class="gn">${mt?eur(mt):"–"}</div></div><div class="gs">${esc(st)}</div></div>
-  <div><div class="tr hd"><span></span><span>Obiettivo</span><span>Fatturato</span></div>${ps.map(row).join("")}<div class="tr tot"><span class="nmc"><b>Totale</b></span><span class="num">${eur(totT)}</span><span class="num">${eur(totR)}</span><div class="mb"><i style="width:${pc(totR,totT)}%"></i></div></div></div></section>`;
+  const ps=people(),adm=isAdmin(),me=S.uid,mt=tg(me);
+  const lab=S.day===TODAY?"Il tuo obiettivo di oggi":"Il tuo obiettivo del "+fmtDay(S.day);
+  const rows=ps.filter(u=>u!==me&&tg(u)).map(u=>`<div class="trow"><span>${esc(rn(u))}</span><b>${eur(tg(u))}</b></div>`).join("");
+  return `<section class="gp"><div><div class="gl">${esc(lab)}</div>${mt?`<div class="gbig">${eur(mt)}</div>`:`<div class="gbig none">Non impostato</div>`}</div><div>`+
+  (S.budErr?`<p class="gnote">Obiettivi non disponibili: l’amministratore deve aggiornare le regole di Firebase.</p>`:(rows?`<div class="gl">Team</div>${rows}`:""))+
+  (adm?`<button class="g" data-a="budedit">Modifica obiettivi</button>`:"")+`</div></section>`;
+}
+function openBanner(){
+  const c=eff(),d=S.dayDoc;
+  if(S.day!==TODAY||!c.open.length)return "";
+  const m=d.open||{};
+  if(!c.open.every(i=>m[i.id]))return "";
+  const w=d.waOpen;
+  return `<section class="pn ok">${ph("Apertura completa")}${w?`<p class="mu" style="margin:0 0 10px">WhatsApp aperto alle ${hm(w.at)} da ${esc(nm(w.by))}</p>`:""}<button class="b" data-a="waopen">${w?"Invia di nuovo su WhatsApp":"Invia “Apertura OK” su WhatsApp"}</button></section>`;
 }
 function reportsCard(){
-  const list=S.reports.filter(r=>rday(r)===S.day).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(b.u?1:0)-(a.u?1:0)||(a.at||0)-(b.at||0));
+  const list=S.reports.filter(r=>rday(r)===S.day).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(a.at||0)-(b.at||0));
   const open=list.filter(r=>!r.res);
-  return `<section class="pn ${open.some(r=>r.u)?"alert":""}">${ph("Segnalazioni",list.length?(open.length?open.length+" aperte su "+list.length:list.length+" risolte"):"")}<div class="stack">
+  return `<section class="pn">${ph("Segnalazioni",list.length?(open.length?open.length+" aperte su "+list.length:list.length+" risolte"):"")}<div class="stack">
    <input type="text" data-d="rp" placeholder="Cosa non va? Cosa serve?" value="${esc(S.draft.rp||"")}">
-   <label class="row ck" style="border:0;padding:4px 0">${ck('data-a="rpu"',S.draft.rpu)}<span class="tx">Urgente</span></label>
    <button class="b" data-a="addreport">Invia segnalazione</button></div><div class="list">`+
-  list.map(r=>`<div class="act"><div class="line"><strong style="${r.res?"color:var(--mu);text-decoration:line-through":""}">${r.u?"⚠ ":""}${esc(r.t)}</strong>${(isAdmin()||r.by===S.uid)?`<button class="x" data-a="delreport" data-i="${r.id}" aria-label="Elimina">✕</button>`:""}</div><div class="meta"><b>${esc(nm(r.by))}</b><span>${hm(r.at)}</span>${r.res?`<span>risolta da ${esc(nm(r.resBy))}</span>`:""}</div>${r.res?"":`<div style="margin-top:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button></div>`}</div>`).join("")+`</div></section>`;
+  list.map(r=>`<div class="act"><div class="line"><strong style="${r.res?"color:var(--mu);text-decoration:line-through":""}">${esc(r.t)}</strong>${(isAdmin()||r.by===S.uid)?`<button class="x" data-a="delreport" data-i="${r.id}" aria-label="Elimina">✕</button>`:""}</div><div class="meta"><b>${esc(nm(r.by))}</b><span>${hm(r.at)}</span>${r.res?`<span>risolta da ${esc(nm(r.resBy))}</span>`:""}</div>${r.res?"":`<div style="margin-top:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button></div>`}</div>`).join("")+`</div></section>`;
 }
 function carryCard(){
   if(S.day!==TODAY)return "";
-  const old=S.reports.filter(r=>!r.res&&rday(r)<TODAY).sort((a,b)=>(b.u?1:0)-(a.u?1:0)||(a.at||0)-(b.at||0));
+  const old=S.reports.filter(r=>!r.res&&rday(r)<TODAY).sort((a,b)=>(a.at||0)-(b.at||0));
   if(!old.length)return "";
   return `<section class="pn alert">${ph("Ancora aperte",old.length+" dai giorni scorsi")}<div class="list">`+
-  old.map(r=>`<div class="act"><strong>${r.u?"⚠ ":""}${esc(r.t)}</strong><div class="meta"><b>${esc(nm(r.by))}</b><span>${esc(fmtDay(rday(r)))}</span></div><div style="margin-top:8px;display:flex;gap:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button><button class="g" data-a="goday" data-i="${rday(r)}">Apri giorno</button></div></div>`).join("")+`</div></section>`;
+  old.map(r=>`<div class="act"><strong>${esc(r.t)}</strong><div class="meta"><b>${esc(nm(r.by))}</b><span>${esc(fmtDay(rday(r)))}</span></div><div style="margin-top:8px;display:flex;gap:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button><button class="g" data-a="goday" data-i="${rday(r)}">Apri giorno</button></div></div>`).join("")+`</div></section>`;
 }
 function viewTasks(){
   const recent=t=>!t.done||(Date.now()-(t.doneAt||0)<2.592e8);
@@ -292,7 +317,7 @@ function viewTasks(){
   return `<section class="pn">${ph("Assegnate a te",mine.filter(t=>!t.done).length+" da fare")}<div class="list">`+
   (mine.map(t=>`<label class="row ck ${t.done?"dn":""}">${ck(`data-a="taskdone" data-i="${t.id}"`,t.done)}<span class="tx">${esc(t.t)}</span><span class="who">da ${esc(nm(t.by))}</span></label>`).join("")||`<p class="mu">Nessuna attività assegnata.</p>`)+`</div></section>
   <section class="pn">${ph("Assegna a un collega")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option>${opts}</select><button class="b" data-a="addtask">Assegna</button></div><div class="list">`+
-  given.map(t=>`<div class="row"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}</span><span class="who">${t.done?"fatta da ":"per "}${esc(nm(t.to))}</span>${(isAdmin()||t.by===S.uid)?`<button class="x" data-a="deltask" data-i="${t.id}" aria-label="Elimina">✕</button>`:""}</div>`).join("")+`</div><p class="mu">I colleghi compaiono nell’elenco dopo il primo accesso.</p></section>`;
+  given.map(t=>`<div class="row"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}</span><span class="who">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}</span>${(isAdmin()||t.by===S.uid)?`<button class="x" data-a="deltask" data-i="${t.id}" aria-label="Elimina">✕</button>`:""}</div>`).join("")+`</div><p class="mu">I colleghi compaiono nell’elenco dopo il primo accesso.</p></section>`;
 }
 function viewTodo(){
   const done=S.todos.filter(t=>t.done).length;
@@ -308,9 +333,11 @@ function viewOggi(){
   const dd=parse(S.day);
   const sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||"");
   const rec=c.rec.filter(r=>r.d===wdi(S.day)).map(r=>({id:r.id,t:r.t}));
+  const sw=shiftWho(S.day);
   return dayHead(dd.getDate(),dd.toLocaleDateString("it-IT",{weekday:"long"}),dd.toLocaleDateString("it-IT",{month:"long",year:"numeric"}),"dprev","dnext")+
   (S.day!==TODAY?`<p class="back"><button class="g" data-a="dtoday">Torna a oggi</button></p>`:"")+
-  carryCard()+budgetPanel()+
+  (sw.set?`<p class="mu" style="margin:-6px 0 14px"><b>In turno:</b> ${sw.on.length?esc(sw.on.join(", ")):"nessuno"}</p>`:"")+
+  openBanner()+carryCard()+budgetPanel()+
   chk("open",c.open,"Apertura")+
   (rec.length?chk("rec",rec,"Attività fisse del "+GGL[wdi(S.day)].toLowerCase()):"")+
   `<section class="pn">${ph("Attività svolte",S.acts.length||"")}<div class="stack">
@@ -323,67 +350,108 @@ function viewOggi(){
   reportsCard()+
   chk("close",c.close,"Chiusura")+
   `<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?"salvato da "+esc(nm(d.sumBy))+" alle "+hm(d.sumAt):"")}<textarea data-d="sum" placeholder="Com’è andata la giornata?">${esc(sum)}</textarea>
-   <div class="btns"><button class="b" data-a="savesum">Salva riepilogo</button></div></section>`;
+   <div class="btns"><button class="g" data-a="savesum">Salva</button><button class="b" data-a="wasum">Salva e invia su WhatsApp</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`;
 }
 function viewCal(){
   const first=parse(S.month),y=first.getFullYear(),mo=first.getMonth();
   const dim=new Date(y,mo+1,0).getDate(),off=(first.getDay()+6)%7,rows=Math.ceil((off+dim)/7);
-  const rd={};S.reports.forEach(r=>{const k=rday(r);const o=rd[k]||(rd[k]={n:0,u:0});o.n++;if(!r.res&&r.u)o.u++});
+  const rd={};S.reports.forEach(r=>{rd[rday(r)]=true});
   let cells=GG.map(g=>`<div class="h">${g}</div>`).join("");
   for(let i=0;i<rows*7;i++){
     const n=i-off+1;
     if(n<1||n>dim){cells+=`<div></div>`;continue}
-    const x=y+"-"+pad(mo+1)+"-"+pad(n),da=S.daysAll[x]||{},r=rd[x];
-    cells+=`<button data-a="goday" data-i="${x}" class="${x===TODAY?"t":""}" aria-label="${n}"><span>${n}</span><span class="dots">${da.hasActs?'<i class="dot d-a"></i>':""}${da.sum?'<i class="dot d-s"></i>':""}${r?`<i class="dot ${r.u?"d-u":"d-r"}"></i>`:""}</span></button>`;
+    const x=y+"-"+pad(mo+1)+"-"+pad(n),da=S.daysAll[x]||{};
+    cells+=`<button data-a="sumday" data-i="${x}" class="${x===TODAY?"t":""}" aria-label="${n}"><span>${n}</span><span class="dots">${da.hasActs?'<i class="dot d-a"></i>':""}${da.sum?'<i class="dot d-s"></i>':""}${rd[x]?'<i class="dot d-r"></i>':""}</span></button>`;
   }
   return dayHead(null,first.toLocaleDateString("it-IT",{month:"long"}),String(y),"mprev","mnext")+
   (S.month!==TODAY.slice(0,8)+"01"?`<p class="back"><button class="g" data-a="mtoday">Questo mese</button></p>`:"")+
-  `<section class="pn"><div class="cal">${cells}</div><div class="legend"><span><i class="dot d-a"></i>attività</span><span><i class="dot d-s"></i>riepilogo</span><span><i class="dot d-r"></i>segnalazioni</span><span><i class="dot d-u"></i>urgente ancora aperta</span></div><p class="mu" style="margin-bottom:0">Tocca un giorno per vedere checklist, attività, segnalazioni e riepilogo.</p></section>`;
+  `<section class="pn"><div class="cal">${cells}</div><div class="legend"><span><i class="dot d-a"></i>attività</span><span><i class="dot d-s"></i>riepilogo</span><span><i class="dot d-r"></i>segnalazioni</span></div><p class="mu" style="margin-bottom:0">Tocca un giorno per aprire il riepilogo.</p></section>`;
+}
+function sheetHtml(){
+  const x=S.sumDay,d=S.daysAll[x]||{},acts=S.sa,c=eff(),dd=parse(x),fut=x>TODAY;
+  const t2=u=>esc(rn(u));
+  const row=(ok,txt,who,sub)=>`<div class="row sr"><span class="mk ${ok?"ok":""}">${ok?"✓":"–"}</span><span class="tx">${esc(txt)}${sub?`<small class="sub">${esc(sub)}</small>`:""}</span><span class="who">${who}</span></div>`;
+  const sw=shiftWho(x);
+  let h=`<div class="shbg" data-a="sumclose"></div><div class="sh" role="dialog" aria-label="Riepilogo del giorno"><div class="shh"><div class="dh" style="margin:0;flex:1"><div class="dnum">${dd.getDate()}</div><div class="dt"><b>${esc(dd.toLocaleDateString("it-IT",{weekday:"long"}))}</b><span>${esc(dd.toLocaleDateString("it-IT",{month:"long",year:"numeric"}))}</span></div></div><button class="g sq" data-a="sumclose" aria-label="Chiudi">✕</button></div><div class="sbody">`;
+  if(sw.set)h+=`<p class="mu" style="margin-top:0"><b>In turno:</b> ${sw.on.length?esc(sw.on.join(", ")):"nessuno"}</p>`;
+  const bl=people().filter(u=>tg(u,x));
+  if(bl.length)h+=`<section class="pn">${ph("Obiettivi del giorno")}<div class="list">${bl.map(u=>`<div class="row"><span class="tx">${t2(u)}</span><b>${eur(tg(u,x))}</b></div>`).join("")}</div></section>`;
+  if(fut){h+=`<p class="mu">Giorno futuro: qui compaiono turni e obiettivi.</p>`}
+  else{
+    const sec=(k,items,title)=>{const m=d[k]||{},at=d[k+"At"]||{},n=items.filter(i=>m[i.id]).length;
+      return `<section class="pn">${ph(title,n+" di "+items.length)}${seg(n,items.length)}<div class="list">${items.map(i=>row(!!m[i.id],i.t,m[i.id]?t2(m[i.id])+(at[i.id]?" alle "+hm(at[i.id]):""):"non fatta")).join("")}</div></section>`};
+    h+=sec("open",c.open,"Apertura");
+    const rec=c.rec.filter(r=>r.d===wdi(x)).map(r=>({id:r.id,t:r.t}));
+    if(rec.length)h+=sec("rec",rec,"Attività fisse");
+    if(acts.length)h+=`<section class="pn">${ph("Attività svolte",acts.length)}<div class="list">${acts.map(a=>row(true,a.t,t2(a.by)+" alle "+hm(a.at),a.c?"Commento: "+a.c:"")).join("")}</div></section>`;
+    const td=S.tasks.filter(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===x);
+    if(td.length)h+=`<section class="pn">${ph("ToDo completate",td.length)}<div class="list">${td.map(t=>row(true,t.t,t2(t.doneBy||t.to)+" alle "+hm(t.doneAt),"Assegnata da "+rn(t.by)+" a "+rn(t.to))).join("")}</div></section>`;
+    const rp=S.reports.filter(r=>rday(r)===x).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(a.at||0)-(b.at||0));
+    if(rp.length)h+=`<section class="pn">${ph("Segnalazioni",rp.length)}<div class="list">${rp.map(r=>row(!!r.res,r.t,t2(r.by)+" alle "+hm(r.at),r.res?"Risolta da "+rn(r.resBy):"Ancora aperta")).join("")}</div></section>`;
+    h+=sec("close",c.close,"Chiusura");
+    h+=`<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?t2(d.sumBy)+" alle "+hm(d.sumAt):"")}${d.sum?`<p style="white-space:pre-wrap;margin:0">${esc(d.sum)}</p>`:`<p class="mu" style="margin:0">Nessun riepilogo salvato.</p>`}</section>`;
+  }
+  h+=`<div class="btns" style="justify-content:flex-start;margin-bottom:6px"><button class="b" data-a="sumopen">Apri il giorno</button>${fut?"":`<button class="g" data-a="sumwa">Invia su WhatsApp</button>`}</div></div></div>`;
+  return h;
 }
 function viewPlanner(){
-  const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin();
+  const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin(),cells=cellsOf(S.week);
   const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
+  const cell=k=>{const st=stateOf(cells[k]),l=st==="w"?"Lavoro":st==="r"?"Riposo":"–";return adm?`<button class="sh-c ${st}" data-a="shift" data-c="${k}">${l}</button>`:`<span class="sh-c ${st}">${l}</span>`};
   return dayHead(null,"Turni",lab,"wprev","wnext")+
   (S.week!==mondayOf(TODAY)?`<p class="back"><button class="g" data-a="wtoday">Questa settimana</button></p>`:"")+
-  `<section class="pn"><div class="tw"><table class="pt"><tr><th></th>${days.map((x,i)=>`<th class="${x===TODAY?"t":""}">${GG[i]}<br>${parse(x).getDate()}</th>`).join("")}</tr>
-  ${c.staff.map(s=>`<tr><td class="n">${esc(s.n)}</td>${days.map(x=>{const k=x+"_"+s.id;return `<td><input type="text" data-a="cell" data-c="${k}" placeholder="–" ${adm?"":"readonly"} value="${esc(S.wk[k]||"")}"></td>`}).join("")}</tr>`).join("")}</table></div>
-  <p class="mu" style="margin-bottom:0">${adm?"Scrivi il turno in ogni casella, per esempio 9–17, riposo, ferie.":"Solo l’amministratore può modificare i turni."}</p></section>`;
+  `<section class="pn">`+
+  (adm?`<label class="fld" style="margin-top:0"><span>Orario di lavoro, uguale per tutti i turni</span><input type="text" data-a="shifttime" placeholder="per esempio 9:00–13:00 e 15:00–19:00" value="${esc(c.shiftTime)}"></label>`:(c.shiftTime?`<p class="mu" style="margin:0 0 10px"><b>Orario di lavoro:</b> ${esc(c.shiftTime)}</p>`:""))+
+  `<div class="tw"><table class="pt"><tr><th></th>${days.map((x,i)=>`<th class="${x===TODAY?"t":""}">${GG[i]}<br>${parse(x).getDate()}</th>`).join("")}</tr>
+  ${c.staff.map(s=>`<tr><td class="n">${esc(s.n)}</td>${days.map(x=>`<td>${cell(x+"_"+s.id)}</td>`).join("")}</tr>`).join("")}</table></div>
+  <p class="mu" style="margin-bottom:0">${adm?"Tocca una casella per scegliere Lavoro, Riposo o vuoto.":"Solo l’amministratore può modificare i turni."}</p>`+
+  (adm?`<div class="btns" style="justify-content:flex-start"><button class="g" data-a="copyweek">Copia la settimana scorsa</button></div>`:"")+`</section>`;
 }
 function recCfg(){
   const rec=eff().rec;
   return `<section class="pn">${ph("Cadenze fisse","ogni settimana")}<p class="mu" style="margin-top:0">Attività che compaiono ogni settimana nel giorno indicato. In Oggi tutti possono spuntarle.</p>`+
-  GGL.map((n,w)=>`<h3 class="sub">${n}</h3><div class="list">`+
+  GGL.map((n,w)=>`<h3 class="sub2">${n}</h3><div class="list">`+
     rec.filter(r=>r.d===w).map(r=>`<div class="row"><input type="text" data-a="recname" data-i="${r.id}" value="${esc(r.t)}"><button class="x" data-a="delrec" data-i="${r.id}" aria-label="Elimina">✕</button></div>`).join("")+
     `<div class="row"><input type="text" data-d="newrec_${w}" placeholder="Nuova attività del ${n.toLowerCase()}" value="${esc(S.draft["newrec_"+w]||"")}"><button class="g" data-a="addrec" data-w="${w}">Aggiungi</button></div></div>`).join("")+`</section>`;
 }
 function budCfg(){
-  const ps=people(),b=eff().bud||{};
-  return `<section class="pn">${ph("Budget giornaliero")}<p class="mu" style="margin-top:0">Quanto deve fatturare ogni persona in ciascun giorno della settimana. In Oggi puoi cambiare l’obiettivo di un singolo giorno.</p>`+
-  (ps.length?`<div class="tw"><table class="bt"><tr><th></th>${GG.map(g=>`<th>${g}</th>`).join("")}</tr>${ps.map(u=>`<tr><td class="n">${esc(rn(u))}</td>${GG.map((_,w)=>`<td><input type="text" inputmode="decimal" data-a="budcell" data-u="${u}" data-w="${w}" placeholder="0" value="${fnum(b[u]&&b[u][w])}"></td>`).join("")}</tr>`).join("")}</table></div>`:`<p class="mu">Le persone compaiono qui dopo il primo accesso.</p>`)+`</section>`;
+  const ps=people(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.bw,i));
+  const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
+  return `<section class="pn">${ph("Obiettivi budget")}<p class="mu" style="margin-top:0">Quanto deve fatturare ogni persona, giorno per giorno. Ognuno vede solo l’obiettivo del giorno che sta guardando.</p>
+  <div class="wnav"><button class="g sq" data-a="bprev" aria-label="Settimana precedente">‹</button><b>${esc(lab)}</b><button class="g sq" data-a="bnext" aria-label="Settimana successiva">›</button></div>`+
+  (ps.length?`<div class="tw"><table class="bt"><tr><th></th>${days.map((x,i)=>`<th class="${x===TODAY?"t":""}">${GG[i]}<br>${parse(x).getDate()}</th>`).join("")}</tr>${ps.map(u=>`<tr><td class="n">${esc(rn(u))}</td>${days.map(x=>`<td><input type="text" inputmode="decimal" data-a="budcell" data-u="${u}" data-d="${x}" placeholder="–" value="${fnum(tg(u,x))}"></td>`).join("")}</tr>`).join("")}</table></div>`:`<p class="mu">Le persone compaiono qui dopo il primo accesso.</p>`)+
+  `<div class="btns" style="justify-content:flex-start"><button class="g" data-a="budcopy">Copia dalla settimana scorsa</button>${S.bw!==mondayOf(TODAY)?`<button class="g" data-a="btoday">Questa settimana</button>`:""}</div></section>`;
 }
 function viewSet(){
   const c=eff(),adm=isAdmin();
   const items=(k,title)=>`<section class="pn">${ph(title)}<div class="list">`+c[k].map(i=>`<div class="row"><input type="text" data-a="itemname" data-k="${k}" data-i="${i.id}" value="${esc(i.t)}"><button class="x" data-a="delitem" data-k="${k}" data-i="${i.id}" aria-label="Elimina">✕</button></div>`).join("")+
    `<div class="row"><input type="text" data-d="new_${k}" placeholder="Nuova voce" value="${esc(S.draft["new_"+k]||"")}"><button class="g" data-a="additem" data-k="${k}">Aggiungi</button></div></div></section>`;
   let h=`<section class="pn">${ph("Il tuo profilo",adm?"amministratore":"")}<label class="fld" style="margin-top:0"><span>Nome visibile ai colleghi</span><input type="text" data-a="myname" value="${esc(S.names[S.uid]||"")}"></label><p class="mu">Accesso con ${esc(S.email)}</p><div class="btns" style="justify-content:flex-start"><button class="g" data-a="logout">Esci</button></div></section>`;
-  if(S.adminLoaded&&!S.adminUid)h+=`<section class="pn">${ph("Amministratore")}<p class="mu" style="margin-top:0">Non c’è ancora un amministratore. Solo lui modifica planner, nomi del personale, checklist, cadenze, budget ed elimina le attività dei colleghi.</p><p class="mu">Fallo tu per primo, prima di far entrare i colleghi: dopo non si cambia da qui.</p><button class="b" data-a="claimadmin">Imposta me come amministratore</button></section>`;
-  if(!adm)return h+(S.adminUid?`<p class="mu">Planner, nomi del personale, checklist, cadenze e budget li modifica solo l’amministratore.</p>`:"");
-  return h+`<section class="pn">${ph("Nomi del personale")}<div class="list">`+c.staff.map(s=>`<div class="row"><input type="text" data-a="staffname" data-i="${s.id}" value="${esc(s.n)}"></div>`).join("")+`</div><p class="mu">Compaiono nel planner dei turni.</p></section>`+budCfg()+items("open","Voci checklist apertura")+items("close","Voci checklist chiusura")+recCfg();
+  if(S.adminLoaded&&!S.adminUid)h+=`<section class="pn">${ph("Amministratore")}<p class="mu" style="margin-top:0">Non c’è ancora un amministratore. Solo lui modifica turni, nomi del personale, checklist, cadenze, obiettivi budget ed elimina le attività dei colleghi.</p><p class="mu">Fallo tu per primo, prima di far entrare i colleghi: dopo non si cambia da qui.</p><button class="b" data-a="claimadmin">Imposta me come amministratore</button></section>`;
+  if(!adm)return h+(S.adminUid?`<p class="mu">Turni, nomi del personale, checklist, cadenze e obiettivi budget li modifica solo l’amministratore.</p>`:"");
+  return h+budCfg()+`<section class="pn">${ph("Nomi del personale")}<div class="list">`+c.staff.map(s=>`<div class="row"><input type="text" data-a="staffname" data-i="${s.id}" value="${esc(s.n)}"></div>`).join("")+`</div><p class="mu">Compaiono nel planner dei turni.</p></section>`+items("open","Voci checklist apertura")+items("close","Voci checklist chiusura")+recCfg();
 }
 function render(){
   const a=document.activeElement;
   if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&$("#app").contains(a)){S.pending=true;return}
   S.pending=false;
   const app=$("#app"),logged=!!S.uid;
-  const urg=S.reports.filter(r=>!r.res&&r.u).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
+  const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
   const who=$("#who");who.hidden=!logged;who.textContent=String(S.names[S.uid]||S.email||"?").charAt(0).toUpperCase();
-  const tabs=[["oggi","Oggi",urg],["cal","Calendario",0],["plan","Planner",0],["todo","Todo",mine],["set","Altro",0]];
+  const tabs=[["oggi","Oggi",openRep],["cal","Riepilogo",0],["plan","Planner",0],["todo","ToDo",mine],["set","Altro",0]];
   $("#nav").innerHTML=logged?tabs.map(([k,l,b])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}"><span class="ic">${IC[k]}</span>${l}${b?`<b class="bd">${b}</b>`:""}</button>`).join(""):"";
   app.className=S.tab==="plan"?"wide":"";
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:`<p class="mu">Caricamento…</p>`);return}
   app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<div class="note">Nessun amministratore impostato: vai in Altro.</div>`:"")+({oggi:viewOggi,cal:viewCal,plan:viewPlanner,todo:()=>viewTasks()+viewTodo(),set:viewSet}[S.tab])();
+  const sh=$("#sheet"),html=(S.tab==="cal"&&S.sumDay)?sheetHtml():"";
+  if(html!==S.sheetHtml){
+    const sb=sh.querySelector&&sh.querySelector(".sbody"),st=sb?sb.scrollTop:0;
+    sh.innerHTML=html;S.sheetHtml=html;
+    const nb=sh.querySelector&&sh.querySelector(".sbody");if(nb)nb.scrollTop=st;
+    if(document.body)document.body.style.overflow=html?"hidden":"";
+  }
 }
 
 document.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending)render()},60));
@@ -398,12 +466,22 @@ function act(a,el){
       S.loginErr=/invalid|wrong|user-not-found/.test(e.code||"")?"Email o password errati.":"Accesso non riuscito ("+(e.code||"errore")+").";render()});
   }
   else if(a==="logout"){signOut(auth).then(()=>location.reload())}
-  else if(a==="tab"){S.tab=i;render();scrollTo(0,0)}
+  else if(a==="tab"){if(S.sumDay){S.sumDay="";watchSum("")}S.tab=i;render();scrollTo(0,0)}
   else if(a==="dprev"||a==="dnext"||a==="dtoday"){S.day=a==="dtoday"?TODAY:addDays(S.day,a==="dprev"?-1:1);delete S.draft.sum;S.confirm="";watchDay();render()}
-  else if(a==="wprev"||a==="wnext"||a==="wtoday"){S.week=a==="wtoday"?mondayOf(TODAY):addDays(S.week,a==="wprev"?-7:7);watchWeek();render()}
+  else if(a==="wprev"||a==="wnext"||a==="wtoday"){S.week=a==="wtoday"?mondayOf(TODAY):addDays(S.week,a==="wprev"?-7:7);render()}
+  else if(a==="bprev"||a==="bnext"||a==="btoday"){S.bw=a==="btoday"?mondayOf(TODAY):addDays(S.bw,a==="bprev"?-7:7);render()}
   else if(a==="goday"){openDay(i)}
+  else if(a==="budedit"){S.bw=mondayOf(S.day);S.tab="set";render();scrollTo(0,0)}
   else if(a==="mprev"||a==="mnext"||a==="mtoday"){if(a==="mtoday")S.month=TODAY.slice(0,8)+"01";else{const m=parse(S.month);m.setMonth(m.getMonth()+(a==="mprev"?-1:1));S.month=ymd(m)}render()}
-  else if(a==="chk"){save(db.doc("days/"+S.day),{[k]:{[i]:el.checked?S.uid:""}})}
+  else if(a==="sumday"){S.sumDay=i;watchSum(i);render()}
+  else if(a==="sumclose"){S.sumDay="";watchSum("");render()}
+  else if(a==="sumopen"){openDay(S.sumDay)}
+  else if(a==="sumwa"){sendWa(waText(S.sumDay,S.daysAll[S.sumDay]||{},S.sa))}
+  else if(a==="chk"){const on=el.checked;
+    save(db.doc("days/"+S.day),{[k]:{[i]:on?S.uid:""},[k+"At"]:{[i]:on?Date.now():0}});
+    if(k==="open"&&on){const items=eff().open,m={...(S.dayDoc.open||{}),[i]:S.uid};if(items.length&&items.every(it=>m[it.id])&&S.day===TODAY)toast("Apertura completa: puoi inviare il messaggio")}}
+  else if(a==="waopen"){const lab=parse(S.day).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
+    sendWa("Apertura OK\n"+lab+", "+hm(Date.now()));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
   else if(a==="addact"){const t=(S.draft.at||"").trim();if(!t){toast("Scrivi cosa è stato fatto");return}
     const c=(S.draft.ac||"").trim(),id=uid8();S.draft.at="";S.draft.ac="";
     db.doc("days/"+S.day+"/acts/"+id).set({t,c,by:S.uid,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));save(db.doc("days/"+S.day),{hasActs:true});render()}
@@ -411,23 +489,31 @@ function act(a,el){
   else if(a==="askdel"){S.confirm=i;render()}
   else if(a==="delact"){S.confirm="";if(S.acts.length<=1)save(db.doc("days/"+S.day),{hasActs:false});db.doc("days/"+S.day+"/acts/"+i).delete().catch(()=>toast("Operazione non riuscita"));render()}
   else if(a==="savesum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now()});toast("Riepilogo salvato")}
-  else if(a==="budset"){save(db.doc("days/"+S.day),{bud:{[D2.u]:num(el.value)}})}
-  else if(a==="revset"){save(db.doc("days/"+S.day),{rev:{[D2.u]:num(el.value)}})}
-  else if(a==="cell"){save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value.trim()}})}
+  else if(a==="wasum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;
+    save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),waClose:{by:S.uid,at:Date.now()}});
+    sendWa(waText(S.day,{...S.dayDoc,sum:v},S.acts))}
+  else if(a==="shift"){save(db.doc("weeks/"+S.week),{cells:{[D2.c]:nextShift(cellsOf(S.week)[D2.c])}})}
+  else if(a==="shifttime"){const v=el.value.trim();editCfg(c=>{c.shiftTime=v})}
+  else if(a==="copyweek"){const prev=cellsOf(addDays(S.week,-7)),out={};
+    Object.keys(prev).forEach(key=>{const p=key.split("_");out[addDays(p[0],7)+"_"+p[1]]=prev[key]});
+    if(!Object.keys(out).length){toast("La settimana scorsa è vuota");return}
+    save(db.doc("weeks/"+S.week),{cells:out});toast("Turni copiati dalla settimana scorsa")}
+  else if(a==="budcell"){saveBud(db.doc("budget/"+D2.d),{u:{[D2.u]:num(el.value)}})}
+  else if(a==="budcopy"){let n=0;for(let j=0;j<7;j++){const b=S.budAll[addDays(S.bw,j-7)];if(b&&b.u){n++;saveBud(db.doc("budget/"+addDays(S.bw,j)),{u:{...b.u}})}}
+    toast(n?"Obiettivi copiati dalla settimana scorsa":"La settimana scorsa è vuota")}
   else if(a==="addtodo"){const t=(S.draft.todo||"").trim();if(!t)return;S.draft.todo="";
     db.doc("users/"+S.uid+"/todos/"+uid8()).set({t,done:false,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));render()}
   else if(a==="todo"){save(db.doc("users/"+S.uid+"/todos/"+i),{done:el.checked,doneAt:el.checked?Date.now():0})}
   else if(a==="deltodo"){db.doc("users/"+S.uid+"/todos/"+i).delete().catch(()=>{})}
   else if(a==="cleardone"){S.todos.filter(t=>t.done).forEach(t=>db.doc("users/"+S.uid+"/todos/"+t.id).delete().catch(()=>{}))}
-  else if(a==="rpu"){S.draft.rpu=el.checked}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
-    const u=!!S.draft.rpu;S.draft.rp="";S.draft.rpu=false;
-    db.doc("reports/"+uid8()).set({t,u,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));render()}
+    S.draft.rp="";
+    db.doc("reports/"+uid8()).set({t,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));render()}
   else if(a==="resolve"){save(db.doc("reports/"+i),{res:true,resBy:S.uid,resAt:Date.now()})}
   else if(a==="delreport"){db.doc("reports/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="addtask"){const t=(S.draft.tk||"").trim(),to=S.draft.tkto||"";if(!t){toast("Scrivi cosa deve fare");return}if(!to){toast("Scegli il collega");return}
     S.draft.tk="";db.doc("tasks/"+uid8()).set({t,to,by:S.uid,at:Date.now(),done:false}).catch(()=>toast("Salvataggio non riuscito"));render()}
-  else if(a==="taskdone"){save(db.doc("tasks/"+i),{done:el.checked,doneAt:el.checked?Date.now():0})}
+  else if(a==="taskdone"){save(db.doc("tasks/"+i),{done:el.checked,doneAt:el.checked?Date.now():0,doneBy:el.checked?S.uid:""})}
   else if(a==="deltask"){db.doc("tasks/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="claimadmin"){db.doc("meta/admin").set({uid:S.uid}).then(()=>toast("Ora sei l’amministratore")).catch(()=>toast("Non riuscito: c’è già un amministratore"))}
   else if(a==="myname"){const v=el.value.trim();if(v)save(db.doc("users/"+S.uid),{name:v})}
@@ -438,9 +524,8 @@ function act(a,el){
   else if(a==="addrec"){const w=D2.w,v=(S.draft["newrec_"+w]||"").trim();if(!v)return;S.draft["newrec_"+w]="";editCfg(c=>{c.rec.push({id:uid8(),d:+w,t:v})})}
   else if(a==="delrec"){editCfg(c=>{c.rec=c.rec.filter(x=>x.id!==i)})}
   else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
-  else if(a==="budcell"){const v=num(el.value);editCfg(c=>{c.bud=c.bud||{};const arr=(c.bud[D2.u]||[0,0,0,0,0,0,0]).slice();arr[+D2.w]=v||0;c.bud[D2.u]=arr})}
 }
-const CH=["chk","todo","cell","actc","staffname","itemname","myname","rpu","taskdone","recname","budset","revset","budcell"];
+const CH=["chk","todo","actc","staffname","itemname","myname","taskdone","recname","budcell","shifttime"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
