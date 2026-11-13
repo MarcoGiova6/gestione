@@ -38,12 +38,12 @@ main{max-width:760px;margin:0 auto;padding:6px 16px calc(100px + env(safe-area-i
 main.wide{max-width:1100px}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--bgf);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border-top:1px solid var(--ln)}
 .tabs:empty{display:none}
-.tabs button{position:relative;flex:1;max-width:150px;border:0;background:transparent;color:var(--mu);font:600 11.5px var(--sans);display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 2px}
-.tabs .ic{width:54px;height:30px;border-radius:15px;display:grid;place-items:center;transition:background .2s}
+.tabs button{position:relative;flex:1;min-width:0;max-width:120px;border:0;background:transparent;color:var(--mu);font:600 10.5px var(--sans);display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 0}
+.tabs .ic{width:44px;height:29px;border-radius:15px;display:grid;place-items:center;transition:background .2s}
 .tabs svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button.on{color:var(--ink)}
 .tabs button.on .ic{background:var(--hv);color:var(--hvx)}
-.bd{position:absolute;top:-1px;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font:700 11px/18px var(--sans);text-align:center}
+.bd{position:absolute;top:-2px;left:calc(50% + 4px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font:700 11px/18px var(--sans);text-align:center}
 .pn{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:16px 18px;margin-bottom:14px}
 .pn.alert{border:1.5px solid var(--warn)}
 .pn.ok{border:1.5px solid var(--go)}
@@ -57,7 +57,7 @@ input[type=date]{min-height:46px;-webkit-appearance:none;appearance:none;text-al
 .pn.avv .ph h2{color:var(--hvx)}
 .ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
 .ph h2{margin:0;font:400 24px/1.1 var(--disp);letter-spacing:.01em}
-.ph small{font:600 13.5px var(--sans);color:var(--mu);text-align:right}
+.ph small{font:600 13.5px var(--sans);color:var(--mu);text-align:right;white-space:nowrap}
 .mu{color:var(--mu);font-size:14px;margin:8px 0}
 .seg{display:flex;gap:3px;margin:2px 0 6px}
 .seg i{flex:1;height:5px;border-radius:3px;background:var(--ln)}
@@ -85,6 +85,29 @@ input[type=date]{min-height:46px;-webkit-appearance:none;appearance:none;text-al
 .meta b{color:var(--ink);font-weight:600}
 .act input[type=text]{margin-top:8px}
 .cmadd{display:flex;gap:8px;margin-top:8px}
+.cmadd input[type=text]{flex:1;min-width:0}
+.rp{padding:12px 0;border-top:1px solid var(--ln)}
+.list>.rp:first-child{border-top:0}
+.rph{display:flex;align-items:center;gap:10px}
+.rpb{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:0;color:var(--ink);font:inherit;display:block}
+.rpt{display:block;font-weight:600}
+.rd .rpt{color:var(--mu);text-decoration:line-through;font-weight:500}
+.rp .meta{flex-wrap:wrap;margin-top:2px}
+.rpx{margin-top:4px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.pgrid .pn{margin-bottom:0}
+.pdh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.pdh b{font:400 23px/1.1 var(--disp);letter-spacing:.01em}
+.pdh span{color:var(--mu);font-size:14px}
+.pn.today{border:2px solid var(--ink)}
+.pn.today .pdh b{background:var(--hv);color:var(--hvx);padding:2px 9px;border-radius:7px}
+.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--ln);font-weight:600}
+.pdh+.prow{border-top:0}
+.sp{min-width:112px;border:1px dashed var(--ln2);border-radius:10px;padding:10px 12px;font:600 14px var(--sans);background:transparent;color:var(--mu);text-align:center}
+.sp.w{background:var(--hv);color:var(--hvx);border-color:transparent}
+.sp.r{background:var(--fill);color:var(--mu);border-color:transparent}
+.sp.f{background:var(--warnbg);color:var(--warn);border-color:transparent}
+.sp.m{background:var(--badbg);color:var(--bad);border-color:transparent}
 .act .cmadd input[type=text]{margin-top:0;flex:1}
 .cm{font-size:14px;margin-top:8px;padding-left:10px;border-left:3px solid var(--ln)}
 .cm b{font-weight:600}
@@ -201,7 +224,7 @@ const fnum=n=>n?String(n).replace(".",","):"";
 const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Persona 3"}];
 const defOpen=[{id:"o1",t:"Apertura cassa"},{id:"o3",t:"Ordine e pulizia"},{id:"o4",t:"Gestione OSN"}];
 const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizionatori"},{id:"c1",t:"Chiusura cassa"},{id:"c3",t:"Porte e allarme"}];
-const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null};
+const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),bw:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},budAll:{},budErr:false,todos:[],names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
 const subs={};
 const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||[],shiftTime:c.shiftTime||"",avviso:c.avviso||null,cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
@@ -265,6 +288,8 @@ function editCfg(fn){
 
 const IC={
   oggi:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>',
+  ap:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg>',
+  ch:'<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>',
   cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
   plan:'<svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="7" height="7" rx="2"/><rect x="13.5" y="4" width="7" height="7" rx="2"/><rect x="3.5" y="13" width="7" height="7" rx="2"/><rect x="13.5" y="13" width="7" height="7" rx="2"/></svg>',
   todo:'<svg viewBox="0 0 24 24"><path d="M10 7h10M10 12h10M10 17h10"/><path d="M3.8 7l1 1 2-2M3.8 12l1 1 2-2M3.8 17l1 1 2-2"/></svg>',
@@ -315,13 +340,12 @@ function budgetPanel(){
   return `<section class="gp"><div><div class="gl">${esc(lab)}</div>${mt?`<div class="gbig">${eur(mt)}</div>`:`<div class="gbig none">Non impostato</div>`}</div>`+
   (S.budErr?`<div><p class="gnote">Obiettivi non disponibili: l’amministratore deve aggiornare le regole di Firebase.</p></div>`:(adm?`<div><button class="g" data-a="budedit">Modifica obiettivi</button></div>`:""))+`</section>`;
 }
-function openBanner(){
-  const c=eff(),d=S.dayDoc;
-  if(S.day!==TODAY||!c.open.length)return "";
-  const m=d.open||{};
-  if(!c.open.every(i=>m[i.id]))return "";
-  const w=d.waOpen;
-  return `<section class="pn ok">${ph("Apertura completa")}${w?`<p class="mu" style="margin:0 0 10px">WhatsApp aperto alle ${hm(w.at)} da ${esc(nm(w.by))}</p>`:""}<button class="b" data-a="waopen">${w?"Invia di nuovo su WhatsApp":"Invia “Apertura OK” su WhatsApp"}</button></section>`;
+function openSend(){
+  const c=eff(),d=S.dayDoc,m=d.open||{};
+  const all=c.open.length&&c.open.every(i=>m[i.id]);
+  if(d.waOpen)return `<p class="mu">WhatsApp aperto alle ${hm(d.waOpen.at)} da ${esc(nm(d.waOpen.by))}</p>`;
+  if(S.day!==TODAY||!all)return "";
+  return `<section class="pn ok">${ph("Apertura completa")}<button class="b" data-a="waopen">Invia “Apertura OK” su WhatsApp</button></section>`;
 }
 function avvisoCard(){
   const a=eff().avviso;
@@ -342,20 +366,15 @@ function memoPanel(d){
   const m=d.memo||{},v=S.draft.memo!==undefined?S.draft.memo:(m.t||"");
   return `<section class="pn">${ph("Promemoria per domani",m.t?esc(nm(m.by))+" alle "+hm(m.at):"")}<textarea data-d="memo" placeholder="Cosa deve sapere chi apre domani?">${esc(v)}</textarea><div class="btns"><button class="g" data-a="savememo">Salva promemoria</button></div></section>`;
 }
-function reportsCard(){
-  const list=S.reports.filter(r=>rday(r)===S.day).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(a.at||0)-(b.at||0));
-  const open=list.filter(r=>!r.res);
-  return `<section class="pn">${ph("Segnalazioni",list.length?(open.length?open.length+" aperte su "+list.length:list.length+" risolte"):"")}<div class="stack">
-   <input type="text" data-d="rp" placeholder="Cosa non va? Cosa serve?" value="${esc(S.draft.rp||"")}">
-   <button class="b" data-a="addreport">Invia segnalazione</button></div><div class="list">`+
-  list.map(r=>`<div class="act"><div class="line"><strong style="${r.res?"color:var(--mu);text-decoration:line-through":""}">${esc(r.t)}</strong>${isAdmin()?`<button class="x" data-a="delreport" data-i="${r.id}" aria-label="Elimina">✕</button>`:""}</div><div class="meta"><b>${esc(nm(r.by))}</b><span>${hm(r.at)}</span>${r.res?`<span>risolta da ${esc(nm(r.resBy))}</span>`:""}</div>${cmBlock(r,"addcmrep",r.id)}${r.res?"":`<div style="margin-top:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button></div>`}</div>`).join("")+`</div></section>`;
+function rptRow(r){
+  const ex=!!S.exp[r.id],n=cmAll(r,r.by,r.at).length;
+  return `<div class="rp ${r.res?"rd":""}"><div class="rph"><button class="rpb" data-a="rtog" data-i="${r.id}" aria-expanded="${ex}"><span class="rpt">${esc(r.t)}</span><span class="meta"><b>${esc(nm(r.by))}</b><span>${hm(r.at)}</span>${rday(r)!==S.day?`<span>${esc(fmtDay(rday(r)))}</span>`:""}${n?`<span>${n} ${n>1?"commenti":"commento"}</span>`:""}${r.res?`<span>risolta da ${esc(nm(r.resBy))}</span>`:""}</span></button>${r.res?"":`<button class="g" data-a="resolve" data-i="${r.id}">Risolta</button>`}</div>${ex?`<div class="rpx">${cmBlock(r,"addcmrep",r.id)}${isAdmin()?`<div style="margin-top:8px"><button class="g" data-a="delreport" data-i="${r.id}">Elimina segnalazione</button></div>`:""}</div>`:""}</div>`;
 }
-function carryCard(){
-  if(S.day!==TODAY)return "";
-  const old=S.reports.filter(r=>!r.res&&rday(r)<TODAY).sort((a,b)=>(a.at||0)-(b.at||0));
-  if(!old.length)return "";
-  return `<section class="pn alert">${ph("Ancora aperte",old.length+" dai giorni scorsi")}<div class="list">`+
-  old.map(r=>`<div class="act"><strong>${esc(r.t)}</strong><div class="meta"><b>${esc(nm(r.by))}</b><span>${esc(fmtDay(rday(r)))}</span></div>${cmBlock(r,"addcmrep",r.id)}<div style="margin-top:8px;display:flex;gap:8px"><button class="g" data-a="resolve" data-i="${r.id}">Segna come risolta</button><button class="g" data-a="goday" data-i="${rday(r)}">Apri giorno</button></div></div>`).join("")+`</div></section>`;
+function reportsCard(){
+  const list=S.reports.filter(r=>rday(r)===S.day||(S.day===TODAY&&!r.res&&rday(r)<TODAY)).sort((a,b)=>(a.res?1:0)-(b.res?1:0)||(a.at||0)-(b.at||0));
+  const open=list.filter(r=>!r.res).length;
+  return `<section class="pn">${ph("Segnalazioni",open?open+" aperte":(list.length?"tutte risolte":""))}<div class="cmadd" style="margin-top:0"><input type="text" data-d="rp" placeholder="Cosa non va? Cosa serve?" value="${esc(S.draft.rp||"")}"><button class="b" data-a="addreport">Invia</button></div>`+
+  (list.length?`<div class="list" style="margin-top:6px">${list.map(rptRow).join("")}</div>`:`<p class="mu" style="margin-bottom:0">Nessuna segnalazione.</p>`)+`</section>`;
 }
 const tfor=t=>t.for||ymd(new Date(t.at||0));
 function myTasksCard(){
@@ -377,21 +396,22 @@ function viewTodo(){
   S.todos.map(t=>`<label class="row ck ${t.done?"dn":""}">${ck(`data-a="todo" data-i="${t.id}"`,t.done)}<span class="tx">${esc(t.t)}</span><button class="x" data-a="deltodo" data-i="${t.id}" aria-label="Elimina">✕</button></label>`).join("")+`</div>`+
   (done?`<p><button class="g" data-a="cleardone">Elimina le completate (${done})</button></p>`:"")+`</section>`;
 }
-function viewOggi(){
-  const c=eff(),d=S.dayDoc;
-  const chk=(k,items,title)=>{const m=d[k]||{},n=items.filter(i=>m[i.id]).length;
-    return `<section class="pn">${ph(title,n+" di "+items.length)}${seg(n,items.length)}<div class="list">`+
-    (items.map(i=>`<label class="row ck ${m[i.id]?"dn":""}">${ck(`data-a="chk" data-k="${k}" data-i="${i.id}"`,m[i.id])}<span class="tx">${esc(i.t)}</span>${m[i.id]?`<span class="who">${esc(nm(m[i.id]))}</span>`:""}</label>`).join("")||`<p class="mu">Nessuna voce. L’amministratore le aggiunge da Altro.</p>`)+`</div></section>`};
-  const dd=parse(S.day);
-  const sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||"");
-  const rec=c.rec.filter(r=>r.d===wdi(S.day)).map(r=>({id:r.id,t:r.t}));
-  const sw=shiftWho(S.day);
+function chkCard(k,items,title){
+  const m=S.dayDoc[k]||{},n=items.filter(i=>m[i.id]).length;
+  return `<section class="pn">${ph(title,n+" di "+items.length)}${seg(n,items.length)}<div class="list">`+
+  (items.map(i=>`<label class="row ck ${m[i.id]?"dn":""}">${ck(`data-a="chk" data-k="${k}" data-i="${i.id}"`,m[i.id])}<span class="tx">${esc(i.t)}</span>${m[i.id]?`<span class="who">${esc(nm(m[i.id]))}</span>`:""}</label>`).join("")||`<p class="mu">Nessuna voce. L’amministratore le aggiunge da Altro.</p>`)+`</div></section>`;
+}
+function dayBar(){
+  const dd=parse(S.day),sw=shiftWho(S.day);
   return dayHead(dd.getDate(),dd.toLocaleDateString("it-IT",{weekday:"long"}),dd.toLocaleDateString("it-IT",{month:"long",year:"numeric"}),"dprev","dnext")+
   (S.day!==TODAY?`<p class="back"><button class="g" data-a="dtoday">Torna a oggi</button></p>`:"")+
-  (sw.set?`<p class="mu" style="margin:-6px 0 14px">${turnoHtml(sw)}</p>`:"")+
-  avvisoCard()+memoCard()+myTasksCard()+openBanner()+carryCard()+budgetPanel()+
-  chk("open",c.open,"Apertura")+
-  (rec.length?chk("rec",rec,"Attività fisse del "+GGL[wdi(S.day)].toLowerCase()):"")+
+  (sw.set?`<p class="mu" style="margin:-6px 0 14px">${turnoHtml(sw)}</p>`:"");
+}
+function viewOggi(){
+  const c=eff();
+  const rec=c.rec.filter(r=>r.d===wdi(S.day)).map(r=>({id:r.id,t:r.t}));
+  return dayBar()+avvisoCard()+memoCard()+myTasksCard()+budgetPanel()+
+  (rec.length?chkCard("rec",rec,"Attività fisse del "+GGL[wdi(S.day)].toLowerCase()):"")+
   `<section class="pn">${ph("Attività svolte",S.acts.length||"")}<div class="stack">
     <input type="text" data-d="at" placeholder="Cosa è stato fatto?" value="${esc(S.draft.at||"")}">
     <input type="text" data-d="ac" placeholder="Commento (facoltativo)" value="${esc(S.draft.ac||"")}">
@@ -399,10 +419,16 @@ function viewOggi(){
   S.acts.map(a=>`<div class="act"><div class="line"><strong>${esc(a.t)}</strong>${!(isAdmin()||a.by===S.uid)?"":S.confirm===a.id?`<button class="g" data-a="delact" data-i="${a.id}">Elimina?</button>`:`<button class="x" data-a="askdel" data-i="${a.id}" aria-label="Elimina">✕</button>`}</div>
     <div class="meta"><b>${esc(nm(a.by))}</b><span>${hm(a.at)}</span></div>
     ${cmBlock(a,"addcmact",a.id)}</div>`).join("")+`</div></section>`+
-  reportsCard()+
-  chk("close",c.close,"Chiusura")+
+  reportsCard();
+}
+function viewApertura(){
+  return dayBar()+chkCard("open",eff().open,"Apertura")+openSend();
+}
+function viewChiusura(){
+  const d=S.dayDoc,sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||"");
+  return dayBar()+chkCard("close",eff().close,"Chiusura")+
   `<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?"salvato da "+esc(nm(d.sumBy))+" alle "+hm(d.sumAt):"")}<textarea data-d="sum" placeholder="Com’è andata la giornata?">${esc(sum)}</textarea>
-   <div class="btns">${d.sumBy?`<button class="g" data-a="wasend">Invia su WhatsApp</button>`:""}<button class="b" data-a="savesum">Salva riepilogo</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`+memoPanel(d);
+   <div class="btns">${d.sumBy&&!d.waClose?`<button class="g" data-a="wasend">Invia su WhatsApp</button>`:""}<button class="b" data-a="savesum">Salva riepilogo</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`+memoPanel(d);
 }
 function viewCal(){
   const first=parse(S.month),y=first.getFullYear(),mo=first.getMonth();
@@ -450,15 +476,12 @@ function sheetHtml(){
 function viewPlanner(){
   const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin(),cells=cellsOf(S.week);
   const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  const cell=k=>{const st=stateOf(cells[k]),l={w:"Lavoro",r:"Riposo",f:"Ferie",m:"Malattia"}[st]||"–";return adm?`<button class="sh-c ${st}" data-a="shift" data-c="${k}">${l}</button>`:`<span class="sh-c ${st}">${l}</span>`};
+  const LB={w:"Lavoro",r:"Riposo",f:"Ferie",m:"Malattia"};
+  const pill=k=>{const st=stateOf(cells[k]),l=LB[st]||"–";return adm?`<button class="sp ${st}" data-a="shift" data-c="${k}">${l}</button>`:`<span class="sp ${st}">${l}</span>`};
   return dayHead(null,"Turni",lab,"wprev","wnext")+
   (S.week!==mondayOf(TODAY)?`<p class="back"><button class="g" data-a="wtoday">Questa settimana</button></p>`:"")+
-  `<section class="pn">`+
-  (adm?`<label class="fld" style="margin-top:0"><span>Orario di lavoro, uguale per tutti i turni</span><input type="text" data-a="shifttime" placeholder="per esempio 9:00–13:00 e 15:00–19:00" value="${esc(c.shiftTime)}"></label>`:(c.shiftTime?`<p class="mu" style="margin:0 0 10px"><b>Orario di lavoro:</b> ${esc(c.shiftTime)}</p>`:""))+
-  `<div class="tw"><table class="pt"><tr><th></th>${days.map((x,i)=>`<th class="${x===TODAY?"t":""}">${GG[i]}<br>${parse(x).getDate()}</th>`).join("")}</tr>
-  ${c.staff.map(s=>`<tr><td class="n">${esc(s.n)}</td>${days.map(x=>`<td>${cell(x+"_"+s.id)}</td>`).join("")}</tr>`).join("")}</table></div>
-  <p class="mu" style="margin-bottom:0">${adm?"Tocca una casella per scegliere Lavoro, Riposo, Ferie, Malattia o vuoto.":"Solo l’amministratore può modificare i turni."}</p>`+
-  ""+`</section>`;
+  (adm?`<section class="pn"><label class="fld" style="margin:0"><span>Orario di lavoro, uguale per tutti i turni</span><input type="text" data-a="shifttime" placeholder="per esempio 9:00–13:00 e 15:00–19:00" value="${esc(c.shiftTime)}"></label><p class="mu" style="margin-bottom:0">Tocca un turno per scegliere Lavoro, Riposo, Ferie, Malattia o vuoto.</p></section>`:(c.shiftTime?`<p class="mu" style="margin:0 0 12px"><b>Orario di lavoro:</b> ${esc(c.shiftTime)}</p>`:""))+
+  `<div class="pgrid">`+days.map((x,i)=>`<section class="pn ${x===TODAY?"today":""}"><div class="pdh"><b>${GGL[i]}</b><span>${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</span></div>${c.staff.map(q=>`<div class="prow"><span>${esc(q.n)}</span>${pill(x+"_"+q.id)}</div>`).join("")}</section>`).join("")+`</div>`;
 }
 function recCfg(){
   const rec=eff().rec;
@@ -501,13 +524,13 @@ function render(){
   const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
   const who=$("#who");who.hidden=!logged;who.textContent=String(S.names[S.uid]||S.email||"?").charAt(0).toUpperCase();
   if(S.tab==="todo"&&!isAdmin())S.tab="oggi";
-  const tabs=[["oggi","Oggi",openRep],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0]]:[]),["set","Altro",0]];
+  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0]]:[]),["set","Altro",0]];
   $("#nav").innerHTML=logged?tabs.map(([k,l,b])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}"><span class="ic">${IC[k]}</span>${l}${b?`<b class="bd">${b}</b>`:""}</button>`).join(""):"";
   app.className=S.tab==="plan"?"wide":"";
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:`<p class="mu">Caricamento…</p>`);return}
-  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<div class="note">Nessun amministratore impostato: vai in Altro.</div>`:"")+({oggi:viewOggi,cal:viewCal,plan:viewPlanner,todo:()=>viewTodo()+(isAdmin()?viewAssign():""),set:viewSet}[S.tab])();
+  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid&&S.tab!=="set"?`<div class="note">Nessun amministratore impostato: vai in Altro.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,todo:()=>viewTodo()+(isAdmin()?viewAssign():""),set:viewSet}[S.tab])();
   const sh=$("#sheet"),html=(S.tab==="cal"&&S.sumDay)?sheetHtml():"";
   if(html!==S.sheetHtml){
     const sb=sh.querySelector&&sh.querySelector(".sbody"),st=sb?sb.scrollTop:0;
@@ -550,6 +573,7 @@ function act(a,el){
     db.doc("days/"+S.day+"/acts/"+id).set({t,c,by:S.uid,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));save(db.doc("days/"+S.day),{hasActs:true});render()}
   else if(a==="addcmact"){const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("days/"+S.day+"/acts/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}});render()}
   else if(a==="addcmrep"){const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("reports/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}});render()}
+  else if(a==="rtog"){S.exp[i]=!S.exp[i];render()}
   else if(a==="askdel"){S.confirm=i;render()}
   else if(a==="delact"){S.confirm="";if(S.acts.length<=1)save(db.doc("days/"+S.day),{hasActs:false});db.doc("days/"+S.day+"/acts/"+i).delete().catch(()=>toast("Operazione non riuscita"));render()}
   else if(a==="savesum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;const mp=memoPatch();save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),...mp});S.dayDoc={...S.dayDoc,sum:v,sumBy:S.uid,sumAt:Date.now(),...mp};S.modal={type:"close"};renderModal()}
