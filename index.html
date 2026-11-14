@@ -668,7 +668,7 @@ function viewBudget(){
   const nolink=eff().staff.filter(q=>!q.uid);
   return dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+
   (ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"")+
-  (nolink.length?`<div class="note">Collega al loro account: ${nolink.map(q=>`<button class="g" data-a="ren" data-i="${q.id}">${esc(q.n)}</button>`).join(" ")}<br>Senza collegamento non vedono il proprio obiettivo.</div>`:"")+
+  `<section class="pn">${ph("Account collegati",nolink.length?nolink.length+" da collegare":"tutti collegati")}<div class="list">${eff().staff.map(q=>`<div class="row"><span class="tx">${esc(q.n)}<small class="sub">${q.uid?"account: "+esc(rn(q.uid)):"non collegato"}</small></span><button class="g" data-a="ren" data-i="${q.id}">${q.uid?"Cambia":"Collega"}</button></div>`).join("")}</div><p class="mu" style="margin-bottom:0">Senza collegamento la persona non vede il proprio obiettivo.</p></section>`+
   `<section class="pn">${ph("Budget del mese")}<label class="fld" style="margin-top:0"><span>Budget mensile (€)</span><input type="text" inputmode="decimal" data-a="bmtotal" placeholder="per esempio 30000" value="${fnum(total)}"></label><div class="bstats"><div><span>Incassato</span><b>${eur(Math.round(inc))}</b></div><div><span>Mancano</span><b>${eur(Math.round(left))}</b></div><div><span>Raggiunto</span><b>${pct}%</b></div></div></section>`+
   `<section class="pn">${ph("Peso dei giorni (%)")}<div class="wgrid">${GG.map((g,i)=>`<label><span>${g}</span><input type="text" inputmode="decimal" data-a="bmw" data-i="${i}" value="${fnum(W[i])}"></label>`).join("")}</div><p class="mu" style="margin-bottom:0">Pesi dentro la settimana: l’app li adatta al mese, così la somma dei giorni resta uguale al budget.</p></section>`+
   `<section class="pn"><div class="btns" style="margin:0;justify-content:flex-start"><button class="b" data-a="pdf">Esporta PDF</button><button class="g" data-a="pdfmail">Invia per e-mail</button></div></section>`+
@@ -851,7 +851,7 @@ function act(a,el){
   else if(a==="menu"){if(S.modal&&S.modal.type==="menu")closeModal();else openModal({type:"menu"})}
   else if(a==="mopen"){closeModal();openModal({type:i})}
   else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;S.draft.rnuid=q.uid||"";openModal({type:"rename",sid:i})}
-  else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim(),lk=S.draft.rnuid||"";clearDrafts();closeModal();if(m&&v)editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q){q.n=v;if(lk)q.uid=lk;else delete q.uid}})}
+  else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim(),sel=document.querySelector('#modal [data-d="rnuid"]'),lk=(sel&&typeof sel.value==="string")?sel.value:(S.draft.rnuid||"");clearDrafts();closeModal();if(m&&v){editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q){q.n=v;if(lk)q.uid=lk;else delete q.uid}});toast(lk?v+" collegata a "+rn(lk):"Collegamento tolto")}}
   else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value}})}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     S.draft.rp="";
