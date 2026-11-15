@@ -9,6 +9,8 @@
 <meta name="theme-color" content="#e8e9eb" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d0e10" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
 :root{
   --bg:#e8e9eb;--sf:#f9f9fa;--ink:#16171a;--mu:#666b73;--ln:#d2d4d8;--ln2:#b4b8bf;--fill:#ecedef;
@@ -139,6 +141,8 @@ select.sm{width:auto;flex:none;padding:12px 10px}
 .kpis b{font:400 30px/1.15 var(--disp);white-space:nowrap}
 .krh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
 .krh span{color:var(--mu);font-size:13px}
+.rv input[type=time]{width:130px;min-height:46px;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:var(--fill);color:var(--ink);font:inherit;text-align:right;-webkit-appearance:none;appearance:none}
+.rv select{padding:12px 10px}
 .rv{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
 .rv input[type=text]{width:130px;text-align:right}
 .pn.today .pdh b{background:var(--hv);color:var(--hvx);padding:2px 9px;border-radius:7px}
@@ -269,7 +273,7 @@ const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizi
 const defRec=[{id:"rc1",d:1,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc3",d:3,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc5",d:5,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rp4",d:4,w:"ch",t:"Plastica: ritiro sabato mattina"},{id:"ri0",d:0,w:"ch",t:"Indifferenziata: ritiro martedì mattina"}];
 const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},bm:{},rev:{},msum:{},mpers:{},sumAll:{},persAll:{},tgtAll:{},tgt:{},bmo:TODAY.slice(0,7),bexp:{},fl:{},names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
 const subs={};
-const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,avviso:c.avviso||null,cfgv:c.cfgv||0}};
+const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,avviso:c.avviso||null,notif:c.notif||{},cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
 const rn=id=>S.names[id]||"Collega";
 const isAdmin=()=>!!S.uid&&S.adminUid===S.uid;
@@ -367,12 +371,43 @@ function watchSum(x){
   subs.stgt=D.doc("targets/"+x+"_"+S.uid).onSnapshot(t=>{S.tgt[x]=t.exists?(t.data().v||0):0;render()},()=>{});
   subs.sacts=D.doc("days/"+x).collection("acts").onSnapshot(q=>{S.sa=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.at||0)-(b.at||0));render()},fail);
 }
+const pushSupport=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+let pushFg=0;
+function pushBlock(){
+  let t,b="";
+  if(!pushSupport())t=isIOS()?"Per le notifiche: tocca Condividi, poi Aggiungi alla schermata Home, e apri l’app da quell’icona.":"Questo browser non supporta le notifiche.";
+  else if(Notification.permission==="denied")t="Le notifiche sono bloccate. Riattivale dalle impostazioni del dispositivo (Notifiche → Gestione).";
+  else if(Notification.permission==="granted"&&S.pushOn){t="Notifiche attive su questo dispositivo.";b=`<button class="g" data-a="pushtest">Invia notifica di prova</button>`}
+  else{t="Ricevi avvisi, attività e promemoria anche con l’app chiusa.";b=`<button class="b" data-a="pushon">Attiva notifiche</button>`}
+  return `<div style="border-top:1px solid var(--ln);padding-top:12px"><p class="mu" style="margin:0 0 8px"><b>Notifiche</b><br>${t}</p>${b}</div>`;
+}
+async function setupPush(ask){
+  try{
+    if(!pushSupport()||!S.uid)return;
+    const vapid=(eff().notif||{}).vapid;
+    if(!vapid){if(ask)toast("L’amministratore deve ancora impostare la chiave notifiche");return}
+    if(Notification.permission!=="granted"){
+      if(!ask)return;
+      const r=await Notification.requestPermission();
+      if(r!=="granted"){toast("Permesso notifiche non concesso");if(S.modal){S.modal.v=(S.modal.v||"")+"p";renderModal()}return}
+    }
+    const {getMessaging,getToken,onMessage}=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js");
+    const reg=await navigator.serviceWorker.register("firebase-messaging-sw.js");
+    await navigator.serviceWorker.ready;
+    const m=getMessaging(app),tok=await getToken(m,{vapidKey:vapid,serviceWorkerRegistration:reg});
+    if(!tok)throw new Error("token vuoto");
+    if(!pushFg){pushFg=1;onMessage(m,p=>{const n=(p&&p.data)||{};toast((n.title||"Notifica")+(n.body?": "+n.body:""))})}
+    await D.doc("push/"+S.uid).update({tokens:{[tok.slice(-24)]:{t:tok,at:Date.now(),ua:(navigator.userAgent||"").slice(0,80)}}});
+    S.pushOn=true;if(ask)toast("Notifiche attivate");
+    if(S.modal){S.modal.v=(S.modal.v||"")+"o";renderModal()}
+  }catch(e){if(ask)toast("Non riuscito: "+((e&&(e.code||e.message))||"errore"))}
+}
 async function start(u){
   S.uid=u.uid;S.email=u.email||"";
   try{const r=doc(fdb,"users/"+S.uid);const s=await getDoc(r);
     if(!s.exists()){const n=S.email.split("@")[0];await setDoc(r,{name:n.charAt(0).toUpperCase()+n.slice(1)})}}catch(e){}
   subs.users=D.col("users").onSnapshot(q=>{q.docs.forEach(d=>S.names[d.id]=(d.data()||{}).name);render()},fail);
-  subs.cfg=D.doc("config/main").onSnapshot(s=>{S.cfg=s.exists?s.data():null;S.loaded=true;schedulePublish();render()},fail);
+  subs.cfg=D.doc("config/main").onSnapshot(s=>{S.cfg=s.exists?s.data():null;S.loaded=true;schedulePublish();if(!S.pushTried){S.pushTried=1;setupPush(false);if(location.search){deepLink(location.search);try{history.replaceState(null,"",location.pathname)}catch(e){}}}render()},fail);
   subs.admin=D.doc("meta/admin").onSnapshot(s=>{S.adminUid=s.exists?(s.data().uid||null):null;S.adminLoaded=true;watchAdmin();render()},fail);
   subs.tasks=D.col("tasks").onSnapshot(q=>{S.tasks=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.reports=D.col("reports").onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
@@ -404,25 +439,43 @@ const ph=(t,r)=>`<div class="ph"><h2>${t}</h2>${r!=null&&r!==""?`<small>${r}</sm
 const seg=(n,t)=>`<div class="seg ${t&&n>=t?"all":""}">${Array.from({length:t},(_,i)=>`<i class="${i<n?"f":""}"></i>`).join("")}</div>`;
 const dayHead=(big,t1,t2,prev,next)=>`<div class="dh">${big!=null?`<div class="dnum">${big}</div>`:""}<div class="dt"><b>${esc(t1)}</b><span>${esc(t2)}</span></div><button class="g sq" data-a="${prev}" aria-label="Precedente">‹</button><button class="g sq" data-a="${next}" aria-label="Successivo">›</button></div>`;
 
-function waMsg(kind,x,d,reasons,note){
-  const o=kind==="open",items=o?openItems(x):closeItems(x),rs=reasons||{};
-  const lab=parse(x).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+(x===TODAY?", "+hm(Date.now()):"");
-  const miss=items.filter(i=>!((d[i.k]||{})[i.id]));
-  const L=["*"+(o?"Apertura":"Chiusura")+(miss.length?": problema":" OK")+"*",lab,""];
-  items.forEach(i=>{const w=(d[i.k]||{})[i.id],r=rs[i.k+"_"+i.id];L.push(w?"✅ "+i.t+" ("+rn(w)+")":"❌ "+i.t+(r?": "+r:""))});
-  if(note)L.push("",note);
-  if(!o)L.push("","*Riepilogo*",d.sum||"(nessun riepilogo)");
-  return L.join("\n");
-}
 const isIOS=()=>{const n=typeof navigator!=="undefined"?navigator:{};return /iPhone|iPad|iPod/.test(n.userAgent||"")||(n.platform==="MacIntel"&&n.maxTouchPoints>1)};
-function sendWa(text){
-  const enc=encodeURIComponent(text),t0=Date.now();
-  if(isIOS()){
-    location.href="whatsapp://send?text="+enc;
-    setTimeout(()=>{if(document.visibilityState==="visible"&&Date.now()-t0<4500&&!S.modal)openModal({type:"wafall",url:"https://wa.me/?text="+enc})},2200);
-  }else location.href="https://wa.me/?text="+enc;
-}
 
+const shT=(t,n=90)=>{t=String(t||"").replace(/\s+/g," ").trim();return t.length>n?t.slice(0,n-1)+"…":t};
+function notify(to,title,body,url){
+  if(!S.uid)return;
+  D.doc("notif/"+uid8()).set({to,title,body:body||"",url:url||"?tab=oggi",by:S.uid,at:Date.now()}).catch(()=>{});
+}
+function deepLink(url){
+  if(!S.uid)return;
+  const q=new URLSearchParams(String(url||"").split("?")[1]||""),tab=q.get("tab"),day=q.get("day");
+  if(!["oggi","ap","ch","cal"].includes(tab))return;
+  if(day&&/^\d{4}-\d{2}-\d{2}$/.test(day)&&day!==S.day)openDay(day);
+  S.tab=tab;
+  if(tab==="cal"&&day){S.sumDay=day;watchSum(day)}
+  render();scrollTo(0,0);
+}
+if(typeof navigator!=="undefined"&&navigator.serviceWorker&&navigator.serviceWorker.addEventListener)navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.url)deepLink(e.data.url)});
+function askConf(kind){
+  if(kind==="close"&&!String(S.dayDoc.sum||"").trim()){openModal({type:"warn"});return}
+  openModal({type:"conf",kind});
+}
+function confirmDay(kind){
+  const o=kind==="open",at=Date.now(),f=o?"apConf":"chConf";
+  save(D.doc("days/"+S.day),{[f]:{by:S.uid,at}});
+  S.dayDoc={...S.dayDoc,[f]:{by:S.uid,at}};
+  if(!isAdmin())notify("admin",o?"Apertura OK ✅":"Chiusura OK ✅",o?"Confermata da "+rn(S.uid):"Apri per leggere il riepilogo giornaliero",o?"?tab=ap":"?tab=cal&day="+S.day);
+  toast(o?"Apertura confermata":"Chiusura confermata");render();
+}
+function afterTick(k,i){
+  if(S.day!==TODAY)return;
+  ["open","close"].forEach(kind=>{
+    const items=kind==="open"?openItems(S.day):closeItems(S.day);
+    if(!items.some(it=>it.k===k&&it.id===i))return;
+    const d={...S.dayDoc,[k]:{...(S.dayDoc[k]||{}),[i]:S.uid}};
+    if(items.every(it=>(d[it.k]||{})[it.id])&&!(kind==="open"?S.dayDoc.apConf:S.dayDoc.chConf))askConf(kind);
+  });
+}
 let mkey="";
 function openModal(m){S.modal={id:uid8(),...m};renderModal()}
 function closeModal(){S.modal=null;renderModal()}
@@ -433,17 +486,15 @@ function modalHtml(){
   const m=S.modal;if(!m)return "";
   const dlg=(h,inner)=>`<div class="mbg"></div><div class="dlg" role="dialog" aria-modal="true"><h2>${h}</h2>${inner}</div>`;
   const adm=isAdmin();
-  if(m.type==="open")return dlg("Apertura completa",`<p>Tutte le voci di apertura sono completate. Vuoi inviare “Apertura OK” su WhatsApp?</p><button class="b" data-a="mwa">Invia su WhatsApp</button><button class="g" data-a="mclose">Non ora</button>`);
-  if(m.type==="close")return dlg("Riepilogo salvato",`<p>Tutte le voci di chiusura sono completate. Vuoi inviare “Chiusura OK” con il riepilogo su WhatsApp?</p><button class="b" data-a="mwa">Invia su WhatsApp</button><button class="g" data-a="mclose">Non ora</button>`);
+  if(m.type==="conf"){const o=m.kind==="open";return dlg(o?"Vuoi confermare l’apertura?":"Vuoi confermare la chiusura?",`<p class="mu" style="margin:0">${o?"Tutte le voci di apertura sono spuntate.":"Tutte le voci di chiusura sono spuntate."}</p><button class="b" data-a="mconf">SÌ</button><button class="g" data-a="mclose">NO</button>`)}
+  if(m.type==="warn")return dlg("Attenzione",`<p style="margin:0"><b>Riepilogo di fine giornata non compilato! ⚠️</b></p><button class="b" data-a="mcompila">Compila</button><button class="g" data-a="mclose">Chiudi</button>`);
   if(m.type==="prob"){
     const o=m.kind==="open";
     return dlg(o?"Problema in apertura":"Problema in chiusura",`<p>Controlla l’elenco e scrivi il motivo delle voci non completate.</p><div>`+
       m.items.map(it=>it.done?`<div class="pli">✅ ${esc(it.t)}</div>`:`<div class="pli">❌ ${esc(it.t)}<input type="text" data-d="pr_${it.k}_${it.id}" placeholder="Motivo (facoltativo)" value="${esc(S.draft["pr_"+it.k+"_"+it.id]||"")}"></div>`).join("")+`</div>`+
       `<input type="text" data-d="prnote" placeholder="Nota aggiuntiva (facoltativa)" value="${esc(S.draft.prnote||"")}">`+
-      (o?"":`<p class="mu" style="margin:0">${m.hasSum?"Al messaggio viene aggiunto il riepilogo di fine giornata.":"Il riepilogo di fine giornata non è ancora stato salvato."}</p>`)+
-      `<button class="b" data-a="mprob">Invia su WhatsApp</button><button class="g" data-a="mclose">Annulla</button>`);
+      `<button class="b" data-a="mprob">Invia</button><button class="g" data-a="mclose">Annulla</button>`);
   }
-  if(m.type==="wafall")return dlg("WhatsApp non si è aperto?",`<p>Se non si è aperto da solo, tocca qui sotto per aprirlo.</p><a class="b" href="${esc(m.url)}" target="_blank" rel="noopener" data-a="mclose">Apri WhatsApp</a><button class="g" data-a="mclose">Chiudi</button>`);
   if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><label class="fld" style="margin:0"><span>Account collegato</span><select data-d="rnuid"><option value="">Nessuno</option>${people().map(u=>`<option value="${u}" ${S.draft.rnuid===u?"selected":""}>${esc(rn(u))}</option>`).join("")}</select></label><button class="b" data-a="mren">Salva</button><button class="g" data-a="mclose">Annulla</button>`);
   if(m.type==="menu")return `<div class="mbg clr" data-a="mclose"></div><div class="pop"><button data-a="mopen" data-i="profile">Il tuo profilo</button>${adm?`<button data-a="mopen" data-i="names">Nomi dei colleghi</button>`:""}</div>`;
   if(m.type==="names")return dlg("Nomi dei colleghi",`<p class="mu" style="margin:0">I nomi che vedono tutti nell’app. Si salvano quando esci dal campo.</p>`+people().map(u=>`<input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}" aria-label="Nome">`).join("")+`<button class="g" data-a="mclose">Chiudi</button>`);
@@ -451,6 +502,7 @@ function modalHtml(){
     const c=eff(),nameTxt=esc(S.names[S.uid]||"");
     let h=`<p class="mu" style="margin:0"><b>${nameTxt}</b>${adm?" (amministratore)":""}</p><p class="mu" style="margin:0">Accesso con ${esc(S.email)}</p>`;
     if(S.adminLoaded&&!S.adminUid)h+=`<p class="mu" style="margin:0">Non c’è ancora un amministratore. Solo lui modifica turni, checklist, cadenze, budget e avvisi.</p><button class="b" data-a="claimadmin">Imposta me come amministratore</button>`;
+    h+=pushBlock();
     h+=`<button class="g" data-a="logout">Esci</button><button class="g" data-a="mclose">Chiudi</button>`;
     return dlg("Il tuo profilo",h);
   }
@@ -482,14 +534,15 @@ function dayGoal(){
   return `<section class="gp"><div><div class="gl">${esc(lab)}</div>${mt?`<div class="gbig">${eur(mt)}</div>`:`<div class="gbig none">Non impostato</div>`}</div>`+
   (adm?`<div><button class="g" data-a="budedit">Vai al budget</button></div>`:"")+`</section>`;
 }
-function openSend(){
-  const d=S.dayDoc,its=openItems(S.day),miss=its.filter(i=>!((d[i.k]||{})[i.id])).length;
+function confBlock(kind){
+  const o=kind==="open",d=S.dayDoc,items=o?openItems(S.day):closeItems(S.day),miss=items.filter(i=>!((d[i.k]||{})[i.id])).length;
+  const conf=o?d.apConf:d.chConf,ko=o?d.apKO:d.chKO;
   let h="";
-  if(S.day===TODAY&&miss)h+=`<p><button class="g" style="width:100%" data-a="probopen">Invia messaggio problema apertura</button></p>`;
-  if(d.waOpenP)h+=`<p class="mu">Messaggio problema inviato alle ${hm(d.waOpenP.at)} da ${esc(nm(d.waOpenP.by))}</p>`;
-  if(d.waOpen)return h+`<p class="mu">WhatsApp aperto alle ${hm(d.waOpen.at)} da ${esc(nm(d.waOpen.by))}</p>`;
-  if(S.day!==TODAY||miss||!its.length)return h;
-  return h+`<section class="pn ok">${ph("Apertura completa")}<button class="b" data-a="waopen">Invia “Apertura OK” su WhatsApp</button></section>`;
+  if(S.day===TODAY&&miss)h+=`<p><button class="g" style="width:100%" data-a="${o?"probopen":"probclose"}">${o?"Problema apertura":"Problema chiusura"}</button></p>`;
+  if(ko)h+=`<p class="mu">Problema segnalato alle ${hm(ko.at)} da ${esc(nm(ko.by))}</p>`;
+  if(conf)return h+`<p><button class="g" style="width:100%" disabled>${o?"Apertura":"Chiusura"} confermata alle ${hm(conf.at)}</button></p>`;
+  if(S.day!==TODAY||miss||!items.length)return h;
+  return h+`<section class="pn ok">${ph(o?"Apertura completa":"Chiusura completa")}<button class="b" data-a="askconf" data-i="${kind}">${o?"Conferma apertura":"Conferma chiusura"}</button></section>`;
 }
 function avvisoCard(){
   const a=eff().avviso;
@@ -536,8 +589,9 @@ function viewAssign(){
 }
 function chkCard(k,items,title){
   const mp=i=>S.dayDoc[i.k||k]||{},n=items.filter(i=>mp(i)[i.id]).length;
+  const rsM=S.dayDoc[k==="open"?"apRs":"chRs"]||{},note=S.dayDoc[k==="open"?"apNote":"chNote"];
   return `<section class="pn">${ph(title,n+" di "+items.length)}${seg(n,items.length)}<div class="list">`+
-  (items.map(i=>`<label class="row ck ${mp(i)[i.id]?"dn":""}">${ck(`data-a="chk" data-k="${i.k||k}" data-i="${i.id}"`,mp(i)[i.id])}<span class="tx">${esc(i.t)}</span>${mp(i)[i.id]?`<span class="who">${esc(nm(mp(i)[i.id]))}</span>`:""}</label>`).join("")||`<p class="mu">Nessuna voce. L’amministratore le aggiunge da Altro.</p>`)+`</div></section>`;
+  (items.map(i=>{const dn=mp(i)[i.id],rsn=!dn&&rsM[(i.k||k)+"_"+i.id];return `<label class="row ck ${dn?"dn":""}">${ck(`data-a="chk" data-k="${i.k||k}" data-i="${i.id}"`,dn)}<span class="tx">${esc(i.t)}${rsn?`<small class="sub">Motivo: ${esc(rsn)}</small>`:""}</span>${dn?`<span class="who">${esc(nm(dn))}</span>`:""}</label>`}).join("")||`<p class="mu">Nessuna voce. L’amministratore le aggiunge da Altro.</p>`)+`</div>${note&&n<items.length?`<p class="mu" style="margin:8px 0 0">Nota: ${esc(note)}</p>`:""}</section>`;
 }
 function dayBar(){
   const dd=parse(S.day),sw=shiftWho(S.day);
@@ -560,15 +614,13 @@ function viewOggi(){
   reportsCard();
 }
 function viewApertura(){
-  return dayBar()+chkCard("open",openItems(S.day),"Apertura")+openSend();
+  return dayBar()+chkCard("open",openItems(S.day),"Apertura")+confBlock("open");
 }
 function viewChiusura(){
-  const d=S.dayDoc,sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||""),its=closeItems(S.day),miss=its.filter(i=>!((d[i.k]||{})[i.id])).length;
-  return dayBar()+chkCard("close",its,"Chiusura")+
-  (S.day===TODAY&&miss?`<p><button class="g" style="width:100%" data-a="probclose">Invia messaggio problema chiusura</button></p>`:"")+
-  (d.waCloseP?`<p class="mu">Messaggio problema inviato alle ${hm(d.waCloseP.at)} da ${esc(nm(d.waCloseP.by))}</p>`:"")+
+  const d=S.dayDoc,sum=S.draft.sum!==undefined?S.draft.sum:(d.sum||"");
+  return dayBar()+chkCard("close",closeItems(S.day),"Chiusura")+confBlock("close")+
   `<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?"salvato da "+esc(nm(d.sumBy))+" alle "+hm(d.sumAt):"")}<textarea data-d="sum" placeholder="Com’è andata la giornata?">${esc(sum)}</textarea>
-   <div class="btns">${d.sumBy&&!miss&&!d.waClose?`<button class="g" data-a="wasend">Invia su WhatsApp</button>`:""}<button class="b" data-a="savesum">Salva riepilogo</button></div>${d.waClose?`<p class="mu" style="text-align:right">WhatsApp aperto alle ${hm(d.waClose.at)} da ${esc(nm(d.waClose.by))}</p>`:""}</section>`+memoPanel(d);
+   <div class="btns"><button class="b" data-a="savesum">Salva riepilogo</button></div></section>`+memoPanel(d);
 }
 function viewCal(){
   const first=parse(S.month),y=first.getFullYear(),mo=first.getMonth();
@@ -612,7 +664,7 @@ function sheetHtml(){
     h+=`<section class="pn">${ph("Riepilogo di fine giornata",d.sumBy?t2(d.sumBy)+" alle "+hm(d.sumAt):"")}${d.sum?`<p style="white-space:pre-wrap;margin:0">${esc(d.sum)}</p>`:`<p class="mu" style="margin:0">Nessun riepilogo salvato.</p>`}</section>`;
     if(d.memo&&d.memo.t)h+=`<section class="pn">${ph("Promemoria per domani",t2(d.memo.by)+" alle "+hm(d.memo.at))}<p style="white-space:pre-wrap;margin:0">${esc(d.memo.t)}</p></section>`;
   }
-  h+=`<div class="btns" style="justify-content:flex-start;margin-bottom:6px"><button class="b" data-a="sumopen">Apri il giorno</button>${fut?"":`<button class="g" data-a="sumwa">Invia su WhatsApp</button>`}</div></div></div>`;
+  h+=`<div class="btns" style="justify-content:flex-start;margin-bottom:6px"><button class="b" data-a="sumopen">Apri il giorno</button></div></div></div>`;
   return h;
 }
 function viewPlanner(){
@@ -754,12 +806,18 @@ function avvisoCfg(){
   const a=eff().avviso,v=S.draft.avv!==undefined?S.draft.avv:(a?a.t:"");
   return `<section class="pn">${ph("Avviso")}<p class="mu" style="margin-top:0">Appare in cima a Oggi per tutti, finché non lo togli.</p><textarea data-d="avv" placeholder="Scrivi l’avviso">${esc(v)}</textarea><div class="btns">${a&&a.t?`<button class="g" data-a="avvisoclear">Togli avviso</button>`:""}<button class="b" data-a="avvisosave">Salva avviso</button></div></section>`;
 }
+function notifCfg(){
+  const n=eff().notif||{},vv=S.draft.vapid!==undefined?S.draft.vapid:(n.vapid||"");
+  return `<section class="pn">${ph("Notifiche","solo amministratore")}<p class="mu" style="margin-top:0">Promemoria automatici a chi è in turno nel Planner: apertura 9:30, attività 15:00, chiusura 19:10. A te arrivano gli avvisi se alle 10:00 manca l’apertura e alle 19:30 la chiusura.</p>`+
+  `<h3 class="sub2" style="margin-top:6px">Chiave web push</h3><input type="text" data-d="vapid" placeholder="Incolla qui la chiave pubblica" value="${esc(vv)}"><div class="btns"><button class="b" data-a="vapidsave">Salva chiave</button></div>`+
+  `<p class="mu" style="margin-bottom:0">${n.vapid?"Chiave impostata.":"Chiave non ancora impostata."} Ognuno attiva le notifiche dal proprio profilo (cerchio in alto a destra).</p></section>`;
+}
 function itemsCfg(k,title){
   const c=eff();
   return `<section class="pn">${ph(title)}<div class="list">`+c[k].map(i=>`<div class="row"><input type="text" data-a="itemname" data-k="${k}" data-i="${i.id}" value="${esc(i.t)}"><button class="x" data-a="delitem" data-k="${k}" data-i="${i.id}" aria-label="Elimina">✕</button></div>`).join("")+
    `<div class="row"><input type="text" data-d="new_${k}" placeholder="Nuova voce" value="${esc(S.draft["new_"+k]||"")}"><button class="g" data-a="additem" data-k="${k}">Aggiungi</button></div></div></section>`;
 }
-const viewAvviso=()=>avvisoCfg();
+const viewAvviso=()=>avvisoCfg()+notifCfg();
 const viewLista=()=>itemsCfg("open","Voci checklist apertura")+itemsCfg("close","Voci checklist chiusura")+recCfg();
 function render(){
   migrate();renderModal();
@@ -810,6 +868,9 @@ function act(a,el){
   else if(a==="bday"){S.bexp[i]=!(S.bexp[i]!==undefined?S.bexp[i]:i===TODAY);render()}
   else if(a==="bclose"){const cur=!!(((S.bm[S.bmo]||{}).closed||{})[i]);save(db.doc("bmonth/"+S.bmo),{closed:{[i]:!cur}})}
   else if(a==="rev"){save(db.doc("rev/"+D2.day),{u:{[D2.s]:num(el.value)}})}
+  else if(a==="pushon"){setupPush(true)}
+  else if(a==="pushtest"){notify([S.uid],"Prova notifiche ✅","Le notifiche funzionano su questo dispositivo.","?tab=oggi");toast("Prova inviata: può arrivare dopo qualche minuto")}
+  else if(a==="vapidsave"){if(!isAdmin())return;const cur=(eff().notif||{}).vapid||"",v=(S.draft.vapid!==undefined?S.draft.vapid:cur).trim();delete S.draft.vapid;editCfg(c=>{c.notif={...(c.notif||{}),vapid:v}});toast(v?"Chiave salvata":"Chiave tolta")}
   else if(a==="revx"){const f=D2.f;if(["other","rc","en"].includes(f)){const t=String(el.value||"").trim(),neg=/^[-−–]/.test(t),n0=num(t.replace(/^[-−–]\s*/,"")),n=n0==null?0:(neg&&f==="other"?-n0:n0);save(db.doc("rev/"+D2.day),{[f]:n})}}
   else if(a==="bdone"){const cur=!!(((S.bm[S.bmo]||{}).done||{})[i]);save(db.doc("bmonth/"+S.bmo),{done:{[i]:!cur}})}
   else if(a==="pdf"){exportPdf(S.bmo,"file")}
@@ -820,34 +881,31 @@ function act(a,el){
   else if(a==="sumday"){S.sumDay=i;watchSum(i);render()}
   else if(a==="sumclose"){S.sumDay="";watchSum("");render()}
   else if(a==="sumopen"){openDay(S.sumDay)}
-  else if(a==="sumwa"){sendWa(waMsg("close",S.sumDay,S.daysAll[S.sumDay]||{}))}
   else if(a==="chk"){const on=el.checked;
     save(db.doc("days/"+S.day),{[k]:{[i]:on?S.uid:""},[k+"At"]:{[i]:on?Date.now():0}});
-    if(on){const items=openItems(S.day),same=it=>it.k===k&&it.id===i;if(items.some(same)&&items.every(it=>same(it)||(S.dayDoc[it.k]||{})[it.id])&&S.day===TODAY&&!S.dayDoc.waOpen){openModal({type:"open"})}}}
-  else if(a==="waopen"){sendWa(waMsg("open",S.day,S.dayDoc));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
+    if(on)afterTick(k,i)}
+  else if(a==="askconf"){askConf(i)}
+  else if(a==="mconf"){const m=S.modal;closeModal();if(m)confirmDay(m.kind)}
+  else if(a==="mcompila"){closeModal();S.tab="ch";render();setTimeout(()=>{const t=document.querySelector('textarea[data-d="sum"]');if(t){if(t.scrollIntoView)t.scrollIntoView({block:"center"});if(t.focus)t.focus()}},60)}
   else if(a==="probopen"){openModal({type:"prob",kind:"open",items:snapItems("open")})}
   else if(a==="probclose"){openModal({type:"prob",kind:"close",items:snapItems("close"),hasSum:!!S.dayDoc.sum})}
   else if(a==="addact"){const t=(S.draft.at||"").trim();if(!t){toast("Scrivi cosa è stato fatto");return}
     const c=(S.draft.ac||"").trim(),id=uid8();S.draft.at="";S.draft.ac="";
-    db.doc("days/"+S.day+"/acts/"+id).set({t,c,by:S.uid,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));save(db.doc("days/"+S.day),{hasActs:true});render()}
-  else if(a==="addcmact"){const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("days/"+S.day+"/acts/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}});render()}
-  else if(a==="addcmrep"){const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("reports/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}});render()}
+    db.doc("days/"+S.day+"/acts/"+id).set({t,c,by:S.uid,at:Date.now()}).catch(()=>toast("Salvataggio non riuscito"));save(db.doc("days/"+S.day),{hasActs:true});notify("all","Nuova attività svolta 📝",rn(S.uid)+": "+shT(t),"?tab=oggi");render()}
+  else if(a==="addcmact"){const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("days/"+S.day+"/acts/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}});{const a0=S.acts.find(x=>x.id===i);notify("all","Commento su un’attività 💬",rn(S.uid)+(a0?" su “"+shT(a0.t,40)+"”":"")+": "+shT(t),"?tab=oggi")}render()}
+  else if(a==="addcmrep"){const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("reports/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}});{const r=S.reports.find(x=>x.id===i);notify("all","Commento su una segnalazione 💬",rn(S.uid)+(r?" su “"+shT(r.t,40)+"”":"")+": "+shT(t),"?tab=oggi")}render()}
   else if(a==="rtog"){S.exp[i]=!S.exp[i];render()}
   else if(a==="askdel"){S.confirm=i;render()}
   else if(a==="delact"){S.confirm="";if(S.acts.length<=1)save(db.doc("days/"+S.day),{hasActs:false});db.doc("days/"+S.day+"/acts/"+i).delete().catch(()=>toast("Operazione non riuscita"));render()}
-  else if(a==="savesum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;const mp=memoPatch();save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),...mp});S.dayDoc={...S.dayDoc,sum:v,sumBy:S.uid,sumAt:Date.now(),...mp};
-    const dd=S.dayDoc,miss=closeItems(S.day).some(it=>!((dd[it.k]||{})[it.id]));
-    if(miss)openModal({type:"prob",kind:"close",items:snapItems("close"),hasSum:!!v});else openModal({type:"close"})}
-  else if(a==="wasend"){sendWa(waMsg("close",S.day,S.dayDoc));save(db.doc("days/"+S.day),{waClose:{by:S.uid,at:Date.now()}})}
+  else if(a==="savesum"){const v=(S.draft.sum!==undefined?S.draft.sum:(S.dayDoc.sum||"")).trim();delete S.draft.sum;const mp=memoPatch();save(db.doc("days/"+S.day),{sum:v,sumBy:S.uid,sumAt:Date.now(),...mp});S.dayDoc={...S.dayDoc,sum:v,sumBy:S.uid,sumAt:Date.now(),...mp};toast("Riepilogo salvato");render()}
   else if(a==="mclose"){clearDrafts();closeModal()}
-  else if(a==="mwa"){const m=S.modal;closeModal();if(!m)return;
-    if(m.type==="open"){sendWa(waMsg("open",S.day,S.dayDoc));save(db.doc("days/"+S.day),{waOpen:{by:S.uid,at:Date.now()}})}
-    else{sendWa(waMsg("close",S.day,S.dayDoc));save(db.doc("days/"+S.day),{waClose:{by:S.uid,at:Date.now()}})}}
   else if(a==="mprob"){const m=S.modal;if(!m||m.type!=="prob")return;const rs={};
     m.items.forEach(it=>{const r=(S.draft["pr_"+it.k+"_"+it.id]||"").trim();if(r&&!it.done)rs[it.k+"_"+it.id]=r});
-    const note=(S.draft.prnote||"").trim();clearDrafts();closeModal();
-    sendWa(waMsg(m.kind,S.day,S.dayDoc,rs,note));
-    save(db.doc("days/"+S.day),m.kind==="open"?{waOpenP:{by:S.uid,at:Date.now()}}:{waCloseP:{by:S.uid,at:Date.now()}})}
+    const note=(S.draft.prnote||"").trim(),o=m.kind==="open",at=Date.now();clearDrafts();closeModal();
+    save(db.doc("days/"+S.day),o?{apRs:rs,apNote:note,apKO:{by:S.uid,at}}:{chRs:rs,chNote:note,chKO:{by:S.uid,at}});
+    S.dayDoc={...S.dayDoc,[o?"apNote":"chNote"]:note,[o?"apKO":"chKO"]:{by:S.uid,at},[o?"apRs":"chRs"]:{...(S.dayDoc[o?"apRs":"chRs"]||{}),...rs}};
+    if(!isAdmin())notify("admin",o?"Apertura KO ❌":"Chiusura KO ❌","Apri per vedere i dettagli",o?"?tab=ap":"?tab=ch");
+    toast("Problema inviato");render()}
   else if(a==="menu"){if(S.modal&&S.modal.type==="menu")closeModal();else openModal({type:"menu"})}
   else if(a==="mopen"){closeModal();openModal({type:i})}
   else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;S.draft.rnuid=q.uid||"";openModal({type:"rename",sid:i})}
@@ -855,19 +913,19 @@ function act(a,el){
   else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value}})}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     S.draft.rp="";
-    db.doc("reports/"+uid8()).set({t,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));render()}
-  else if(a==="resolve"){save(db.doc("reports/"+i),{res:true,resBy:S.uid,resAt:Date.now()})}
+    db.doc("reports/"+uid8()).set({t,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));notify("all","Nuova segnalazione ⚠️",rn(S.uid)+": "+shT(t),"?tab=oggi");render()}
+  else if(a==="resolve"){save(db.doc("reports/"+i),{res:true,resBy:S.uid,resAt:Date.now()});{const r=S.reports.find(x=>x.id===i);notify("all","Segnalazione risolta ✅",rn(S.uid)+(r?": "+shT(r.t):""),"?tab=oggi")}}
   else if(a==="delreport"){db.doc("reports/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="addtask"){if(!isAdmin())return;const t=(S.draft.tk||"").trim(),to=S.draft.tkto||"";if(!t){toast("Scrivi cosa deve fare");return}if(!to){toast("Scegli il collega");return}
     const dest=to==="__all"?Object.keys(S.names).filter(id=>id!==S.uid):[to];
     if(!dest.length){toast("Nessun collega a cui assegnare");return}
-    S.draft.tk="";dest.forEach(id=>db.doc("tasks/"+uid8()).set({t,to:id,by:S.uid,at:Date.now(),done:false,for:S.draft.tkday||TODAY}).catch(()=>toast("Salvataggio non riuscito")));
+    const fd=S.draft.tkday||TODAY;S.draft.tk="";dest.forEach(id=>{db.doc("tasks/"+uid8()).set({t,to:id,by:S.uid,at:Date.now(),done:false,for:fd}).catch(()=>toast("Salvataggio non riuscito"));notify([id],"Nuova attività per te 📌",shT(t)+(fd!==TODAY?" (per il "+fd.split("-").reverse().join("/")+")":""),"?tab=oggi")});
     if(dest.length>1)toast("Assegnata a "+dest.length+" colleghi");render()}
   else if(a==="taskdone"){save(db.doc("tasks/"+i),{done:el.checked,doneAt:el.checked?Date.now():0,doneBy:el.checked?S.uid:""})}
   else if(a==="deltask"){db.doc("tasks/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
   else if(a==="claimadmin"){db.doc("meta/admin").set({uid:S.uid}).then(()=>toast("Ora sei l’amministratore")).catch(()=>toast("Non riuscito: c’è già un amministratore"))}
   else if(a==="username"){const v=el.value.trim();if(v)save(db.doc("users/"+D2.u),{name:v})}
-  else if(a==="avvisosave"){const cur=eff().avviso,v=(S.draft.avv!==undefined?S.draft.avv:(cur?cur.t:"")).trim();delete S.draft.avv;editCfg(c=>{c.avviso=v?{t:v,by:S.uid,at:Date.now()}:null});toast(v?"Avviso salvato":"Avviso tolto")}
+  else if(a==="avvisosave"){const cur=eff().avviso,v=(S.draft.avv!==undefined?S.draft.avv:(cur?cur.t:"")).trim();delete S.draft.avv;editCfg(c=>{c.avviso=v?{t:v,by:S.uid,at:Date.now()}:null});if(v&&v!==(cur?cur.t:""))notify("all","Avviso 📢",shT(v,140),"?tab=oggi");toast(v?"Avviso salvato":"Avviso tolto")}
   else if(a==="avvisoclear"){delete S.draft.avv;editCfg(c=>{c.avviso=null});toast("Avviso tolto")}
   else if(a==="savememo"){const mp=memoPatch();if(!Object.keys(mp).length){toast("Scrivi il promemoria");return}save(db.doc("days/"+S.day),mp);toast("Promemoria salvato")}
   else if(a==="memoread"){save(db.doc("days/"+i),{memoDone:{by:S.uid,at:Date.now()}})}
