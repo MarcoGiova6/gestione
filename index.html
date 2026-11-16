@@ -16,7 +16,7 @@
   --bg:#e8e9eb;--sf:#f9f9fa;--ink:#16171a;--mu:#666b73;--ln:#d2d4d8;--ln2:#b4b8bf;--fill:#ecedef;
   --hv:#d6f230;--hvx:#16171a;
   --pri:#16171a;--prix:#ffffff;--ckbg:#16171a;--ckfg:#d6f230;--foc:#16171a;
-  --go:#1f9d57;--warn:#b27700;--warnbg:#fbf0d4;--bad:#d1332a;--badbg:#fbe6e4;
+  --go:#1f9d57;--warn:#b27700;--warnbg:#fbf0d4;--bad:#d1332a;--badbg:#fbe6e4;--gobg:#d9f1e3;--gotx:#ffffff;
   --panel:#16171a;--panelx:#f2f3f4;--panelmu:#9a9ea6;--panelln:#34363b;--panelfill:#26282c;
   --bgf:rgba(232,233,235,.86);
   --disp:"DIN Condensed","Avenir Next Condensed","Arial Narrow",ui-sans-serif,sans-serif;
@@ -25,7 +25,7 @@
 @media (prefers-color-scheme:dark){:root{
   --bg:#0d0e10;--sf:#17181b;--ink:#f2f3f4;--mu:#9a9ea6;--ln:#2b2d31;--ln2:#42454c;--fill:#232529;
   --pri:#d6f230;--prix:#16171a;--ckbg:#d6f230;--ckfg:#16171a;--foc:#d6f230;
-  --go:#3ecf80;--warn:#f2b83c;--warnbg:#3a2d10;--bad:#ff6b60;--badbg:#3b1a18;
+  --go:#3ecf80;--warn:#f2b83c;--warnbg:#3a2d10;--bad:#ff6b60;--badbg:#3b1a18;--gobg:#14301f;--gotx:#0d0e10;
   --panel:#1d1f23;--panelln:#33363c;--panelfill:#2b2e33;--bgf:rgba(13,14,16,.86);color-scheme:dark}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -219,6 +219,36 @@ h3.sub2{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
 .sbody{overflow:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 24px}
 #toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font:600 14.5px var(--sans);z-index:40;max-width:90vw;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.mq{margin-bottom:2px;font-size:17px}
+.fcs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:10px;padding-bottom:2px}
+.fcs::-webkit-scrollbar{display:none}
+.fc{flex:none;border:0;border-radius:18px;padding:8px 14px;background:var(--fill);color:var(--ink);font:600 14px var(--sans)}
+.fc.on{background:var(--ink);color:var(--bg)}
+.pn.mr{padding:0;overflow:hidden}
+.mrh{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;padding:14px 16px 8px}
+.mrt{flex:1;min-width:0}
+.mrt b{display:block;font-weight:700;font-size:16px}
+.mrt small{display:block;color:var(--mu);font-size:13.5px;margin-top:2px}
+.mrn{flex:none;color:var(--mu);font-size:13.5px;font-weight:600}
+.zrow{display:flex;flex-wrap:wrap;gap:6px;padding:4px 14px 14px}
+.zc{border:0;min-width:46px;padding:9px 6px;border-radius:10px;font:700 14px var(--sans);font-variant-numeric:tabular-nums}
+.zc.on{background:var(--go);color:var(--gotx)}
+.zc.off{background:var(--bad);color:var(--gotx)}
+.dlg.wd{width:min(94vw,520px)}
+.dlg .fld{margin:0}
+.dh2 h2{white-space:nowrap}
+.dlg .dh2 .g{width:auto;flex:none}
+.dh2{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mrr{display:flex;align-items:center;gap:10px;width:100%;border:0;border-top:1px solid var(--ln);background:transparent;color:var(--ink);font:inherit;text-align:left;padding:11px 2px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:8px}
+.stl{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px}
+.stl.on{background:var(--gobg)}
+.stl.off{background:var(--badbg)}
+.stl b{flex:1;font:700 18px var(--sans)}
+.stl .sq{width:38px;height:38px;font-size:20px}
+.sn{min-width:24px;text-align:center;font:700 19px var(--sans);font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.zh{margin:14px 0 2px;font:700 14px var(--sans);color:var(--mu)}
 </style>
 </head>
 <body>
@@ -271,7 +301,7 @@ const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Pers
 const defOpen=[{id:"o1",t:"Apertura cassa"},{id:"o3",t:"Ordine e pulizia"},{id:"o4",t:"Gestione OSN"}];
 const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizionatori"},{id:"c1",t:"Chiusura cassa"},{id:"c3",t:"Porte e allarme"}];
 const defRec=[{id:"rc1",d:1,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc3",d:3,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc5",d:5,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rp4",d:4,w:"ch",t:"Plastica: ritiro sabato mattina"},{id:"ri0",d:0,w:"ch",t:"Indifferenziata: ritiro martedì mattina"}];
-const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},bm:{},rev:{},msum:{},mpers:{},sumAll:{},persAll:{},tgtAll:{},tgt:{},bmo:TODAY.slice(0,7),bexp:{},fl:{},names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{}};
+const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},bm:{},rev:{},msum:{},mpers:{},sumAll:{},persAll:{},tgtAll:{},tgt:{},bmo:TODAY.slice(0,7),bexp:{},fl:{},names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{},mag:{},mcat:"",mgen:"",magId:""};
 const subs={};
 const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,avviso:c.avviso||null,notif:c.notif||{},cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
@@ -413,6 +443,7 @@ async function start(u){
   subs.reports=D.col("reports").onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.days=D.col("days").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.daysAll=m;render()},fail);
   subs.weeks=D.col("weeks").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.weeksAll=m;S.fl.wk=1;schedulePublish();render()},fail);
+  subs.mag=D.col("mag").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.mag=m;if(S.modal&&S.modal.type==="magsz")S.modal.v=(S.modal.v||"")+"o";render()},fail);
   watchDay();
 }
 onAuthStateChanged(auth,u=>{S.authReady=true;if(u)start(u);else{S.uid=null;render()}});
@@ -422,6 +453,7 @@ function editCfg(fn){
 }
 
 const IC={
+  mag:'<svg viewBox="0 0 24 24"><path d="M3.5 8.5L12 4l8.5 4.5v8L12 20.5l-8.5-4z"/><path d="M3.5 8.5L12 13l8.5-4.5M12 13v7.5"/></svg>',
   oggi:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>',
   budget:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.2 9.2a3.6 3.6 0 1 0 0 5.6M7.6 11h5.2M7.6 13h5.2"/></svg>',
   avviso:'<svg viewBox="0 0 24 24"><path d="M4 10v4h3l7 4V6L7 10H4z"/><path d="M17.5 9a4 4 0 0 1 0 6"/></svg>',
@@ -476,6 +508,100 @@ function afterTick(k,i){
     if(items.every(it=>(d[it.k]||{})[it.id])&&!(kind==="open"?S.dayDoc.apConf:S.dayDoc.chConf))askConf(kind);
   });
 }
+
+const DEMO=[{"b": "Rev'it", "m": "Redridge GTX", "c": "Marrone/Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 1, "47": 2, "44": 1, "41": 1}}, {"b": "Rev'it", "m": "Descent H2O", "c": "Nero/Rosso", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"41": 1, "42": 2, "45": 1, "39": 1, "44": 1, "47": 1, "46": 1}}, {"b": "Rev'it", "m": "Kick", "c": "Verde scuro/Marrone", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"46": 1, "39": 1, "41": 2, "43": 1, "42": 2, "47": 1}}, {"b": "Eleveit", "m": "Freeride 2.2 Air", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"46": 1, "41": 1, "43": 2}}, {"b": "Eleveit", "m": "Stunt Air", "c": "Giallo/Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"39": 2, "46": 1, "45": 1, "40": 2, "47": 1, "44": 1, "43": 1, "41": 1}}, {"b": "Befast", "m": "Trandy", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"47": 2, "45": 2, "41": 1, "42": 1, "44": 1, "46": 1}}, {"b": "OJ", "m": "Break", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"47": 1, "42": 1, "43": 1, "45": 1, "41": 1, "39": 1, "46": 2}}, {"b": "Stylmartin", "m": "Vector WP", "c": "Nero/Rosso", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"40": 1, "41": 1, "45": 1, "42": 1}}, {"b": "TCX", "m": "Hero 2 WP", "c": "Marrone", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 2, "41": 1, "44": 1, "43": 1}}, {"b": "OJ", "m": "Exploring", "c": "Marrone", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"41": 1, "40": 1, "42": 1, "45": 2}}, {"b": "Scud", "m": "Chelsea", "c": "Marrone", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"43": 1, "39": 1, "42": 1, "40": 2, "44": 2}}, {"b": "Sidi", "m": "SDS Denver", "c": "Marrone", "cat": "stivaletto", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"46_5": 1, "39_5": 1, "41": 1, "40": 2, "44": 1, "43": 1, "42_5": 1, "39": 1}}, {"b": "Eleveit", "m": "Tonale WP", "c": "Nero", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"43": 1, "41": 2, "47": 1, "45": 1, "46": 2, "40": 1}}, {"b": "TCX", "m": "Fuel WP", "c": "Marrone vintage", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 2, "45": 2, "41": 2, "44": 1, "47": 2, "40": 1, "39": 1, "46": 2}}, {"b": "Alpinestars", "m": "SMX-6 V3", "c": "Nero/Bianco/Rosso", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"44": 2, "45": 1, "42": 1, "40": 1, "43": 2, "47": 1, "39": 1}}, {"b": "Alpinestars", "m": "SMX Plus V2", "c": "Nero", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"39": 1, "45": 1, "42": 1}}, {"b": "Alpinestars", "m": "Supertech R Vented", "c": "Nero/Bianco/Rosso fluo", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 2, "43": 1, "44": 1, "46": 1, "41": 1, "39": 1, "47": 1, "40": 1}}, {"b": "Dainese", "m": "Nexus 2", "c": "Nero", "cat": "stivale", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"47": 1, "44": 1, "43": 1}}, {"b": "Gaerne", "m": "GP1 LS", "c": "Nero/Giallo fluo", "cat": "stivale", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"42": 2, "40": 1, "43_5": 1, "45_5": 1, "41_5": 1, "40_5": 1, "45": 1}}, {"b": "Sidi", "m": "REX", "c": "Nero/Grigio", "cat": "stivale", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"47": 1, "39": 1, "44": 1, "46": 2, "44_5": 2, "42_5": 1}}, {"b": "Dainese", "m": "Seeker Gore-Tex", "c": "Nero", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 1, "43": 1, "44": 1}}, {"b": "Gaerne", "m": "G.Midland Gore-Tex", "c": "Nero", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 2, "47": 1, "41": 1, "42": 2}}, {"b": "Gaerne", "m": "Fastback Endurance Enduro", "c": "Nero/Marrone", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"47": 1, "45": 1, "48": 1, "44": 1}}, {"b": "Sidi", "m": "X Power Enduro", "c": "Nero", "cat": "enduro", "g": "U", "h": 1, "mn": 40, "mx": 48, "q": {"44": 1, "43_5": 1, "47_5": 1, "47": 2, "43": 1, "42": 1, "44_5": 1, "46": 2}}, {"b": "Gaerne", "m": "SG12", "c": "Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"42": 1, "41": 1, "44": 1, "48": 2, "46": 1, "43": 1, "45": 1}}, {"b": "Acerbis", "m": "X-Rock MM Two", "c": "Rosso/Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"43": 1, "44": 1, "40": 2, "46": 1, "42": 1, "47": 2, "45": 1}}, {"b": "Alpinestars", "m": "Tech 10", "c": "Nero", "cat": "cross", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"46": 1, "47": 1, "44": 2, "45": 1, "42": 2, "41": 1}}, {"b": "Alpinestars", "m": "Tech 3", "c": "Bianco/Rosso/Blu scuro", "cat": "cross", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"45": 1, "40": 2, "47": 2, "44": 1, "48": 2, "46": 1, "41": 1, "42": 1}}, {"b": "Acerbis", "m": "X-Race", "c": "Nero", "cat": "cross", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"42": 1, "48": 1, "44": 1, "43": 1, "46": 2}}, {"b": "Sidi", "m": "Crossfire 3 SRS", "c": "Rosso/Nero", "cat": "cross", "g": "U", "h": 1, "mn": 40, "mx": 48, "q": {"47": 1, "40": 1, "45": 1, "44_5": 2, "40_5": 2, "46": 1, "43": 1}}, {"b": "Rev'it", "m": "Emerald Ladies Talpa", "c": "Bianco", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"42": 1, "38": 2, "40": 1, "37": 1, "36": 2, "41": 2, "35": 1}}, {"b": "Eleveit", "m": "Antibes WP", "c": "Nero", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"38": 2, "37": 1, "41": 1, "40": 2, "35": 2, "42": 1, "39": 2, "36": 2}}, {"b": "Rev'it", "m": "Delta H2O Ladies", "c": "Blu scuro/Nero", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"41": 2, "35": 2, "37": 1, "36": 1}}, {"b": "Falco", "m": "Lennox 2", "c": "Rosso", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"37": 1, "35": 1, "40": 1, "42": 2, "38": 1, "36": 1, "41": 1, "39": 1}}, {"b": "TCX", "m": "Blend 2 WP WMN", "c": "Nero", "cat": "stivaletto", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"41": 1, "36": 2, "38": 2, "37": 2, "35": 1}}, {"b": "Alpinestars", "m": "Stella Valencia WP", "c": "Nero", "cat": "stivaletto", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"37": 1, "36": 1, "39": 1, "40": 1, "38": 2, "35": 1, "42": 2, "41": 1}}, {"b": "Alpinestars", "m": "Stella SMX-6 V3 Drystar", "c": "Bianco", "cat": "stivale", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"40": 1, "37": 1, "36": 1, "39": 1, "38": 2}}, {"b": "Dainese", "m": "Freeland 2 Gore-Tex WMN", "c": "Nero", "cat": "stivale", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"40": 1, "38": 1, "42": 1, "41": 1, "36": 2, "39": 2, "37": 2}}, {"b": "Rev'it", "m": "Arena GTX Ladies", "c": "Nero", "cat": "stivale", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"37": 2, "39": 1, "41": 1, "38": 1, "36": 1, "42": 2}}, {"b": "Alpinestars", "m": "Stella Tech 3", "c": "Nero/Bianco/Rosa", "cat": "cross", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"37": 2, "39": 1, "42": 1, "41": 2}}];
+const CATS=[["casual","Casual"],["stivaletto","Stivaletto"],["stivale","Stivale"],["enduro","Enduro"],["cross","Cross"]];
+const CATN=Object.fromEntries(CATS),GENS=[["U","Uomo"],["D","Donna"]],GENN={U:"Uomo",D:"Donna"};
+const szNum=s=>+String(s).replace("_","."),szLabel=s=>String(s).replace("_",",");
+function magSizes(m){const mn=+m.mn||0,mx=+m.mx||0,o=[];if(!mn||mx<mn)return o;for(let v=mn;v<=mx+1e-9;v+=(m.h?0.5:1))o.push(Number.isInteger(v)?String(v):Math.floor(v)+"_5");return o}
+const magQ=(m,s)=>Math.max(0,+((m.q||{})[s])||0);
+const magTot=m=>magSizes(m).reduce((a,s)=>a+magQ(m,s),0);
+const magAll=()=>Object.keys(S.mag).map(id=>({id,...S.mag[id]}));
+const mnorm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+const magName=m=>(m.b?m.b+" ":"")+(m.m||"");
+const magSub=m=>[m.c,CATN[m.cat],GENN[m.g]].filter(Boolean).join(" · ");
+const fmtWhen=t=>{const d=new Date(t);return d.toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" alle "+pad(d.getHours())+":"+pad(d.getMinutes())};
+const magOrd=(a,b)=>(CATS.findIndex(x=>x[0]===a.cat)-CATS.findIndex(x=>x[0]===b.cat))||(a.g===b.g?0:a.g==="U"?-1:1)||String(a.b||"").localeCompare(b.b||"","it")||String(a.m||"").localeCompare(b.m||"","it")||String(a.c||"").localeCompare(b.c||"","it");
+function magFiltered(){
+  const q=mnorm(S.draft.mq||"").split(/\s+/).filter(Boolean);
+  return magAll().filter(m=>(!S.mcat||m.cat===S.mcat)&&(!S.mgen||m.g===S.mgen)&&q.every(w=>mnorm([m.b,m.m,m.c,CATN[m.cat],GENN[m.g]].join(" ")).includes(w))).sort(magOrd);
+}
+const zchip=(m,s)=>`<button class="zc ${magQ(m,s)?"on":"off"}" data-a="magsz" data-i="${m.id}" data-s="${s}" aria-label="Taglia ${szLabel(s)} ${magQ(m,s)?"disponibile":"non disponibile"}">${szLabel(s)}</button>`;
+function magRow(m){
+  return `<section class="pn mr"><button class="mrh" data-a="magopen" data-i="${m.id}"><span class="mrt"><b>${esc(magName(m))}</b><small>${esc(magSub(m))}</small></span><span class="mrn">${magTot(m)} paia ›</span></button><div class="zrow">${magSizes(m).map(s=>zchip(m,s)).join("")}</div></section>`;
+}
+function magListHtml(){
+  if(!Object.keys(S.mag).length)return `<section class="pn"><p class="mu" style="margin:0">Nessun modello. Aggiungine uno, oppure carica la bozza con 40 modelli di prova.</p></section>`;
+  const L=magFiltered();
+  if(!L.length)return `<p class="mu">Nessun modello trovato.</p>`;
+  const cap=80;
+  return L.slice(0,cap).map(magRow).join("")+(L.length>cap?`<p class="mu">Altri ${L.length-cap} modelli: scrivi di più per restringere la ricerca.</p>`:"");
+}
+function viewMag(){
+  if(S.magId&&S.mag[S.magId])return viewMagModel({id:S.magId,...S.mag[S.magId]});
+  S.magId="";
+  const chip=(k,l,cur,a)=>`<button class="fc ${cur===k?"on":""}" data-a="${a}" data-i="${k}">${l}</button>`;
+  const all=magAll(),demo=all.some(m=>m.demo);
+  return ph("Magazzino",all.length?all.reduce((a,m)=>a+magTot(m),0)+" paia":"")+
+  `<section class="pn"><input type="text" class="mq" data-d="mq" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Cerca modello, marca o colore" value="${esc(S.draft.mq||"")}"><div class="fcs">${chip("","Tutti",S.mcat,"magcat")}${CATS.map(([k,l])=>chip(k,l,S.mcat,"magcat")).join("")}</div><div class="fcs">${chip("","Uomo e donna",S.mgen,"maggen")}${GENS.map(([k,l])=>chip(k,l,S.mgen,"maggen")).join("")}</div></section>`+
+  `<div id="maglist">${magListHtml()}</div>`+
+  `<section class="pn"><div class="btns" style="margin:0;justify-content:flex-start"><button class="b" data-a="magnew">Aggiungi modello</button>${all.length?"":`<button class="g" data-a="magdemo">Carica la bozza (40 modelli)</button>`}${demo?`<button class="g" data-a="magdeldemo">Elimina i modelli di prova</button>`:""}</div></section>`;
+}
+function viewMagModel(m){
+  return `<p class="back" style="margin:6px 0 10px"><button class="g" data-a="magback">‹ Magazzino</button></p>`+
+  `<section class="pn"><div class="ph"><h2>${esc(magName(m))}</h2><small>${magTot(m)} paia</small></div><p class="mu" style="margin:0">${esc(magSub(m))}</p>${m.at?`<p class="mu" style="margin:6px 0 0">Aggiornato il ${fmtWhen(m.at)}${m.by?" da "+esc(rn(m.by)):""}</p>`:""}<div class="btns" style="margin:12px 0 0;justify-content:flex-start"><button class="g" data-a="magedit" data-i="${m.id}">Modifica scheda</button></div></section>`+
+  `<section class="pn">${ph("Giacenze","tocca + e − per aggiornare")}<div class="sgrid">${magSizes(m).map(z=>{const n=magQ(m,z);return `<div class="stl ${n?"on":"off"}"><b>${szLabel(z)}</b><button class="g sq" data-a="magq" data-i="${m.id}" data-s="${z}" data-k="-1" aria-label="Meno">−</button><span class="sn">${n}</span><button class="g sq" data-a="magq" data-i="${m.id}" data-s="${z}" data-k="1" aria-label="Più">+</button></div>`}).join("")}</div></section>`;
+}
+function szScore(src,m){
+  if(!src)return 0;const f=t=>String(t||"").split(/[\s\/]/)[0];
+  return (m.cat===src.cat?4:0)+(m.b&&m.b===src.b?2:0)+(f(m.c)&&f(m.c)===f(src.c)?1:0);
+}
+function szSheet(m){
+  const src=S.mag[m.src]?{id:m.src,...S.mag[m.src]}:null,z=m.z,has=!!src&&magQ(src,z)>0;
+  let L=magAll().filter(x=>(!src||x.id!==src.id)&&magSizes(x).includes(z)&&magQ(x,z)>0&&(!m.cat||x.cat===m.cat)&&(!m.gen||x.g===m.gen));
+  L.sort((a,b)=>szScore(src,b)-szScore(src,a)||magOrd(a,b));
+  const near=src&&!has?magSizes(src).filter(t=>magQ(src,t)>0&&Math.abs(szNum(t)-szNum(z))<=1).map(szLabel):[];
+  const row=x=>`<button class="mrr" data-a="magopen" data-i="${x.id}"><span class="mrt"><b>${esc(magName(x))}</b><small>${esc(magSub(x))}</small></span><span class="mrn">${magQ(x,z)} ${magQ(x,z)===1?"paio":"paia"} ›</span></button>`;
+  const chip=(k,l,cur,a)=>`<button class="fc ${cur===k?"on":""}" data-a="${a}" data-i="${k}">${l}</button>`;
+  let h=`<div class="mbg" data-a="mclose"></div><div class="dlg wd" role="dialog" aria-modal="true"><div class="dh2"><h2>Taglia ${szLabel(z)}</h2><button class="g" data-a="mclose">Chiudi</button></div>`;
+  if(src)h+=has?`<p class="mu" style="margin:0"><b>${esc(magName(src))}</b> ${esc(src.c||"")} ha la ${szLabel(z)}. Altre scarpe con questa taglia:</p>`:`<p class="mu" style="margin:0"><b>${esc(magName(src))}</b> ${esc(src.c||"")} non ha la ${szLabel(z)}.</p>`;
+  if(near.length)h+=`<p class="mu" style="margin:0">Stessa scarpa, taglie vicine: <b>${near.join(", ")}</b> (la calzata può cambiare).</p>`;
+  h+=`<div class="fcs">${chip("","Uomo e donna",m.gen,"zgen")}${GENS.map(([k,l])=>chip(k,l,m.gen,"zgen")).join("")}</div><div class="fcs">${chip("","Tutte",m.cat,"zcat")}${CATS.map(([k,l])=>chip(k,l,m.cat,"zcat")).join("")}</div>`;
+  if(!L.length)return h+`<p class="mu">Nessun’altra scarpa disponibile in taglia ${szLabel(z)} con questi filtri.</p></div>`;
+  if(src&&!has){
+    const same=L.filter(x=>x.cat===src.cat),rest=L.filter(x=>x.cat!==src.cat);
+    if(same.length)h+=`<div class="zh">Simili: ${CATN[src.cat]} (${same.length})</div>`+same.map(row).join("");
+    if(rest.length)h+=`<div class="zh">Altre categorie (${rest.length})</div>`+rest.map(row).join("");
+  }else h+=`<div class="zh">Disponibili in taglia ${szLabel(z)} (${L.length})</div>`+L.map(row).join("");
+  return h+`</div>`;
+}
+function magEditDrafts(m){
+  S.draft.me_b=m?m.b||"":"";S.draft.me_m=m?m.m||"":"";S.draft.me_c=m?m.c||"":"";S.draft.me_cat=m?m.cat||"casual":"casual";S.draft.me_g=m?m.g||"U":"U";
+  S.draft.me_mn=m?fnum(m.mn):"39";S.draft.me_mx=m?fnum(m.mx):"47";S.draft.me_h=m&&m.h?"1":"0";
+}
+function magEditHtml(m){
+  const nw=!m.mid,d=S.draft,inp=(k,l,x)=>`<label class="fld"><span>${l}</span><input type="text" ${x||""} data-d="${k}" value="${esc(d[k]||"")}"></label>`;
+  return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>${nw?"Nuovo modello":"Modifica scheda"}</h2>`+
+  inp("me_b","Marca")+inp("me_m","Modello")+inp("me_c",nw?"Colori (separati da virgola, uno per scheda)":"Colore")+
+  `<label class="fld"><span>Categoria</span><select data-d="me_cat">${CATS.map(([k,l])=>`<option value="${k}" ${d.me_cat===k?"selected":""}>${l}</option>`).join("")}</select></label>`+
+  `<label class="fld"><span>Uomo o donna</span><select data-d="me_g">${GENS.map(([k,l])=>`<option value="${k}" ${d.me_g===k?"selected":""}>${l}</option>`).join("")}</select></label>`+
+  `<div class="two">${inp("me_mn","Taglia più piccola",'inputmode="decimal"')}${inp("me_mx","Taglia più grande",'inputmode="decimal"')}</div>`+
+  `<label class="fld"><span>Mezze misure</span><select data-d="me_h"><option value="0" ${d.me_h!=="1"?"selected":""}>No</option><option value="1" ${d.me_h==="1"?"selected":""}>Sì</option></select></label>`+
+  `<button class="b" data-a="magsave">Salva</button>${nw?"":`<button class="g" data-a="magdelask" data-i="${m.mid}">Elimina modello</button>`}<button class="g" data-a="mclose">Annulla</button></div>`;
+}
+function magSave(){
+  const m=S.modal,d=S.draft,b=(d.me_b||"").trim(),mm=(d.me_m||"").trim(),mn=num(d.me_mn),mx=num(d.me_mx);
+  if(!mm){toast("Scrivi il nome del modello");return}
+  if(!mn||!mx||mn>mx||mn<20||mx>60){toast("Controlla le taglie: dalla più piccola alla più grande");return}
+  const at=Date.now(),base={b,m:mm,cat:d.me_cat||"casual",g:d.me_g||"U",h:d.me_h==="1"?1:0,mn:Math.round(mn*2)/2,mx:Math.round(mx*2)/2,at,by:S.uid};
+  if(m.mid){const c=(d.me_c||"").trim();S.mag[m.mid]={...S.mag[m.mid],...base,c};save(D.doc("mag/"+m.mid),{...base,c});toast("Salvato")}
+  else{
+    const cols=String(d.me_c||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean),L=cols.length?cols:[""];
+    L.forEach((c,j)=>{const id=uid8()+j,doc={...base,c,q:{}};S.mag[id]=doc;D.doc("mag/"+id).set(doc).catch(()=>toast("Salvataggio non riuscito"))});
+    toast(L.length>1?L.length+" modelli aggiunti":"Modello aggiunto");
+  }
+  closeModal();render();
+}
 let mkey="";
 function openModal(m){S.modal={id:uid8(),...m};renderModal()}
 function closeModal(){S.modal=null;renderModal()}
@@ -495,6 +621,9 @@ function modalHtml(){
       `<input type="text" data-d="prnote" placeholder="Nota aggiuntiva (facoltativa)" value="${esc(S.draft.prnote||"")}">`+
       `<button class="b" data-a="mprob">Invia</button><button class="g" data-a="mclose">Annulla</button>`);
   }
+  if(m.type==="magsz")return szSheet(m);
+  if(m.type==="magedit")return magEditHtml(m);
+  if(m.type==="magdel"){const x=S.mag[m.mid];return dlg(m.kind==="demo"?"Eliminare i modelli di prova?":"Eliminare il modello?",`<p style="margin:0">${m.kind==="demo"?"Verranno cancellati i 40 modelli della bozza, con le loro taglie.":esc(x?magName(x)+" "+(x.c||""):"")+" verrà cancellato con tutte le sue taglie."}</p><button class="b" data-a="magdelgo">Elimina</button><button class="g" data-a="mclose">Annulla</button>`)}
   if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><label class="fld" style="margin:0"><span>Account collegato</span><select data-d="rnuid"><option value="">Nessuno</option>${people().map(u=>`<option value="${u}" ${S.draft.rnuid===u?"selected":""}>${esc(rn(u))}</option>`).join("")}</select></label><button class="b" data-a="mren">Salva</button><button class="g" data-a="mclose">Annulla</button>`);
   if(m.type==="menu")return `<div class="mbg clr" data-a="mclose"></div><div class="pop"><button data-a="mopen" data-i="profile">Il tuo profilo</button>${adm?`<button data-a="mopen" data-i="names">Nomi dei colleghi</button>`:""}</div>`;
   if(m.type==="names")return dlg("Nomi dei colleghi",`<p class="mu" style="margin:0">I nomi che vedono tutti nell’app. Si salvano quando esci dal campo.</p>`+people().map(u=>`<input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}" aria-label="Nome">`).join("")+`<button class="g" data-a="mclose">Chiudi</button>`);
@@ -711,7 +840,7 @@ function viewKpi(){
   if(!last)return h+`<section class="pn">${ph("KPI")}<p class="mu" style="margin:0">Nessun giorno chiuso in questo mese. Nel tab Budget inserisci incassi, scontrini e ingressi, poi premi “Chiudi il giorno”.</p></section>`;
   h+=`<section class="pn">${ph("Progressivo del mese",rows.length+(rows.length===1?" giorno chiuso":" giorni chiusi"))}<div class="kpis"><div><span>Conversion rate</span><b>${pc1(last.ccv)}</b></div><div><span>Scontrino medio</span><b>${last.csm==null?"–":eur2(last.csm)}</b></div></div>`+
     `<div class="bstats" style="margin-top:14px"><div><span>Scontrini</span><b>${nm2(last.C.rc)}</b></div><div><span>Ingressi</span><b>${nm2(last.C.en)}</b></div><div><span>Incassi</span><b>${eur(Math.round(last.C.inc))}</b></div></div></section>`;
-  h+=rows.slice().reverse().map(r=>`<section class="pn kr"><div class="krh"><b>${GG[wdi(r.x)]} ${parse(r.x).getDate()}</b><span>Progressivo</span></div><div class="kpis"><div><span>Conversion rate</span><b>${pc1(r.ccv)}</b></div><div><span>Scontrino medio</span><b>${r.csm==null?"–":eur2(r.csm)}</b></div></div><p class="mu" style="margin:10px 0 0">Del giorno: conversion ${pc1(r.cv)}, scontrino medio ${r.sm==null?"–":eur2(r.sm)} (${nm2(r.rc)} scontrini, ${nm2(r.en)} ingressi)</p></section>`).join("");
+  h+=`<h3 class="sub2" style="margin:6px 2px 10px">Giorno per giorno</h3>`+rows.slice().reverse().map(r=>`<section class="pn kr"><div class="krh"><b>${GG[wdi(r.x)]} ${parse(r.x).getDate()}</b><span>Solo questa giornata</span></div><div class="kpis"><div><span>Conversion rate</span><b>${pc1(r.cv)}</b></div><div><span>Scontrino medio</span><b>${r.sm==null?"–":eur2(r.sm)}</b></div></div><div class="bstats" style="margin-top:12px"><div><span>Scontrini</span><b>${nm2(r.rc)}</b></div><div><span>Ingressi</span><b>${nm2(r.en)}</b></div><div><span>Incassi</span><b>${eur(Math.round(r.act))}</b></div></div></section>`).join("");
   return h;
 }
 function viewBudget(){
@@ -828,7 +957,7 @@ function render(){
   const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
   const who=$("#who");who.hidden=!logged;who.textContent=String(S.names[S.uid]||S.email||"?").charAt(0).toUpperCase();
   if(["todo","budget","avviso","lista","kpi"].includes(S.tab)&&!isAdmin())S.tab="oggi";
-  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],...(isAdmin()?[["todo","ToDo",0],["avviso","Avviso",0],["lista","Check-list",0],["budget","Budget",0],["kpi","KPI",0]]:[])];
+  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],["mag","Magazzino",0],...(isAdmin()?[["todo","ToDo",0],["avviso","Avviso",0],["lista","Check-list",0],["budget","Budget",0],["kpi","KPI",0]]:[])];
   const nv=$("#nav"),sl=nv.scrollLeft||0;
   nv.innerHTML=logged?tabs.map(([k,l,b])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}"><span class="ic">${IC[k]}</span>${l}${b?`<b class="bd">${b}</b>`:""}</button>`).join(""):"";
   nv.scrollLeft=sl;
@@ -836,7 +965,7 @@ function render(){
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:`<p class="mu">Caricamento…</p>`);return}
-  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid?`<div class="note">Nessun amministratore impostato: apri il menu (cerchio in alto a destra) e scegli Il tuo profilo.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,todo:()=>isAdmin()?viewAssign():"",budget:viewBudget,kpi:viewKpi,avviso:viewAvviso,lista:viewLista}[S.tab])();
+  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid?`<div class="note">Nessun amministratore impostato: apri il menu (cerchio in alto a destra) e scegli Il tuo profilo.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,mag:viewMag,todo:()=>isAdmin()?viewAssign():"",budget:viewBudget,kpi:viewKpi,avviso:viewAvviso,lista:viewLista}[S.tab])();
   const sh=$("#sheet"),html=(S.tab==="cal"&&S.sumDay)?sheetHtml():"";
   if(html!==S.sheetHtml){
     const sb=sh.querySelector&&sh.querySelector(".sbody"),st=sb?sb.scrollTop:0;
@@ -848,8 +977,8 @@ function render(){
 
 document.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending)render()},60));
 document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k&&e.target.tagName==="SELECT")S.draft[k]=e.target.value});
-document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k)S.draft[k]=e.target.value});
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",em:"login",pw:"login",rnname:"mren",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_")||k.startsWith("cm_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.d;if(k){S.draft[k]=e.target.value;if(k==="mq"){const L=$("#maglist");if(L)L.innerHTML=magListHtml()}}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.d){const m={at:"addact",ac:"addact",em:"login",pw:"login",rnname:"mren",rp:"addreport",tk:"addtask"};const k=e.target.dataset.d;let a=m[k],el=e.target;if(!a&&(k.startsWith("new_")||k.startsWith("newrec_")||k.startsWith("cm_"))){el=e.target.parentElement.querySelector("button[data-a]");a=el&&el.dataset.a}if(k==="mq"){e.preventDefault();e.target.blur();return}if(a){e.preventDefault();act(a,el);e.target.blur()}}});
 function act(a,el){
   const D2=el.dataset,db=D,i=D2.i,k=D2.k;
   if(a==="login"){
@@ -936,6 +1065,33 @@ function act(a,el){
   else if(a==="delrec"){editCfg(c=>{c.rec=c.rec.filter(x=>x.id!==i)})}
   else if(a==="recwhere"){const v=el.value;editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.w=v})}
   else if(a==="recname"){const v=el.value.trim();if(v)editCfg(c=>{const x=c.rec.find(x=>x.id===i);if(x)x.t=v})}
+  else if(a==="magcat"){S.mcat=i;render()}
+  else if(a==="maggen"){S.mgen=i;render()}
+  else if(a==="magopen"){S.magId=i;S.tab="mag";S.modal=null;renderModal();render();scrollTo(0,0)}
+  else if(a==="magback"){S.magId="";render();scrollTo(0,0)}
+  else if(a==="magsz"){const m=S.mag[i];if(!m)return;openModal({type:"magsz",src:i,z:D2.s,cat:"",gen:m.g||""})}
+  else if(a==="zcat"||a==="zgen"){if(!S.modal)return;S.modal[a==="zcat"?"cat":"gen"]=i;S.modal.v=(S.modal.v||"")+"o";renderModal()}
+  else if(a==="magq"){
+    const m=S.mag[i];if(!m)return;const z=D2.s,n=Math.max(0,Math.min(99,magQ(m,z)+(+k))),at=Date.now();
+    m.q={...(m.q||{}),[z]:n};m.at=at;m.by=S.uid;save(D.doc("mag/"+i),{q:{[z]:n},at,by:S.uid});render();
+  }
+  else if(a==="magnew"){magEditDrafts(null);openModal({type:"magedit",mid:""})}
+  else if(a==="magedit"){const m=S.mag[i];if(!m)return;magEditDrafts(m);openModal({type:"magedit",mid:i})}
+  else if(a==="magsave")magSave()
+  else if(a==="magdelask"){openModal({type:"magdel",kind:"one",mid:i})}
+  else if(a==="magdeldemo"){openModal({type:"magdel",kind:"demo"})}
+  else if(a==="magdelgo"){
+    const m=S.modal;if(!m)return;
+    const ids=m.kind==="demo"?Object.keys(S.mag).filter(x=>S.mag[x].demo):[m.mid];
+    ids.forEach(x=>{delete S.mag[x];D.doc("mag/"+x).delete().catch(()=>toast("Non riuscito"))});
+    if(ids.includes(S.magId))S.magId="";
+    toast(m.kind==="demo"?"Modelli di prova eliminati":"Modello eliminato");closeModal();render();
+  }
+  else if(a==="magdemo"){
+    const at=Date.now();
+    DEMO.forEach((d,j)=>{const id="d"+pad(j+1),doc={...d,demo:true,at,by:S.uid};S.mag[id]=doc;D.doc("mag/"+id).set(doc).catch(()=>toast("Salvataggio non riuscito"))});
+    toast("Bozza caricata: "+DEMO.length+" modelli");render();
+  }
 }
 const CH=["chk","itemname","username","taskdone","recname","recwhere","bmtotal","bmw","rev","revx","shiftset"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
