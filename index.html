@@ -165,6 +165,12 @@ textarea{min-height:100px;resize:vertical}
 .g{border:0;border-radius:10px;padding:10px 15px;background:var(--fill);color:var(--ink);font:600 14px var(--sans)}
 .sq{width:42px;height:42px;padding:0;font-size:22px;line-height:1;border-radius:12px}
 .x{border:0;background:transparent;color:var(--mu);font-size:20px;padding:2px 10px;line-height:1}
+.tkb{width:100%;border:0;background:transparent;text-align:left;color:var(--ink);font:inherit;border-radius:0}
+.list>.tkb+.tkb{border-top:1px solid var(--ln)}
+.tkb .tx{flex:1;min-width:0;font-weight:600}
+.tkb .who{font-size:22px;line-height:1}
+.ysum{display:block;width:100%;margin:0 0 14px;padding:16px 18px;border:0;border-radius:14px;background:#d6f230;color:#16171a;box-shadow:0 0 0 2px #16171a inset;font:700 16px var(--sans);text-align:center}
+.dlg .cmadd .g{width:auto;flex:none;padding:10px 15px}
 .btns{display:flex;gap:10px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap}
 .dh{display:flex;align-items:center;gap:10px;margin:10px 0 16px}
 .dnum{font:400 70px/.88 var(--disp);letter-spacing:.005em;margin-right:4px}
@@ -458,7 +464,7 @@ async function start(u){
   subs.users=D.col("users").onSnapshot(q=>{q.docs.forEach(d=>S.names[d.id]=(d.data()||{}).name);render()},fail);
   subs.cfg=D.doc("config/main").onSnapshot(s=>{S.cfg=s.exists?s.data():null;S.loaded=true;schedulePublish();if(!S.pushTried){S.pushTried=1;setupPush(false);if(location.search){deepLink(location.search);try{history.replaceState(null,"",location.pathname)}catch(e){}}}render()},fail);
   subs.admin=D.doc("meta/admin").onSnapshot(s=>{S.adminUid=s.exists?(s.data().uid||null):null;S.adminLoaded=true;watchAdmin();cleanDemo(S.mag);render()},fail);
-  subs.tasks=D.col("tasks").onSnapshot(q=>{S.tasks=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
+  subs.tasks=D.col("tasks").onSnapshot(q=>{S.tasks=q.docs.map(d=>({id:d.id,...d.data()}));if(S.modal&&S.modal.type==="tdet")S.modal.v=(S.modal.v||"")+"o";render()},fail);
   subs.reports=D.col("reports").onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.days=D.col("days").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.daysAll=m;render()},fail);
   subs.weeks=D.col("weeks").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.weeksAll=m;S.fl.wk=1;schedulePublish();render()},fail);
@@ -659,6 +665,26 @@ function modalHtml(){
     `</div><div class="cmadd"><input type="text" data-d="newcat" placeholder="Nuova categoria" value="${esc(S.draft.newcat||"")}"><button class="g" data-a="catadd">Aggiungi</button></div><button class="g" data-a="mclose">Chiudi</button></div>`;
   }
   if(m.type==="magdel"){const x=S.mag[m.mid];return dlg("Eliminare il modello?",`<p style="margin:0">${esc(x?magName(x)+" "+(x.c||""):"")} verrà cancellato con tutte le sue taglie.</p><button class="b" data-a="magdelgo">Elimina</button><button class="g" data-a="mclose">Annulla</button>`)}
+  if(m.type==="tdet"){
+    const t=S.tasks.find(x=>x.id===m.tid);
+    if(!t)return dlg("Attività",`<p style="margin:0">Questa attività non esiste più.</p><button class="g" data-a="mclose">Chiudi</button>`);
+    const opts=Object.entries(S.names).map(([id,n])=>`<option value="${id}" ${(S.draft.tdto||t.to)===id?"selected":""}>${esc(id===S.uid?"Io":n)}</option>`).join("");
+    const st=t.done?`Fatta da ${esc(nm(t.doneBy||t.to))}${t.doneAt?" il "+fmtWhen(t.doneAt):""}`:"Da fare";
+    return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>Attività</h2>`+
+    `<label class="fld"><span>Cosa c’è da fare</span><textarea data-d="tdt">${esc(S.draft.tdt!==undefined?S.draft.tdt:t.t)}</textarea></label>`+
+    `<label class="fld"><span>Chi deve farla</span><select data-d="tdto">${opts}</select></label>`+
+    `<label class="fld"><span>Per il giorno</span><input type="date" data-d="tdd" value="${esc(S.draft.tdd||tfor(t))}"></label>`+
+    `<button class="b" data-a="tdsave">Salva modifiche</button>`+
+    `<p class="mu" style="margin:0">Creata ${t.at?"il "+fmtWhen(t.at):""} · ${st}</p>`+
+    (t.to===S.uid?`<button class="g" data-a="tdtog">${t.done?"Riapri":"Segna come fatta"}</button>`:"")+
+    `<div class="zh">Commenti</div>${cmBlock(t,"addcmtask",t.id)}`+
+    (m.ask?`<p style="margin:8px 0 0"><b>Eliminare questa attività?</b></p><button class="b" data-a="tddel">Elimina</button><button class="g" data-a="tdno">Annulla</button>`:`<button class="g" data-a="tdask">Elimina attività</button>`)+
+    `<button class="g" data-a="mclose">Chiudi</button></div>`;
+  }
+  if(m.type==="ysum"){
+    const y=addDays(TODAY,-1),d=S.daysAll[y]||{},t=String(d.sum||"").trim();
+    return dlg("Riepilogo di ieri",`<p class="mu" style="margin:0">${esc(fmtDay(y))}${t&&d.sumBy?" · salvato da "+esc(nm(d.sumBy))+(d.sumAt?" alle "+hm(d.sumAt):""):""}</p>`+(t?`<p style="white-space:pre-wrap;color:var(--ink);margin:0">${esc(t)}</p>`:`<p style="margin:0">Ieri non è stato salvato nessun riepilogo.</p>`)+`<button class="b" data-a="mclose">Chiudi</button>`);
+  }
   if(m.type==="turno"){
     const x=m.x,cs=cellsOf(mondayOf(x)),VAL={w:"L",r:"R",f:"F",m:"M"};
     return `<div class="mbg" data-a="mclose"></div><div class="dlg" role="dialog" aria-modal="true"><h2>${GGL[wdi(x)]} ${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</h2>`+
@@ -752,10 +778,11 @@ function myTasksCard(){
 }
 function viewAssign(){
   const recent=t=>!t.done||(Date.now()-(t.doneAt||0)<2.592e8);
-  const given=S.tasks.filter(t=>t.by===S.uid&&t.to!==S.uid&&recent(t)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||tfor(x).localeCompare(tfor(y))||(x.at||0)-(y.at||0));
+  const given=S.tasks.filter(t=>t.by===S.uid&&recent(t)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||tfor(x).localeCompare(tfor(y))||(x.at||0)-(y.at||0));
   const opts=Object.entries(S.names).filter(([id])=>id!==S.uid).map(([id,n])=>`<option value="${id}" ${S.draft.tkto===id?"selected":""}>${esc(n)}</option>`).join("");
-  return `<section class="pn">${ph("Assegna a un collega")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option><option value="__all" ${S.draft.tkto==="__all"?"selected":""}>Tutti i colleghi</option>${opts}</select><label class="fld" style="margin:4px 0 0"><span>Per il giorno</span><input type="date" data-d="tkday" value="${esc(S.draft.tkday||TODAY)}"></label><button class="b" data-a="addtask">Assegna</button></div><div class="list">`+
-  given.map(t=>`<div class="row"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}<small class="sub">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}, ${esc(fmtDay(tfor(t)))}</small></span><button class="x" data-a="deltask" data-i="${t.id}" aria-label="Elimina">✕</button></div>`).join("")+`</div></section>`;
+  return `<section class="pn">${ph("Nuova attività")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa c’è da fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Chi deve farla?</option><option value="${S.uid}" ${S.draft.tkto===S.uid?"selected":""}>Io</option><option value="__all" ${S.draft.tkto==="__all"?"selected":""}>Tutti i colleghi</option>${opts}</select><label class="fld" style="margin:4px 0 0"><span>Per il giorno</span><input type="date" data-d="tkday" value="${esc(S.draft.tkday||TODAY)}"></label><button class="b" data-a="addtask">Aggiungi</button></div></section>`+
+  `<section class="pn">${ph("Attività",given.filter(t=>!t.done).length+" da fare")}<div class="list">`+
+  (given.map(t=>{const n=cmAll(t,t.by,t.at).length;return `<button class="row tkb" data-a="tdopen" data-i="${t.id}"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}<small class="sub">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}, ${esc(fmtDay(tfor(t)))}${n?" · "+n+(n>1?" commenti":" commento"):""}</small></span><span class="who" aria-hidden="true">›</span></button>`}).join("")||`<p class="mu" style="margin:0">Nessuna attività.</p>`)+`</div></section>`;
 }
 function chkCard(k,items,title){
   const mp=i=>S.dayDoc[i.k||k]||{},n=items.filter(i=>mp(i)[i.id]).length;
@@ -772,7 +799,7 @@ function dayBar(){
 function viewOggi(){
   const c=eff();
   const rec=recFor(S.day,"oggi");
-  return dayBar()+budgetPanel()+avvisoCard()+memoCard()+myTasksCard()+
+  return dayBar()+(S.day===TODAY?`<button class="ysum" data-a="ysum">Leggi riepilogo di ieri</button>`:"")+budgetPanel()+avvisoCard()+memoCard()+myTasksCard()+
   (rec.length?chkCard("rec",rec,"Attività fisse del "+GGL[wdi(S.day)].toLowerCase()):"")+
   `<section class="pn">${ph("Attività svolte",S.acts.length||"")}<div class="stack">
     <input type="text" data-d="at" placeholder="Cosa è stato fatto?" value="${esc(S.draft.at||"")}">
@@ -1109,13 +1136,24 @@ function act(a,el){
     db.doc("reports/"+uid8()).set({t,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));notify("all","Nuova segnalazione ⚠️",rn(S.uid)+": "+shT(t),"?tab=oggi");render()}
   else if(a==="resolve"){save(db.doc("reports/"+i),{res:true,resBy:S.uid,resAt:Date.now()});{const r=S.reports.find(x=>x.id===i);notify("all","Segnalazione risolta ✅",rn(S.uid)+(r?": "+shT(r.t):""),"?tab=oggi")}}
   else if(a==="delreport"){db.doc("reports/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
-  else if(a==="addtask"){if(!isAdmin())return;const t=(S.draft.tk||"").trim(),to=S.draft.tkto||"";if(!t){toast("Scrivi cosa deve fare");return}if(!to){toast("Scegli il collega");return}
+  else if(a==="addtask"){if(!isAdmin())return;const t=(S.draft.tk||"").trim(),to=S.draft.tkto||"";if(!t){toast("Scrivi cosa c’è da fare");return}if(!to){toast("Scegli chi deve farla");return}
     const dest=to==="__all"?Object.keys(S.names).filter(id=>id!==S.uid):[to];
     if(!dest.length){toast("Nessun collega a cui assegnare");return}
-    const fd=S.draft.tkday||TODAY;S.draft.tk="";dest.forEach(id=>{db.doc("tasks/"+uid8()).set({t,to:id,by:S.uid,at:Date.now(),done:false,for:fd}).catch(()=>toast("Salvataggio non riuscito"));notify([id],"Nuova attività per te 📌",shT(t)+(fd!==TODAY?" (per il "+fd.split("-").reverse().join("/")+")":""),"?tab=oggi")});
+    const fd=S.draft.tkday||TODAY;S.draft.tk="";dest.forEach(id=>{db.doc("tasks/"+uid8()).set({t,to:id,by:S.uid,at:Date.now(),done:false,for:fd}).catch(()=>toast("Salvataggio non riuscito"));if(id!==S.uid)notify([id],"Nuova attività per te 📌",shT(t)+(fd!==TODAY?" (per il "+fd.split("-").reverse().join("/")+")":""),"?tab=oggi")});
     if(dest.length>1)toast("Assegnata a "+dest.length+" colleghi");render()}
   else if(a==="taskdone"){save(db.doc("tasks/"+i),{done:el.checked,doneAt:el.checked?Date.now():0,doneBy:el.checked?S.uid:""})}
   else if(a==="deltask"){db.doc("tasks/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
+  else if(a==="tdopen"){if(!isAdmin())return;const t=S.tasks.find(x=>x.id===i);if(!t)return;S.draft.tdt=t.t;S.draft.tdd=tfor(t);S.draft.tdto=t.to;S.draft["cm_"+i]="";openModal({type:"tdet",tid:i})}
+  else if(a==="tdsave"){if(!isAdmin()||!S.modal)return;const id=S.modal.tid,t=S.tasks.find(x=>x.id===id);if(!t)return;const tx=(S.draft.tdt||"").trim();if(!tx){toast("Scrivi cosa c’è da fare");return}
+    const to=S.draft.tdto||t.to,fd=S.draft.tdd||tfor(t);save(db.doc("tasks/"+id),{t:tx,to,for:fd});
+    if(to!==t.to&&to!==S.uid)notify([to],"Nuova attività per te 📌",shT(tx)+(fd!==TODAY?" (per il "+fd.split("-").reverse().join("/")+")":""),"?tab=oggi");
+    clearDrafts();closeModal();toast("Attività salvata")}
+  else if(a==="tdtog"){if(!isAdmin()||!S.modal)return;const id=S.modal.tid,t=S.tasks.find(x=>x.id===id);if(!t||t.to!==S.uid)return;const d=!t.done;save(db.doc("tasks/"+id),{done:d,doneAt:d?Date.now():0,doneBy:d?S.uid:""})}
+  else if(a==="addcmtask"){if(!isAdmin())return;const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("tasks/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}})}
+  else if(a==="tdask"){if(!S.modal)return;S.modal.ask=true;S.modal.v=(S.modal.v||"")+"o";renderModal()}
+  else if(a==="tdno"){if(!S.modal)return;S.modal.ask=false;S.modal.v=(S.modal.v||"")+"o";renderModal()}
+  else if(a==="tddel"){if(!isAdmin()||!S.modal)return;db.doc("tasks/"+S.modal.tid).delete().catch(()=>toast("Operazione non riuscita"));clearDrafts();closeModal();toast("Attività eliminata")}
+  else if(a==="ysum"){openModal({type:"ysum"})}
   else if(a==="claimadmin"){db.doc("meta/admin").set({uid:S.uid}).then(()=>toast("Ora sei l’amministratore")).catch(()=>toast("Non riuscito: c’è già un amministratore"))}
   else if(a==="username"){const v=el.value.trim();if(v)save(db.doc("users/"+D2.u),{name:v})}
   else if(a==="avvisosave"){const cur=eff().avviso,v=(S.draft.avv!==undefined?S.draft.avv:(cur?cur.t:"")).trim();delete S.draft.avv;editCfg(c=>{c.avviso=v?{t:v,by:S.uid,at:Date.now()}:null});if(v&&v!==(cur?cur.t:""))notify("all","Avviso 📢",shT(v,140),"?tab=oggi");toast(v?"Avviso salvato":"Avviso tolto")}
