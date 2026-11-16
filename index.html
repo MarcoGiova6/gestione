@@ -260,6 +260,9 @@ h3.sub2{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
 .mc2.r{background:var(--bad);color:var(--gotx)}
 .mc2.n{background:var(--fill);color:var(--ink)}
 .mc2.e{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ln2)}
+.rvt span{font-weight:700}
+.mc2.o{opacity:.55}
+button.mc2{border:0}
 .mc2.t{box-shadow:inset 0 0 0 3px var(--ink)}
 .dlg .row .g{width:auto;flex:none;padding:10px 15px}
 .kn{display:block;color:var(--mu);font:600 13px var(--sans);margin-top:2px}
@@ -656,6 +659,12 @@ function modalHtml(){
     `</div><div class="cmadd"><input type="text" data-d="newcat" placeholder="Nuova categoria" value="${esc(S.draft.newcat||"")}"><button class="g" data-a="catadd">Aggiungi</button></div><button class="g" data-a="mclose">Chiudi</button></div>`;
   }
   if(m.type==="magdel"){const x=S.mag[m.mid];return dlg("Eliminare il modello?",`<p style="margin:0">${esc(x?magName(x)+" "+(x.c||""):"")} verrà cancellato con tutte le sue taglie.</p><button class="b" data-a="magdelgo">Elimina</button><button class="g" data-a="mclose">Annulla</button>`)}
+  if(m.type==="turno"){
+    const x=m.x,cs=cellsOf(mondayOf(x)),VAL={w:"L",r:"R",f:"F",m:"M"};
+    return `<div class="mbg" data-a="mclose"></div><div class="dlg" role="dialog" aria-modal="true"><h2>${GGL[wdi(x)]} ${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</h2>`+
+    eff().staff.map(q=>{const st=stateOf(cs[x+"_"+q.id]);return `<div class="prow"><span>${esc(q.n)}</span><select class="sp ${st}" data-a="shiftset" data-c="${x}_${q.id}" aria-label="Turno di ${esc(q.n)}">${[["","–"],["L","Lavoro"],["R","Riposo"],["F","Ferie"],["M","Malattia"]].map(([v,t])=>`<option value="${v}" ${(VAL[st]||"")===v?"selected":""}>${t}</option>`).join("")}</select></div>`}).join("")+
+    `<button class="b" data-a="mclose">Fatto</button></div>`;
+  }
   if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><label class="fld" style="margin:0"><span>Account collegato</span><select data-d="rnuid"><option value="">Nessuno</option>${people().map(u=>`<option value="${u}" ${S.draft.rnuid===u?"selected":""}>${esc(rn(u))}</option>`).join("")}</select></label><button class="b" data-a="mren">Salva</button><button class="g" data-a="${m.from==="coll"?"mcoll":"mclose"}">Annulla</button>`);
   if(m.type==="menu")return `<div class="mbg clr" data-a="mclose"></div><div class="pop"><button data-a="mopen" data-i="profile">Il tuo profilo</button>${adm?`<button data-a="mopen" data-i="colleghi">Colleghi</button>`:""}</div>`;
   if(m.type==="colleghi")return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>Colleghi</h2><p class="mu" style="margin:0">Il nome nel Planner e l’account collegato. Senza collegamento la persona non vede il proprio obiettivo e non riceve i promemoria di turno.</p><div class="list">${eff().staff.map(q=>`<div class="row"><span class="tx">${esc(q.n)}<small class="sub">${q.uid?"account: "+esc(rn(q.uid)):"non collegato"}</small></span><button class="g" data-a="ren" data-i="${q.id}" data-from="coll">${q.uid?"Cambia":"Collega"}</button></div>`).join("")}</div><div class="zh">Nomi degli account</div><p class="mu" style="margin:0">Il nome che vedono tutti nell’app. Si salva quando esci dal campo.</p>${people().map(u=>`<input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}" aria-label="Nome">`).join("")}<button class="g" data-a="mclose">Chiudi</button></div>`;
@@ -829,32 +838,23 @@ function sheetHtml(){
   return h;
 }
 function planBar(){
-  const adm=isAdmin(),mo=S.pview==="month";
-  return `<div class="pbar"><button class="g" data-a="${mo?"pweek":"pmonth"}">${mo?"Vedi settimana":"Vedi mese"}</button>${adm&&!mo?`<button class="lk ${S.plock?"off":"on"}" data-a="plock">${S.plock?"Sblocca":"Blocca"}</button>`:""}</div>`;
+  return isAdmin()?`<div class="pbar"><button class="lk ${S.plock?"off":"on"}" data-a="plock">${S.plock?"Sblocca":"Blocca"}</button></div>`:"";
 }
-function viewPlanMonth(){
-  const ym=S.pm||TODAY.slice(0,7),[y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate(),off=wdi(ym+"-01"),st=eff().staff,me=st.find(q=>q.uid===S.uid),cc={};
+function viewPlanner(){
+  const ym=S.pm||TODAY.slice(0,7),[y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate(),first=ym+"-01",lastD=ym+"-"+pad(n);
+  const start=addDays(first,-wdi(first)),end=addDays(lastD,6-wdi(lastD)),st=eff().staff,me=st.find(q=>q.uid===S.uid),adm=isAdmin(),cc={};
   const cellsFor=x=>{const w=mondayOf(x);return cc[w]||(cc[w]=cellsOf(w))};
   const ini=q=>String(q.n||"?").trim().charAt(0).toUpperCase();
   let h=dayHead(null,MONTHS[mo-1],String(y),"pmprev","pmnext")+planBar()+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="pmtoday">Questo mese</button></p>`:"");
-  if(!me)h+=`<div class="note">Il tuo account non è collegato a un nome del Planner, quindi non so quali sono i tuoi turni.${isAdmin()?" Collegalo dal menu in alto a destra, voce Colleghi.":" Chiedi all’amministratore di collegarlo."} Vedi comunque le iniziali di chi lavora.</div>`;
-  h+=`<section class="pn"><div class="mcal">${GG.map(g=>`<div class="h">${g}</div>`).join("")}${Array.from({length:off},()=>"<span></span>").join("")}`+
-   Array.from({length:n},(_,i)=>{const x=ym+"-"+pad(i+1),cells=cellsFor(x),on=st.filter(q=>stateOf(cells[x+"_"+q.id])==="w"),my=me?stateOf(cells[x+"_"+me.id]):"",mine=my==="w";
-     return `<div class="mc2 ${me?(mine?"w":my?"r":"e"):"n"} ${x===TODAY?"t":""}" aria-label="${GG[wdi(x)]} ${i+1}${me?(mine?", in turno":my?", non in turno":", non compilato"):""}"><b>${i+1}</b><i>${esc(on.map(ini).join(" "))}</i></div>`}).join("")+`</div></section>`+
+  if(!me)h+=`<div class="note">Il tuo account non è collegato a un nome del Planner, quindi non so quali sono i tuoi turni.${adm?" Collegalo dal menu in alto a destra, voce Colleghi.":" Chiedi all’amministratore di collegarlo."} Vedi comunque le iniziali di chi lavora.</div>`;
+  let cells="";
+  for(let x=start;x<=end;x=addDays(x,1)){
+    const cs=cellsFor(x),on=st.filter(q=>stateOf(cs[x+"_"+q.id])==="w"),my=me?stateOf(cs[x+"_"+me.id]):"",mine=my==="w",d=+x.slice(8);
+    const cls=`mc2 ${me?(mine?"w":my?"r":"e"):"n"} ${x===TODAY?"t":""} ${x.slice(0,7)!==ym?"o":""}`,lab=`${GG[wdi(x)]} ${d}${me?(mine?", in turno":my?", non in turno":", non compilato"):""}`;
+    cells+=`<${adm?"button":"div"} class="${cls}" ${adm?`data-a="pday" data-i="${x}" `:""}aria-label="${lab}"><b>${d}</b><i>${esc(on.map(ini).join(" "))}</i></${adm?"button":"div"}>`;
+  }
+  return h+`<section class="pn"><div class="mcal">${GG.map(g=>`<div class="h">${g}</div>`).join("")}${cells}</div></section>`+
    (me?`<div class="legend"><span><i class="dot" style="background:var(--go)"></i>In turno</span><span><i class="dot" style="background:var(--bad)"></i>Non in turno</span><span><i class="dot" style="box-shadow:inset 0 0 0 1.5px var(--ln2)"></i>Non compilato</span></div>`:"");
-  return h;
-}
-function viewPlanner(){
-  if(S.pview==="month")return viewPlanMonth();
-  const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin()&&!S.plock,cells=cellsOf(S.week);
-  const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  const LB={w:"Lavoro",r:"Riposo",f:"Ferie",m:"Malattia"},VAL={w:"L",r:"R",f:"F",m:"M"};
-  const pill=k=>{const st=stateOf(cells[k]),l=LB[st]||"–";return adm?`<select class="sp ${st}" data-a="shiftset" data-c="${k}" aria-label="Turno">${[["","–"],["L","Lavoro"],["R","Riposo"],["F","Ferie"],["M","Malattia"]].map(([v,t])=>`<option value="${v}" ${(VAL[st]||"")===v?"selected":""}>${t}</option>`).join("")}</select>`:`<span class="sp ${st}">${l}</span>`};
-  const who=q=>adm?`<button class="nmb" data-a="ren" data-i="${q.id}">${esc(q.n)}</button>`:`<span>${esc(q.n)}</span>`;
-  return dayHead(null,"Turni",lab,"wprev","wnext")+
-  planBar()+(S.week!==mondayOf(TODAY)?`<p class="back"><button class="g" data-a="wtoday">Questa settimana</button></p>`:"")+
-  (adm?`<p class="mu" style="margin:0 0 12px">Tocca un nome per cambiarlo. Scegli il turno dal menu.</p>`:isAdmin()?`<p class="mu" style="margin:0 0 12px">Turni bloccati: premi Sblocca per modificarli.</p>`:"")+
-  `<div class="pgrid">`+days.map((x,i)=>`<section class="pn ${x===TODAY?"today":""}"><div class="pdh"><b>${GGL[i]}</b><span>${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</span></div>${c.staff.map(q=>`<div class="prow">${who(q)}${pill(x+"_"+q.id)}</div>`).join("")}</section>`).join("")+`</div>`;
 }
 const WH={oggi:"Oggi",ap:"Apertura",ch:"Chiusura"};
 const whSel=(attrs,v)=>`<select class="sm" ${attrs}>${Object.entries(WH).map(([k,l])=>`<option value="${k}" ${k===v?"selected":""}>${l}</option>`).join("")}</select>`;
@@ -889,13 +889,10 @@ function kpiDays(ym){
     return{x:r.x,act:r.act,rc,en,done:r.done,cv:rc&&en?rc/en:null,sm:rc&&r.act?r.act/rc:null}});
 }
 function viewIngressi(){
-  const ym=S.bmo,[y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate(),days=Array.from({length:n},(_,i)=>ym+"-"+pad(i+1)).filter(x=>x<=TODAY);
-  let h=dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"");
-  if(!days.length)return h+`<section class="pn"><p class="mu" style="margin:0">Nessun giorno da compilare in questo mese.</p></section>`;
-  const wk={};days.forEach(x=>{(wk[mondayOf(x)]=wk[mondayOf(x)]||[]).push(x)});
-  const sd=x=>parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  return h+Object.keys(wk).sort().map(w=>{const L=wk[w],tot=L.reduce((a,x)=>a+(+((S.rev[x]||{}).en)||0),0),miss=L.filter(x=>!(+((S.rev[x]||{}).en)||0)).length;
-    return `<section class="pn">${ph(L.length>1?sd(L[0])+" – "+sd(L[L.length-1]):sd(L[0]),tot?nm2(tot)+" ingressi":"")}${tot&&miss?`<p class="mu" style="margin:0 0 4px">Mancano ${miss} ${miss===1?"giorno":"giorni"}</p>`:""}`+L.map(x=>`<label class="rv"><span>${GG[wdi(x)]} ${parse(x).getDate()}</span><input type="text" inputmode="numeric" data-a="revx" data-day="${x}" data-f="en" placeholder="0" value="${fnum(+((S.rev[x]||{}).en)||0)}"></label>`).join("")+`</section>`}).join("");
+  const ym=S.bmo,[y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate(),days=Array.from({length:n},(_,i)=>ym+"-"+pad(i+1));
+  const tot=days.reduce((a,x)=>a+(+((S.rev[x]||{}).en)||0),0);
+  return dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"")+
+  `<section class="pn">${ph("Ingressi",tot?nm2(tot)+" nel mese":"")}`+days.map(x=>`<label class="rv ${x===TODAY?"rvt":""}"><span>${GG[wdi(x)]} ${parse(x).getDate()}</span><input type="text" inputmode="numeric" data-a="revx" data-day="${x}" data-f="en" placeholder="0" value="${fnum(+((S.rev[x]||{}).en)||0)}"></label>`).join("")+`</section>`;
 }
 function viewKpi(){
   const ym=S.bmo,[y,mo]=ym.split("-").map(Number),rows=kpiRows(ym),last=rows[rows.length-1],days=kpiDays(ym),MISS=`<b class="miss">Dato mancante</b>`;
@@ -1053,8 +1050,7 @@ function act(a,el){
   else if(a==="logout"){signOut(auth).then(()=>location.reload())}
   else if(a==="tab"){if(S.sumDay){S.sumDay="";watchSum("")}S.tab=i;render();scrollTo(0,0);const on=$("#nav").querySelector&&$("#nav").querySelector(".on");if(on&&on.scrollIntoView)on.scrollIntoView({inline:"center",block:"nearest"})}
   else if(a==="dprev"||a==="dnext"||a==="dtoday"){S.day=a==="dtoday"?TODAY:addDays(S.day,a==="dprev"?-1:1);delete S.draft.sum;delete S.draft.memo;S.confirm="";watchDay();render()}
-  else if(a==="pmonth"){S.pview="month";S.pm=S.pm||TODAY.slice(0,7);render();scrollTo(0,0)}
-  else if(a==="pweek"){S.pview="week";render();scrollTo(0,0)}
+  else if(a==="pday"){if(!isAdmin())return;if(S.plock){toast("Turni bloccati: premi Sblocca per modificarli");return}openModal({type:"turno",x:i})}
   else if(a==="plock"){if(!isAdmin())return;S.plock=!S.plock;render()}
   else if(a==="pmprev"||a==="pmnext"||a==="pmtoday"){if(a==="pmtoday")S.pm=TODAY.slice(0,7);else{const m=parse((S.pm||TODAY.slice(0,7))+"-01");m.setMonth(m.getMonth()+(a==="pmprev"?-1:1));S.pm=ymd(m).slice(0,7)}render()}
   else if(a==="wprev"||a==="wnext"||a==="wtoday"){S.week=a==="wtoday"?mondayOf(TODAY):addDays(S.week,a==="wprev"?-7:7);render()}
@@ -1107,7 +1103,7 @@ function act(a,el){
   else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;S.draft.rnuid=q.uid||"";openModal({type:"rename",sid:i,from:D2.from||""})}
   else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim(),sel=document.querySelector('#modal [data-d="rnuid"]'),lk=(sel&&typeof sel.value==="string")?sel.value:(S.draft.rnuid||"");clearDrafts();closeModal();if(m&&v){editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q){q.n=v;if(lk)q.uid=lk;else delete q.uid}});toast(lk?v+" collegata a "+rn(lk):"Collegamento tolto")}if(m&&m.from==="coll")openModal({type:"colleghi"})}
   else if(a==="mcoll"){clearDrafts();closeModal();openModal({type:"colleghi"})}
-  else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value}})}
+  else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+mondayOf(String(D2.c).slice(0,10))),{cells:{[D2.c]:el.value}})}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     S.draft.rp="";
     db.doc("reports/"+uid8()).set({t,by:S.uid,at:Date.now(),res:false,day:S.day}).catch(()=>toast("Salvataggio non riuscito"));notify("all","Nuova segnalazione ⚠️",rn(S.uid)+": "+shT(t),"?tab=oggi");render()}
