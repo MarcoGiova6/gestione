@@ -248,6 +248,20 @@ h3.sub2{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
 .stl .sq{width:38px;height:38px;font-size:20px}
 .sn{min-width:24px;text-align:center;font:700 19px var(--sans);font-variant-numeric:tabular-nums}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pbar{display:flex;gap:8px;margin:0 0 12px}
+.lk{border:0;border-radius:10px;padding:10px 15px;font:700 14px var(--sans)}
+.lk.on{background:var(--go);color:var(--gotx)}
+.lk.off{background:var(--bad);color:var(--gotx)}
+.mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.mcal .h{font:600 12.5px var(--sans);color:var(--mu);text-align:center;padding:2px 0 4px}
+.mc2{min-height:62px;border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:7px 1px 6px;font:700 15px var(--sans)}
+.mc2 i{font:700 11px/1.15 var(--sans);font-style:normal;letter-spacing:.02em;text-align:center;min-height:13px}
+.mc2.w{background:var(--go);color:var(--gotx)}
+.mc2.r{background:var(--bad);color:var(--gotx)}
+.mc2.n{background:var(--fill);color:var(--ink)}
+.mc2.t{box-shadow:inset 0 0 0 3px var(--ink)}
+.dlg .row .g{width:auto;flex:none;padding:10px 15px}
+.kpis b.miss{display:block;font:600 15px/2 var(--sans);color:var(--warn);white-space:normal}
 .zh{margin:14px 0 2px;font:700 14px var(--sans);color:var(--mu)}
 </style>
 </head>
@@ -301,9 +315,9 @@ const defStaff=[{id:"s1",n:"Persona 1"},{id:"s2",n:"Persona 2"},{id:"s3",n:"Pers
 const defOpen=[{id:"o1",t:"Apertura cassa"},{id:"o3",t:"Ordine e pulizia"},{id:"o4",t:"Gestione OSN"}];
 const defClose=[{id:"c2",t:"Riordino e pulizia"},{id:"c4",t:"Spegnimento condizionatori"},{id:"c1",t:"Chiusura cassa"},{id:"c3",t:"Porte e allarme"}];
 const defRec=[{id:"rc1",d:1,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc3",d:3,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rc5",d:5,w:"ap",t:"Cartone: ritiro a pranzo"},{id:"rp4",d:4,w:"ch",t:"Plastica: ritiro sabato mattina"},{id:"ri0",d:0,w:"ch",t:"Indifferenziata: ritiro martedì mattina"}];
-const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},bm:{},rev:{},msum:{},mpers:{},sumAll:{},persAll:{},tgtAll:{},tgt:{},bmo:TODAY.slice(0,7),bexp:{},fl:{},names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{},mag:{},mcat:"",mgen:"",magId:""};
+const S={tab:"oggi",day:TODAY,week:mondayOf(TODAY),cfg:null,loaded:false,authReady:false,dayDoc:{},acts:[],weeksAll:{},bm:{},rev:{},msum:{},mpers:{},sumAll:{},persAll:{},tgtAll:{},tgt:{},bmo:TODAY.slice(0,7),bexp:{},fl:{},names:{},draft:{},confirm:"",uid:null,email:"",err:"",loginErr:"",pending:false,adminUid:null,adminLoaded:false,tasks:[],reports:[],daysAll:{},month:TODAY.slice(0,8)+"01",healed:"",sumDay:"",sa:[],sheetHtml:"",modal:null,exp:{},mag:{},mcat:"",mgen:"",magId:"",plock:true,pview:"week",pm:""};
 const subs={};
-const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,avviso:c.avviso||null,notif:c.notif||{},cfgv:c.cfgv||0}};
+const eff=()=>{const c=S.cfg||{};return{staff:c.staff||defStaff,open:c.open||defOpen,close:c.close||defClose,rec:c.rec||defRec,avviso:c.avviso||null,notif:c.notif||{},cats:c.cats||null,cfgv:c.cfgv||0}};
 const nm=id=>id===S.uid?"Tu":(S.names[id]||"Collega");
 const rn=id=>S.names[id]||"Collega";
 const isAdmin=()=>!!S.uid&&S.adminUid===S.uid;
@@ -453,6 +467,7 @@ function editCfg(fn){
 }
 
 const IC={
+  ingressi:'<svg viewBox="0 0 24 24"><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.500v13a1.500 1.500 0 0 1-1.500 1.500H14"/><path d="M4 12h10M10.500 8L14.500 12l-4 4"/></svg>',
   mag:'<svg viewBox="0 0 24 24"><path d="M3.5 8.5L12 4l8.5 4.5v8L12 20.5l-8.5-4z"/><path d="M3.5 8.5L12 13l8.5-4.5M12 13v7.5"/></svg>',
   oggi:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>',
   budget:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.2 9.2a3.6 3.6 0 1 0 0 5.6M7.6 11h5.2M7.6 13h5.2"/></svg>',
@@ -509,9 +524,14 @@ function afterTick(k,i){
   });
 }
 
-const DEMO=[{"b": "Rev'it", "m": "Redridge GTX", "c": "Marrone/Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 1, "47": 2, "44": 1, "41": 1}}, {"b": "Rev'it", "m": "Descent H2O", "c": "Nero/Rosso", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"41": 1, "42": 2, "45": 1, "39": 1, "44": 1, "47": 1, "46": 1}}, {"b": "Rev'it", "m": "Kick", "c": "Verde scuro/Marrone", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"46": 1, "39": 1, "41": 2, "43": 1, "42": 2, "47": 1}}, {"b": "Eleveit", "m": "Freeride 2.2 Air", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"46": 1, "41": 1, "43": 2}}, {"b": "Eleveit", "m": "Stunt Air", "c": "Giallo/Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"39": 2, "46": 1, "45": 1, "40": 2, "47": 1, "44": 1, "43": 1, "41": 1}}, {"b": "Befast", "m": "Trandy", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"47": 2, "45": 2, "41": 1, "42": 1, "44": 1, "46": 1}}, {"b": "OJ", "m": "Break", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"47": 1, "42": 1, "43": 1, "45": 1, "41": 1, "39": 1, "46": 2}}, {"b": "Stylmartin", "m": "Vector WP", "c": "Nero/Rosso", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"40": 1, "41": 1, "45": 1, "42": 1}}, {"b": "TCX", "m": "Hero 2 WP", "c": "Marrone", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 2, "41": 1, "44": 1, "43": 1}}, {"b": "OJ", "m": "Exploring", "c": "Marrone", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"41": 1, "40": 1, "42": 1, "45": 2}}, {"b": "Scud", "m": "Chelsea", "c": "Marrone", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"43": 1, "39": 1, "42": 1, "40": 2, "44": 2}}, {"b": "Sidi", "m": "SDS Denver", "c": "Marrone", "cat": "stivaletto", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"46_5": 1, "39_5": 1, "41": 1, "40": 2, "44": 1, "43": 1, "42_5": 1, "39": 1}}, {"b": "Eleveit", "m": "Tonale WP", "c": "Nero", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"43": 1, "41": 2, "47": 1, "45": 1, "46": 2, "40": 1}}, {"b": "TCX", "m": "Fuel WP", "c": "Marrone vintage", "cat": "stivaletto", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 2, "45": 2, "41": 2, "44": 1, "47": 2, "40": 1, "39": 1, "46": 2}}, {"b": "Alpinestars", "m": "SMX-6 V3", "c": "Nero/Bianco/Rosso", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"44": 2, "45": 1, "42": 1, "40": 1, "43": 2, "47": 1, "39": 1}}, {"b": "Alpinestars", "m": "SMX Plus V2", "c": "Nero", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"39": 1, "45": 1, "42": 1}}, {"b": "Alpinestars", "m": "Supertech R Vented", "c": "Nero/Bianco/Rosso fluo", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 2, "43": 1, "44": 1, "46": 1, "41": 1, "39": 1, "47": 1, "40": 1}}, {"b": "Dainese", "m": "Nexus 2", "c": "Nero", "cat": "stivale", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"47": 1, "44": 1, "43": 1}}, {"b": "Gaerne", "m": "GP1 LS", "c": "Nero/Giallo fluo", "cat": "stivale", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"42": 2, "40": 1, "43_5": 1, "45_5": 1, "41_5": 1, "40_5": 1, "45": 1}}, {"b": "Sidi", "m": "REX", "c": "Nero/Grigio", "cat": "stivale", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"47": 1, "39": 1, "44": 1, "46": 2, "44_5": 2, "42_5": 1}}, {"b": "Dainese", "m": "Seeker Gore-Tex", "c": "Nero", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 1, "43": 1, "44": 1}}, {"b": "Gaerne", "m": "G.Midland Gore-Tex", "c": "Nero", "cat": "stivale", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 2, "47": 1, "41": 1, "42": 2}}, {"b": "Gaerne", "m": "Fastback Endurance Enduro", "c": "Nero/Marrone", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"47": 1, "45": 1, "48": 1, "44": 1}}, {"b": "Sidi", "m": "X Power Enduro", "c": "Nero", "cat": "enduro", "g": "U", "h": 1, "mn": 40, "mx": 48, "q": {"44": 1, "43_5": 1, "47_5": 1, "47": 2, "43": 1, "42": 1, "44_5": 1, "46": 2}}, {"b": "Gaerne", "m": "SG12", "c": "Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"42": 1, "41": 1, "44": 1, "48": 2, "46": 1, "43": 1, "45": 1}}, {"b": "Acerbis", "m": "X-Rock MM Two", "c": "Rosso/Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"43": 1, "44": 1, "40": 2, "46": 1, "42": 1, "47": 2, "45": 1}}, {"b": "Alpinestars", "m": "Tech 10", "c": "Nero", "cat": "cross", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"46": 1, "47": 1, "44": 2, "45": 1, "42": 2, "41": 1}}, {"b": "Alpinestars", "m": "Tech 3", "c": "Bianco/Rosso/Blu scuro", "cat": "cross", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"45": 1, "40": 2, "47": 2, "44": 1, "48": 2, "46": 1, "41": 1, "42": 1}}, {"b": "Acerbis", "m": "X-Race", "c": "Nero", "cat": "cross", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"42": 1, "48": 1, "44": 1, "43": 1, "46": 2}}, {"b": "Sidi", "m": "Crossfire 3 SRS", "c": "Rosso/Nero", "cat": "cross", "g": "U", "h": 1, "mn": 40, "mx": 48, "q": {"47": 1, "40": 1, "45": 1, "44_5": 2, "40_5": 2, "46": 1, "43": 1}}, {"b": "Rev'it", "m": "Emerald Ladies Talpa", "c": "Bianco", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"42": 1, "38": 2, "40": 1, "37": 1, "36": 2, "41": 2, "35": 1}}, {"b": "Eleveit", "m": "Antibes WP", "c": "Nero", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"38": 2, "37": 1, "41": 1, "40": 2, "35": 2, "42": 1, "39": 2, "36": 2}}, {"b": "Rev'it", "m": "Delta H2O Ladies", "c": "Blu scuro/Nero", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"41": 2, "35": 2, "37": 1, "36": 1}}, {"b": "Falco", "m": "Lennox 2", "c": "Rosso", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"37": 1, "35": 1, "40": 1, "42": 2, "38": 1, "36": 1, "41": 1, "39": 1}}, {"b": "TCX", "m": "Blend 2 WP WMN", "c": "Nero", "cat": "stivaletto", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"41": 1, "36": 2, "38": 2, "37": 2, "35": 1}}, {"b": "Alpinestars", "m": "Stella Valencia WP", "c": "Nero", "cat": "stivaletto", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"37": 1, "36": 1, "39": 1, "40": 1, "38": 2, "35": 1, "42": 2, "41": 1}}, {"b": "Alpinestars", "m": "Stella SMX-6 V3 Drystar", "c": "Bianco", "cat": "stivale", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"40": 1, "37": 1, "36": 1, "39": 1, "38": 2}}, {"b": "Dainese", "m": "Freeland 2 Gore-Tex WMN", "c": "Nero", "cat": "stivale", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"40": 1, "38": 1, "42": 1, "41": 1, "36": 2, "39": 2, "37": 2}}, {"b": "Rev'it", "m": "Arena GTX Ladies", "c": "Nero", "cat": "stivale", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"37": 2, "39": 1, "41": 1, "38": 1, "36": 1, "42": 2}}, {"b": "Alpinestars", "m": "Stella Tech 3", "c": "Nero/Bianco/Rosa", "cat": "cross", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"37": 2, "39": 1, "42": 1, "41": 2}}];
-const CATS=[["casual","Casual"],["stivaletto","Stivaletto"],["stivale","Stivale"],["enduro","Enduro"],["cross","Cross"]];
-const CATN=Object.fromEntries(CATS),GENS=[["U","Uomo"],["D","Donna"]],GENN={U:"Uomo",D:"Donna"};
+const DEMO=[{"b": "Rev'it", "m": "Redridge GTX", "c": "Marrone/Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 1, "47": 2, "44": 1, "41": 1}}, {"b": "Rev'it", "m": "Descent H2O", "c": "Nero/Rosso", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"41": 1, "42": 2, "45": 1, "39": 1, "44": 1, "47": 1, "46": 1}}, {"b": "Rev'it", "m": "Kick", "c": "Verde scuro/Marrone", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"46": 1, "39": 1, "41": 2, "43": 1, "42": 2, "47": 1}}, {"b": "Eleveit", "m": "Freeride 2.2 Air", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"46": 1, "41": 1, "43": 2}}, {"b": "Eleveit", "m": "Stunt Air", "c": "Giallo/Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"39": 2, "46": 1, "45": 1, "40": 2, "47": 1, "44": 1, "43": 1, "41": 1}}, {"b": "Befast", "m": "Trandy", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"47": 2, "45": 2, "41": 1, "42": 1, "44": 1, "46": 1}}, {"b": "OJ", "m": "Break", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"47": 1, "42": 1, "43": 1, "45": 1, "41": 1, "39": 1, "46": 2}}, {"b": "Stylmartin", "m": "Vector WP", "c": "Nero/Rosso", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"40": 1, "41": 1, "45": 1, "42": 1}}, {"b": "TCX", "m": "Hero 2 WP", "c": "Marrone", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 2, "41": 1, "44": 1, "43": 1}}, {"b": "OJ", "m": "Exploring", "c": "Marrone", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"41": 1, "40": 1, "42": 1, "45": 2}}, {"b": "Scud", "m": "Chelsea", "c": "Marrone", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"43": 1, "39": 1, "42": 1, "40": 2, "44": 2}}, {"b": "Sidi", "m": "SDS Denver", "c": "Marrone", "cat": "stivali", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"46_5": 1, "39_5": 1, "41": 1, "40": 2, "44": 1, "43": 1, "42_5": 1, "39": 1}}, {"b": "Eleveit", "m": "Tonale WP", "c": "Nero", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"43": 1, "41": 2, "47": 1, "45": 1, "46": 2, "40": 1}}, {"b": "TCX", "m": "Fuel WP", "c": "Marrone vintage", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 2, "45": 2, "41": 2, "44": 1, "47": 2, "40": 1, "39": 1, "46": 2}}, {"b": "Alpinestars", "m": "SMX-6 V3", "c": "Nero/Bianco/Rosso", "cat": "racing", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"44": 2, "45": 1, "42": 1, "40": 1, "43": 2, "47": 1, "39": 1}}, {"b": "Alpinestars", "m": "SMX Plus V2", "c": "Nero", "cat": "racing", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"39": 1, "45": 1, "42": 1}}, {"b": "Alpinestars", "m": "Supertech R Vented", "c": "Nero/Bianco/Rosso fluo", "cat": "racing", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 2, "43": 1, "44": 1, "46": 1, "41": 1, "39": 1, "47": 1, "40": 1}}, {"b": "Dainese", "m": "Nexus 2", "c": "Nero", "cat": "racing", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"47": 1, "44": 1, "43": 1}}, {"b": "Gaerne", "m": "GP1 LS", "c": "Nero/Giallo fluo", "cat": "racing", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"42": 2, "40": 1, "43_5": 1, "45_5": 1, "41_5": 1, "40_5": 1, "45": 1}}, {"b": "Sidi", "m": "REX", "c": "Nero/Grigio", "cat": "racing", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"47": 1, "39": 1, "44": 1, "46": 2, "44_5": 2, "42_5": 1}}, {"b": "Dainese", "m": "Seeker Gore-Tex", "c": "Nero", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 1, "43": 1, "44": 1}}, {"b": "Gaerne", "m": "G.Midland Gore-Tex", "c": "Nero", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 2, "47": 1, "41": 1, "42": 2}}, {"b": "Gaerne", "m": "Fastback Endurance Enduro", "c": "Nero/Marrone", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"47": 1, "45": 1, "48": 1, "44": 1}}, {"b": "Sidi", "m": "X Power Enduro", "c": "Nero", "cat": "enduro", "g": "U", "h": 1, "mn": 40, "mx": 48, "q": {"44": 1, "43_5": 1, "47_5": 1, "47": 2, "43": 1, "42": 1, "44_5": 1, "46": 2}}, {"b": "Gaerne", "m": "SG12", "c": "Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"42": 1, "41": 1, "44": 1, "48": 2, "46": 1, "43": 1, "45": 1}}, {"b": "Acerbis", "m": "X-Rock MM Two", "c": "Rosso/Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"43": 1, "44": 1, "40": 2, "46": 1, "42": 1, "47": 2, "45": 1}}, {"b": "Alpinestars", "m": "Tech 10", "c": "Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"46": 1, "47": 1, "44": 2, "45": 1, "42": 2, "41": 1}}, {"b": "Alpinestars", "m": "Tech 3", "c": "Bianco/Rosso/Blu scuro", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"45": 1, "40": 2, "47": 2, "44": 1, "48": 2, "46": 1, "41": 1, "42": 1}}, {"b": "Acerbis", "m": "X-Race", "c": "Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"42": 1, "48": 1, "44": 1, "43": 1, "46": 2}}, {"b": "Sidi", "m": "Crossfire 3 SRS", "c": "Rosso/Nero", "cat": "enduro", "g": "U", "h": 1, "mn": 40, "mx": 48, "q": {"47": 1, "40": 1, "45": 1, "44_5": 2, "40_5": 2, "46": 1, "43": 1}}, {"b": "Rev'it", "m": "Emerald Ladies Talpa", "c": "Bianco", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"42": 1, "38": 2, "40": 1, "37": 1, "36": 2, "41": 2, "35": 1}}, {"b": "Eleveit", "m": "Antibes WP", "c": "Nero", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"38": 2, "37": 1, "41": 1, "40": 2, "35": 2, "42": 1, "39": 2, "36": 2}}, {"b": "Rev'it", "m": "Delta H2O Ladies", "c": "Blu scuro/Nero", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"41": 2, "35": 2, "37": 1, "36": 1}}, {"b": "Falco", "m": "Lennox 2", "c": "Rosso", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"37": 1, "35": 1, "40": 1, "42": 2, "38": 1, "36": 1, "41": 1, "39": 1}}, {"b": "TCX", "m": "Blend 2 WP WMN", "c": "Nero", "cat": "stivali", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"39": 1, "37": 2, "42": 2, "38": 2, "36": 1}}, {"b": "Alpinestars", "m": "Stella Valencia WP", "c": "Nero", "cat": "stivali", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"37": 2, "40": 1, "41": 1, "39": 1}}, {"b": "Alpinestars", "m": "Stella SMX-6 V3 Drystar", "c": "Bianco", "cat": "racing", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"36": 1, "37": 1, "39": 1, "41": 2, "40": 2}}, {"b": "Dainese", "m": "Freeland 2 Gore-Tex WMN", "c": "Nero", "cat": "stivali", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"40": 1, "36": 1, "37": 2, "41": 2, "39": 1, "42": 1}}, {"b": "Rev'it", "m": "Arena GTX Ladies", "c": "Nero", "cat": "stivali", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"42": 1, "37": 2, "41": 1, "38": 2, "36": 1, "40": 2}}, {"b": "Alpinestars", "m": "Stella Tech 3", "c": "Nero/Bianco/Rosa", "cat": "enduro", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"40": 2, "39": 2, "38": 2, "37": 2, "42": 1}}];
+const DEFCATS=[{id:"casual",t:"Casual"},{id:"stivali",t:"Stivali"},{id:"racing",t:"Racing"},{id:"enduro",t:"Enduro"}];
+const LEGACY={stivaletto:"stivali",stivale:"stivali",cross:"enduro"};
+const catArr=()=>{const c=S.cfg&&S.cfg.cats;return c&&c.length?c:DEFCATS};
+const catPairs=()=>catArr().map(c=>[c.id,c.t]);
+const catId=x=>LEGACY[x]||x;
+const catN=x=>{const k=catId(x),c=catArr().find(y=>y.id===k);return c?c.t:(k||"")};
+const GENS=[["U","Uomo"],["D","Donna"]],GENN={U:"Uomo",D:"Donna"};
 const szNum=s=>+String(s).replace("_","."),szLabel=s=>String(s).replace("_",",");
 function magSizes(m){const mn=+m.mn||0,mx=+m.mx||0,o=[];if(!mn||mx<mn)return o;for(let v=mn;v<=mx+1e-9;v+=(m.h?0.5:1))o.push(Number.isInteger(v)?String(v):Math.floor(v)+"_5");return o}
 const magQ=(m,s)=>Math.max(0,+((m.q||{})[s])||0);
@@ -519,12 +539,12 @@ const magTot=m=>magSizes(m).reduce((a,s)=>a+magQ(m,s),0);
 const magAll=()=>Object.keys(S.mag).map(id=>({id,...S.mag[id]}));
 const mnorm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
 const magName=m=>(m.b?m.b+" ":"")+(m.m||"");
-const magSub=m=>[m.c,CATN[m.cat],GENN[m.g]].filter(Boolean).join(" · ");
+const magSub=m=>[m.c,catN(m.cat),GENN[m.g],m.sku?"SKU "+m.sku:""].filter(Boolean).join(" · ");
 const fmtWhen=t=>{const d=new Date(t);return d.toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" alle "+pad(d.getHours())+":"+pad(d.getMinutes())};
-const magOrd=(a,b)=>(CATS.findIndex(x=>x[0]===a.cat)-CATS.findIndex(x=>x[0]===b.cat))||(a.g===b.g?0:a.g==="U"?-1:1)||String(a.b||"").localeCompare(b.b||"","it")||String(a.m||"").localeCompare(b.m||"","it")||String(a.c||"").localeCompare(b.c||"","it");
+const magOrd=(a,b)=>(catPairs().findIndex(x=>x[0]===catId(a.cat))-catPairs().findIndex(x=>x[0]===catId(b.cat)))||(a.g===b.g?0:a.g==="U"?-1:1)||String(a.b||"").localeCompare(b.b||"","it")||String(a.m||"").localeCompare(b.m||"","it")||String(a.c||"").localeCompare(b.c||"","it");
 function magFiltered(){
   const q=mnorm(S.draft.mq||"").split(/\s+/).filter(Boolean);
-  return magAll().filter(m=>(!S.mcat||m.cat===S.mcat)&&(!S.mgen||m.g===S.mgen)&&q.every(w=>mnorm([m.b,m.m,m.c,CATN[m.cat],GENN[m.g]].join(" ")).includes(w))).sort(magOrd);
+  return magAll().filter(m=>(!S.mcat||catId(m.cat)===S.mcat)&&(!S.mgen||m.g===S.mgen)&&q.every(w=>mnorm([m.b,m.m,m.c,m.sku,catN(m.cat),GENN[m.g]].join(" ")).includes(w))).sort(magOrd);
 }
 const zchip=(m,s)=>`<button class="zc ${magQ(m,s)?"on":"off"}" data-a="magsz" data-i="${m.id}" data-s="${s}" aria-label="Taglia ${szLabel(s)} ${magQ(m,s)?"disponibile":"non disponibile"}">${szLabel(s)}</button>`;
 function magRow(m){
@@ -543,9 +563,9 @@ function viewMag(){
   const chip=(k,l,cur,a)=>`<button class="fc ${cur===k?"on":""}" data-a="${a}" data-i="${k}">${l}</button>`;
   const all=magAll(),demo=all.some(m=>m.demo);
   return ph("Magazzino",all.length?all.reduce((a,m)=>a+magTot(m),0)+" paia":"")+
-  `<section class="pn"><input type="text" class="mq" data-d="mq" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Cerca modello, marca o colore" value="${esc(S.draft.mq||"")}"><div class="fcs">${chip("","Tutti",S.mcat,"magcat")}${CATS.map(([k,l])=>chip(k,l,S.mcat,"magcat")).join("")}</div><div class="fcs">${chip("","Uomo e donna",S.mgen,"maggen")}${GENS.map(([k,l])=>chip(k,l,S.mgen,"maggen")).join("")}</div></section>`+
+  `<section class="pn"><input type="text" class="mq" data-d="mq" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Cerca nome, marca, colore o SKU" value="${esc(S.draft.mq||"")}"><div class="fcs">${chip("","Tutti",S.mcat,"magcat")}${catPairs().map(([k,l])=>chip(k,l,S.mcat,"magcat")).join("")}</div><div class="fcs">${chip("","Uomo e donna",S.mgen,"maggen")}${GENS.map(([k,l])=>chip(k,l,S.mgen,"maggen")).join("")}</div></section>`+
   `<div id="maglist">${magListHtml()}</div>`+
-  `<section class="pn"><div class="btns" style="margin:0;justify-content:flex-start"><button class="b" data-a="magnew">Aggiungi modello</button>${all.length?"":`<button class="g" data-a="magdemo">Carica la bozza (40 modelli)</button>`}${demo?`<button class="g" data-a="magdeldemo">Elimina i modelli di prova</button>`:""}</div></section>`;
+  `<section class="pn"><div class="btns" style="margin:0;justify-content:flex-start"><button class="b" data-a="magnew">Aggiungi prodotto</button>${all.length?"":`<button class="g" data-a="magdemo">Carica la bozza (40 modelli)</button>`}${demo?`<button class="g" data-a="magdeldemo">Elimina i modelli di prova</button>`:""}${isAdmin()?`<button class="g" data-a="magcats">Gestisci categorie</button>`:""}</div></section>`;
 }
 function viewMagModel(m){
   return `<p class="back" style="margin:6px 0 10px"><button class="g" data-a="magback">‹ Magazzino</button></p>`+
@@ -554,11 +574,11 @@ function viewMagModel(m){
 }
 function szScore(src,m){
   if(!src)return 0;const f=t=>String(t||"").split(/[\s\/]/)[0];
-  return (m.cat===src.cat?4:0)+(m.b&&m.b===src.b?2:0)+(f(m.c)&&f(m.c)===f(src.c)?1:0);
+  return (catId(m.cat)===catId(src.cat)?4:0)+(m.b&&m.b===src.b?2:0)+(f(m.c)&&f(m.c)===f(src.c)?1:0);
 }
 function szSheet(m){
   const src=S.mag[m.src]?{id:m.src,...S.mag[m.src]}:null,z=m.z,has=!!src&&magQ(src,z)>0;
-  let L=magAll().filter(x=>(!src||x.id!==src.id)&&magSizes(x).includes(z)&&magQ(x,z)>0&&(!m.cat||x.cat===m.cat)&&(!m.gen||x.g===m.gen));
+  let L=magAll().filter(x=>(!src||x.id!==src.id)&&magSizes(x).includes(z)&&magQ(x,z)>0&&(!m.cat||catId(x.cat)===m.cat)&&(!m.gen||x.g===m.gen));
   L.sort((a,b)=>szScore(src,b)-szScore(src,a)||magOrd(a,b));
   const near=src&&!has?magSizes(src).filter(t=>magQ(src,t)>0&&Math.abs(szNum(t)-szNum(z))<=1).map(szLabel):[];
   const row=x=>`<button class="mrr" data-a="magopen" data-i="${x.id}"><span class="mrt"><b>${esc(magName(x))}</b><small>${esc(magSub(x))}</small></span><span class="mrn">${magQ(x,z)} ${magQ(x,z)===1?"paio":"paia"} ›</span></button>`;
@@ -566,24 +586,25 @@ function szSheet(m){
   let h=`<div class="mbg" data-a="mclose"></div><div class="dlg wd" role="dialog" aria-modal="true"><div class="dh2"><h2>Taglia ${szLabel(z)}</h2><button class="g" data-a="mclose">Chiudi</button></div>`;
   if(src)h+=has?`<p class="mu" style="margin:0"><b>${esc(magName(src))}</b> ${esc(src.c||"")} ha la ${szLabel(z)}. Altre scarpe con questa taglia:</p>`:`<p class="mu" style="margin:0"><b>${esc(magName(src))}</b> ${esc(src.c||"")} non ha la ${szLabel(z)}.</p>`;
   if(near.length)h+=`<p class="mu" style="margin:0">Stessa scarpa, taglie vicine: <b>${near.join(", ")}</b> (la calzata può cambiare).</p>`;
-  h+=`<div class="fcs">${chip("","Uomo e donna",m.gen,"zgen")}${GENS.map(([k,l])=>chip(k,l,m.gen,"zgen")).join("")}</div><div class="fcs">${chip("","Tutte",m.cat,"zcat")}${CATS.map(([k,l])=>chip(k,l,m.cat,"zcat")).join("")}</div>`;
+  h+=`<div class="fcs">${chip("","Uomo e donna",m.gen,"zgen")}${GENS.map(([k,l])=>chip(k,l,m.gen,"zgen")).join("")}</div><div class="fcs">${chip("","Tutte",m.cat,"zcat")}${catPairs().map(([k,l])=>chip(k,l,m.cat,"zcat")).join("")}</div>`;
   if(!L.length)return h+`<p class="mu">Nessun’altra scarpa disponibile in taglia ${szLabel(z)} con questi filtri.</p></div>`;
   if(src&&!has){
-    const same=L.filter(x=>x.cat===src.cat),rest=L.filter(x=>x.cat!==src.cat);
-    if(same.length)h+=`<div class="zh">Simili: ${CATN[src.cat]} (${same.length})</div>`+same.map(row).join("");
+    const same=L.filter(x=>catId(x.cat)===catId(src.cat)),rest=L.filter(x=>catId(x.cat)!==catId(src.cat));
+    if(same.length)h+=`<div class="zh">Simili: ${catN(src.cat)} (${same.length})</div>`+same.map(row).join("");
     if(rest.length)h+=`<div class="zh">Altre categorie (${rest.length})</div>`+rest.map(row).join("");
   }else h+=`<div class="zh">Disponibili in taglia ${szLabel(z)} (${L.length})</div>`+L.map(row).join("");
   return h+`</div>`;
 }
 function magEditDrafts(m){
-  S.draft.me_b=m?m.b||"":"";S.draft.me_m=m?m.m||"":"";S.draft.me_c=m?m.c||"":"";S.draft.me_cat=m?m.cat||"casual":"casual";S.draft.me_g=m?m.g||"U":"U";
+  S.draft.me_b=m?m.b||"":"";S.draft.me_m=m?m.m||"":"";S.draft.me_c=m?m.c||"":"";S.draft.me_cat=m?(catId(m.cat)||catArr()[0].id):catArr()[0].id;S.draft.me_g=m?m.g||"U":"U";S.draft.me_sku=m?m.sku||"":"";
   S.draft.me_mn=m?fnum(m.mn):"39";S.draft.me_mx=m?fnum(m.mx):"47";S.draft.me_h=m&&m.h?"1":"0";
 }
 function magEditHtml(m){
   const nw=!m.mid,d=S.draft,inp=(k,l,x)=>`<label class="fld"><span>${l}</span><input type="text" ${x||""} data-d="${k}" value="${esc(d[k]||"")}"></label>`;
-  return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>${nw?"Nuovo modello":"Modifica scheda"}</h2>`+
+  return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>${nw?"Nuovo prodotto":"Modifica scheda"}</h2>`+
+  `<label class="fld"><span>Categoria</span><select data-d="me_cat">${catPairs().map(([k,l])=>`<option value="${k}" ${d.me_cat===k?"selected":""}>${esc(l)}</option>`).join("")}</select></label>`+
   inp("me_b","Marca")+inp("me_m","Modello")+inp("me_c",nw?"Colori (separati da virgola, uno per scheda)":"Colore")+
-  `<label class="fld"><span>Categoria</span><select data-d="me_cat">${CATS.map(([k,l])=>`<option value="${k}" ${d.me_cat===k?"selected":""}>${l}</option>`).join("")}</select></label>`+
+  inp("me_sku",nw?"SKU (solo se aggiungi un colore)":"SKU (codice articolo)",'autocapitalize="characters" autocorrect="off" spellcheck="false"')+
   `<label class="fld"><span>Uomo o donna</span><select data-d="me_g">${GENS.map(([k,l])=>`<option value="${k}" ${d.me_g===k?"selected":""}>${l}</option>`).join("")}</select></label>`+
   `<div class="two">${inp("me_mn","Taglia più piccola",'inputmode="decimal"')}${inp("me_mx","Taglia più grande",'inputmode="decimal"')}</div>`+
   `<label class="fld"><span>Mezze misure</span><select data-d="me_h"><option value="0" ${d.me_h!=="1"?"selected":""}>No</option><option value="1" ${d.me_h==="1"?"selected":""}>Sì</option></select></label>`+
@@ -593,12 +614,12 @@ function magSave(){
   const m=S.modal,d=S.draft,b=(d.me_b||"").trim(),mm=(d.me_m||"").trim(),mn=num(d.me_mn),mx=num(d.me_mx);
   if(!mm){toast("Scrivi il nome del modello");return}
   if(!mn||!mx||mn>mx||mn<20||mx>60){toast("Controlla le taglie: dalla più piccola alla più grande");return}
-  const at=Date.now(),base={b,m:mm,cat:d.me_cat||"casual",g:d.me_g||"U",h:d.me_h==="1"?1:0,mn:Math.round(mn*2)/2,mx:Math.round(mx*2)/2,at,by:S.uid};
-  if(m.mid){const c=(d.me_c||"").trim();S.mag[m.mid]={...S.mag[m.mid],...base,c};save(D.doc("mag/"+m.mid),{...base,c});toast("Salvato")}
+  const at=Date.now(),sku=(d.me_sku||"").trim(),base={b,m:mm,cat:d.me_cat||catArr()[0].id,g:d.me_g||"U",h:d.me_h==="1"?1:0,mn:Math.round(mn*2)/2,mx:Math.round(mx*2)/2,at,by:S.uid};
+  if(m.mid){const c=(d.me_c||"").trim();S.mag[m.mid]={...S.mag[m.mid],...base,c,sku};save(D.doc("mag/"+m.mid),{...base,c,sku});toast("Salvato")}
   else{
     const cols=String(d.me_c||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean),L=cols.length?cols:[""];
-    L.forEach((c,j)=>{const id=uid8()+j,doc={...base,c,q:{}};S.mag[id]=doc;D.doc("mag/"+id).set(doc).catch(()=>toast("Salvataggio non riuscito"))});
-    toast(L.length>1?L.length+" modelli aggiunti":"Modello aggiunto");
+    L.forEach((c,j)=>{const id=uid8()+j,doc={...base,c,q:{}};if(L.length===1&&sku)doc.sku=sku;S.mag[id]=doc;D.doc("mag/"+id).set(doc).catch(()=>toast("Salvataggio non riuscito"))});
+    toast(L.length>1?L.length+" prodotti aggiunti":"Prodotto aggiunto");
   }
   closeModal();render();
 }
@@ -623,10 +644,16 @@ function modalHtml(){
   }
   if(m.type==="magsz")return szSheet(m);
   if(m.type==="magedit")return magEditHtml(m);
+  if(m.type==="magcats"){
+    const used=id=>magAll().filter(x=>catId(x.cat)===id).length;
+    return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>Categorie</h2><p class="mu" style="margin:0">Cambia il nome, aggiungi o togli categorie. Si può togliere solo una categoria senza prodotti.</p><div class="list">`+
+    catArr().map(c=>`<div class="row"><input type="text" data-a="catname" data-i="${c.id}" value="${esc(c.t)}" aria-label="Nome categoria"><span class="mrn">${used(c.id)}</span><button class="x" data-a="catdel" data-i="${c.id}" aria-label="Elimina">✕</button></div>`).join("")+
+    `</div><div class="cmadd"><input type="text" data-d="newcat" placeholder="Nuova categoria" value="${esc(S.draft.newcat||"")}"><button class="g" data-a="catadd">Aggiungi</button></div><button class="g" data-a="mclose">Chiudi</button></div>`;
+  }
   if(m.type==="magdel"){const x=S.mag[m.mid];return dlg(m.kind==="demo"?"Eliminare i modelli di prova?":"Eliminare il modello?",`<p style="margin:0">${m.kind==="demo"?"Verranno cancellati i 40 modelli della bozza, con le loro taglie.":esc(x?magName(x)+" "+(x.c||""):"")+" verrà cancellato con tutte le sue taglie."}</p><button class="b" data-a="magdelgo">Elimina</button><button class="g" data-a="mclose">Annulla</button>`)}
-  if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><label class="fld" style="margin:0"><span>Account collegato</span><select data-d="rnuid"><option value="">Nessuno</option>${people().map(u=>`<option value="${u}" ${S.draft.rnuid===u?"selected":""}>${esc(rn(u))}</option>`).join("")}</select></label><button class="b" data-a="mren">Salva</button><button class="g" data-a="mclose">Annulla</button>`);
-  if(m.type==="menu")return `<div class="mbg clr" data-a="mclose"></div><div class="pop"><button data-a="mopen" data-i="profile">Il tuo profilo</button>${adm?`<button data-a="mopen" data-i="names">Nomi dei colleghi</button>`:""}</div>`;
-  if(m.type==="names")return dlg("Nomi dei colleghi",`<p class="mu" style="margin:0">I nomi che vedono tutti nell’app. Si salvano quando esci dal campo.</p>`+people().map(u=>`<input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}" aria-label="Nome">`).join("")+`<button class="g" data-a="mclose">Chiudi</button>`);
+  if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><label class="fld" style="margin:0"><span>Account collegato</span><select data-d="rnuid"><option value="">Nessuno</option>${people().map(u=>`<option value="${u}" ${S.draft.rnuid===u?"selected":""}>${esc(rn(u))}</option>`).join("")}</select></label><button class="b" data-a="mren">Salva</button><button class="g" data-a="${m.from==="coll"?"mcoll":"mclose"}">Annulla</button>`);
+  if(m.type==="menu")return `<div class="mbg clr" data-a="mclose"></div><div class="pop"><button data-a="mopen" data-i="profile">Il tuo profilo</button>${adm?`<button data-a="mopen" data-i="colleghi">Colleghi</button>`:""}</div>`;
+  if(m.type==="colleghi")return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>Colleghi</h2><p class="mu" style="margin:0">Il nome nel Planner e l’account collegato. Senza collegamento la persona non vede il proprio obiettivo e non riceve i promemoria di turno.</p><div class="list">${eff().staff.map(q=>`<div class="row"><span class="tx">${esc(q.n)}<small class="sub">${q.uid?"account: "+esc(rn(q.uid)):"non collegato"}</small></span><button class="g" data-a="ren" data-i="${q.id}" data-from="coll">${q.uid?"Cambia":"Collega"}</button></div>`).join("")}</div><div class="zh">Nomi degli account</div><p class="mu" style="margin:0">Il nome che vedono tutti nell’app. Si salva quando esci dal campo.</p>${people().map(u=>`<input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}" aria-label="Nome">`).join("")}<button class="g" data-a="mclose">Chiudi</button></div>`;
   if(m.type==="profile"){
     const c=eff(),nameTxt=esc(S.names[S.uid]||"");
     let h=`<p class="mu" style="margin:0"><b>${nameTxt}</b>${adm?" (amministratore)":""}</p><p class="mu" style="margin:0">Accesso con ${esc(S.email)}</p>`;
@@ -796,15 +823,32 @@ function sheetHtml(){
   h+=`<div class="btns" style="justify-content:flex-start;margin-bottom:6px"><button class="b" data-a="sumopen">Apri il giorno</button></div></div></div>`;
   return h;
 }
+function planBar(){
+  const adm=isAdmin(),mo=S.pview==="month";
+  return `<div class="pbar"><button class="g" data-a="${mo?"pweek":"pmonth"}">${mo?"Vedi settimana":"Vedi mese"}</button>${adm&&!mo?`<button class="lk ${S.plock?"off":"on"}" data-a="plock">${S.plock?"Sblocca":"Blocca"}</button>`:""}</div>`;
+}
+function viewPlanMonth(){
+  const ym=S.pm||TODAY.slice(0,7),[y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate(),off=wdi(ym+"-01"),st=eff().staff,me=st.find(q=>q.uid===S.uid),cc={};
+  const cellsFor=x=>{const w=mondayOf(x);return cc[w]||(cc[w]=cellsOf(w))};
+  const ini=q=>String(q.n||"?").trim().charAt(0).toUpperCase();
+  let h=dayHead(null,MONTHS[mo-1],String(y),"pmprev","pmnext")+planBar()+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="pmtoday">Questo mese</button></p>`:"");
+  if(!me)h+=`<div class="note">Il tuo account non è collegato a un nome del Planner, quindi non so quali sono i tuoi turni.${isAdmin()?" Collegalo dal menu in alto a destra, voce Colleghi.":" Chiedi all’amministratore di collegarlo."} Vedi comunque le iniziali di chi lavora.</div>`;
+  h+=`<section class="pn"><div class="mcal">${GG.map(g=>`<div class="h">${g}</div>`).join("")}${Array.from({length:off},()=>"<span></span>").join("")}`+
+   Array.from({length:n},(_,i)=>{const x=ym+"-"+pad(i+1),cells=cellsFor(x),on=st.filter(q=>stateOf(cells[x+"_"+q.id])==="w"),mine=!!me&&on.some(q=>q.id===me.id);
+     return `<div class="mc2 ${me?(mine?"w":"r"):"n"} ${x===TODAY?"t":""}" aria-label="${GG[wdi(x)]} ${i+1}${me?(mine?", in turno":", riposo"):""}"><b>${i+1}</b><i>${esc(on.map(ini).join(" "))}</i></div>`}).join("")+`</div></section>`+
+   (me?`<div class="legend"><span><i class="dot" style="background:var(--go)"></i>In turno</span><span><i class="dot" style="background:var(--bad)"></i>Non in turno</span></div>`:"");
+  return h;
+}
 function viewPlanner(){
-  const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin(),cells=cellsOf(S.week);
+  if(S.pview==="month")return viewPlanMonth();
+  const c=eff(),days=[0,1,2,3,4,5,6].map(i=>addDays(S.week,i)),adm=isAdmin()&&!S.plock,cells=cellsOf(S.week);
   const lab=parse(days[0]).toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
   const LB={w:"Lavoro",r:"Riposo",f:"Ferie",m:"Malattia"},VAL={w:"L",r:"R",f:"F",m:"M"};
   const pill=k=>{const st=stateOf(cells[k]),l=LB[st]||"–";return adm?`<select class="sp ${st}" data-a="shiftset" data-c="${k}" aria-label="Turno">${[["","–"],["L","Lavoro"],["R","Riposo"],["F","Ferie"],["M","Malattia"]].map(([v,t])=>`<option value="${v}" ${(VAL[st]||"")===v?"selected":""}>${t}</option>`).join("")}</select>`:`<span class="sp ${st}">${l}</span>`};
   const who=q=>adm?`<button class="nmb" data-a="ren" data-i="${q.id}">${esc(q.n)}</button>`:`<span>${esc(q.n)}</span>`;
   return dayHead(null,"Turni",lab,"wprev","wnext")+
-  (S.week!==mondayOf(TODAY)?`<p class="back"><button class="g" data-a="wtoday">Questa settimana</button></p>`:"")+
-  (adm?`<p class="mu" style="margin:0 0 12px">Tocca un nome per cambiarlo. Scegli il turno dal menu.</p>`:"")+
+  planBar()+(S.week!==mondayOf(TODAY)?`<p class="back"><button class="g" data-a="wtoday">Questa settimana</button></p>`:"")+
+  (adm?`<p class="mu" style="margin:0 0 12px">Tocca un nome per cambiarlo. Scegli il turno dal menu.</p>`:isAdmin()?`<p class="mu" style="margin:0 0 12px">Turni bloccati: premi Sblocca per modificarli.</p>`:"")+
   `<div class="pgrid">`+days.map((x,i)=>`<section class="pn ${x===TODAY?"today":""}"><div class="pdh"><b>${GGL[i]}</b><span>${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</span></div>${c.staff.map(q=>`<div class="prow">${who(q)}${pill(x+"_"+q.id)}</div>`).join("")}</section>`).join("")+`</div>`;
 }
 const WH={oggi:"Oggi",ap:"Apertura",ch:"Chiusura"};
@@ -817,7 +861,7 @@ function recCfg(){
     `<div class="row" style="flex-wrap:wrap"><input type="text" style="flex:1 1 100%" data-d="newrec_${w}" placeholder="Nuova attività del ${n.toLowerCase()}" value="${esc(S.draft["newrec_"+w]||"")}">${whSel(`data-d="newrecw_${w}" style="flex:1"`,S.draft["newrecw_"+w]||"oggi")}<button class="g" data-a="addrec" data-w="${w}">Aggiungi</button></div></div>`).join("")+`</section>`;
 }
 function bdayCard(r){
-  const x=r.x,d=parse(x),ex=S.bexp[x]!==undefined?S.bexp[x]:x===TODAY,hasAct=r.act>0,show=!r.closed&&hasAct;
+  const x=r.x,d=parse(x),ex=!!S.bexp[x],hasAct=r.act>0,show=!r.closed&&hasAct;
   const diff=show?r.act-r.target:null,rv0=S.rev[x]||{},rv=rv0.u||{};
   const sub=r.closed&&!hasAct?"Festivo, peso 0":"Budget "+eur(Math.round(r.target))+(hasAct?", incassato "+eur(Math.round(r.act)):"");
   const row=(lab,f,v,mode)=>`<label class="rv"><span>${lab}</span><input type="text" inputmode="${mode||"decimal"}" data-a="revx" data-day="${x}" data-f="${f}" placeholder="0" value="${fnum(v)}"></label>`;
@@ -826,30 +870,47 @@ function bdayCard(r){
    (hasAct?`<div class="bdr"><span>Incasso del giorno</span><b>${eur(Math.round(r.act))}</b></div><div class="bdr"><span>Scarto dal budget</span><b>${r.act-r.target>=0?"+":"−"}${eur(Math.abs(Math.round(r.act-r.target)))}</b></div>`:"")+
    `<h3 class="sub2">Incassi</h3>`+eff().staff.map(q=>`<label class="rv"><span>${esc(q.n)}${r.on.some(o=>o.id===q.id)?" (in turno)":""}</span><input type="text" inputmode="decimal" data-a="rev" data-day="${x}" data-s="${q.id}" placeholder="0" value="${fnum(+rv[q.id]||0)}"></label>`).join("")+
    row("Altro (aggiustamenti)","other",+rv0.other||0,"text")+
-   `<h3 class="sub2">Dati del giorno</h3>`+row("N. scontrini","rc",+rv0.rc||0,"numeric")+row("Ingressi","en",+rv0.en||0,"numeric")+
+   `<h3 class="sub2">Dati del giorno</h3>`+row("N. scontrini","rc",+rv0.rc||0,"numeric")+
    `<div class="btns" style="justify-content:flex-start"><button class="${r.done?"g":"b"}" data-a="bdone" data-i="${x}">${r.done?"Riapri il giorno":"Chiudi il giorno"}</button><button class="g" data-a="bclose" data-i="${x}">${r.closed?"Togli festivo":"Giorno festivo (peso 0)"}</button></div></div>`:"")+`</section>`;
 }
 function kpiRows(ym){
-  const C={inc:0,rc:0,en:0};
-  return calcMonth(ym).filter(r=>r.done).map(r=>{const rv=S.rev[r.x]||{},rc=+rv.rc||0,en=+rv.en||0;C.inc+=r.act;C.rc+=rc;C.en+=en;
-    return{x:r.x,act:r.act,rc,en,cv:en?rc/en:null,sm:rc?r.act/rc:null,ccv:C.en?C.rc/C.en:null,csm:C.rc?C.inc/C.rc:null,C:{...C}}});
+  const A={inc:0,rc:0,en:0},P={rc:0,en:0,n:0},Q={inc:0,rc:0,n:0};
+  return calcMonth(ym).filter(r=>r.done).map(r=>{const rv=S.rev[r.x]||{},rc=+rv.rc||0,en=+rv.en||0;
+    A.inc+=r.act;A.rc+=rc;A.en+=en;if(rc&&en){P.rc+=rc;P.en+=en;P.n++}if(r.act&&rc){Q.inc+=r.act;Q.rc+=rc;Q.n++}
+    return{x:r.x,act:r.act,rc,en,cv:rc&&en?rc/en:null,sm:rc&&r.act?r.act/rc:null,ccv:P.en?P.rc/P.en:null,csm:Q.rc?Q.inc/Q.rc:null,C:{...A},nP:P.n,nQ:Q.n}});
+}
+function kpiDays(ym){
+  return calcMonth(ym).filter(r=>r.x<TODAY).map(r=>{const rv=S.rev[r.x]||{},rc=+rv.rc||0,en=+rv.en||0;
+    return{x:r.x,act:r.act,rc,en,done:r.done,cv:rc&&en?rc/en:null,sm:rc&&r.act?r.act/rc:null}});
+}
+function viewIngressi(){
+  const ym=S.bmo,[y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate(),days=Array.from({length:n},(_,i)=>ym+"-"+pad(i+1)).filter(x=>x<=TODAY);
+  let h=dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"");
+  h+=`<p class="mu" style="margin:0 0 12px">Scrivi gli ingressi quando te li mandano. Servono per la conversion rate nel tab KPI. Gli incassi e gli scontrini si inseriscono nel Budget.</p>`;
+  if(!days.length)return h+`<section class="pn"><p class="mu" style="margin:0">Nessun giorno da compilare in questo mese.</p></section>`;
+  const wk={};days.forEach(x=>{(wk[mondayOf(x)]=wk[mondayOf(x)]||[]).push(x)});
+  const sd=x=>parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
+  return h+Object.keys(wk).sort().reverse().map(w=>{const L=wk[w],tot=L.reduce((a,x)=>a+(+((S.rev[x]||{}).en)||0),0),miss=L.filter(x=>!(+((S.rev[x]||{}).en)||0)).length;
+    return `<section class="pn">${ph(L.length>1?sd(L[0])+" – "+sd(L[L.length-1]):sd(L[0]),tot?nm2(tot)+" ingressi":"da compilare")}${tot&&miss?`<p class="mu" style="margin:0 0 4px">Mancano ${miss} ${miss===1?"giorno":"giorni"}</p>`:""}`+L.map(x=>`<label class="rv"><span>${GG[wdi(x)]} ${parse(x).getDate()}</span><input type="text" inputmode="numeric" data-a="revx" data-day="${x}" data-f="en" placeholder="0" value="${fnum(+((S.rev[x]||{}).en)||0)}"></label>`).join("")+`</section>`}).join("");
 }
 function viewKpi(){
-  const ym=S.bmo,[y,mo]=ym.split("-").map(Number),rows=kpiRows(ym),last=rows[rows.length-1];
+  const ym=S.bmo,[y,mo]=ym.split("-").map(Number),rows=kpiRows(ym),last=rows[rows.length-1],days=kpiDays(ym),MISS=`<b class="miss">Dato mancante</b>`;
   let h=dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"");
-  if(!last)return h+`<section class="pn">${ph("KPI")}<p class="mu" style="margin:0">Nessun giorno chiuso in questo mese. Nel tab Budget inserisci incassi, scontrini e ingressi, poi premi “Chiudi il giorno”.</p></section>`;
-  h+=`<section class="pn">${ph("Progressivo del mese",rows.length+(rows.length===1?" giorno chiuso":" giorni chiusi"))}<div class="kpis"><div><span>Conversion rate</span><b>${pc1(last.ccv)}</b></div><div><span>Scontrino medio</span><b>${last.csm==null?"–":eur2(last.csm)}</b></div></div>`+
-    `<div class="bstats" style="margin-top:14px"><div><span>Scontrini</span><b>${nm2(last.C.rc)}</b></div><div><span>Ingressi</span><b>${nm2(last.C.en)}</b></div><div><span>Incassi</span><b>${eur(Math.round(last.C.inc))}</b></div></div></section>`;
-  h+=`<h3 class="sub2" style="margin:6px 2px 10px">Giorno per giorno</h3>`+rows.slice().reverse().map(r=>`<section class="pn kr"><div class="krh"><b>${GG[wdi(r.x)]} ${parse(r.x).getDate()}</b><span>Solo questa giornata</span></div><div class="kpis"><div><span>Conversion rate</span><b>${pc1(r.cv)}</b></div><div><span>Scontrino medio</span><b>${r.sm==null?"–":eur2(r.sm)}</b></div></div><div class="bstats" style="margin-top:12px"><div><span>Scontrini</span><b>${nm2(r.rc)}</b></div><div><span>Ingressi</span><b>${nm2(r.en)}</b></div><div><span>Incassi</span><b>${eur(Math.round(r.act))}</b></div></div></section>`).join("");
+  if(last){
+    const notes=[];
+    if(last.nP<rows.length)notes.push("Conversion rate calcolata su "+last.nP+" giorni su "+rows.length+" chiusi: negli altri mancano ingressi o scontrini.");
+    if(last.nQ<rows.length)notes.push("Scontrino medio calcolato su "+last.nQ+" giorni su "+rows.length+" chiusi: negli altri mancano incassi o scontrini.");
+    h+=`<section class="pn">${ph("Progressivo del mese",rows.length+(rows.length===1?" giorno chiuso":" giorni chiusi"))}<div class="kpis"><div><span>Conversion rate</span>${last.ccv==null?MISS:`<b>${pc1(last.ccv)}</b>`}</div><div><span>Scontrino medio</span>${last.csm==null?MISS:`<b>${eur2(last.csm)}</b>`}</div></div>`+
+      `<div class="bstats" style="margin-top:14px"><div><span>Scontrini</span><b>${nm2(last.C.rc)}</b></div><div><span>Ingressi</span><b>${nm2(last.C.en)}</b></div><div><span>Incassi</span><b>${eur(Math.round(last.C.inc))}</b></div></div>${notes.map(t=>`<p class="mu" style="margin:10px 0 0">${t}</p>`).join("")}</section>`;
+  }else h+=`<section class="pn">${ph("Progressivo del mese","nessun giorno chiuso")}<p class="mu" style="margin:0">Nel tab Budget inserisci incassi e scontrini, poi premi “Chiudi il giorno”. Gli ingressi vanno nel tab Ingressi.</p></section>`;
+  if(days.length)h+=`<h3 class="sub2" style="margin:6px 2px 10px">Giorno per giorno</h3>`+days.slice().reverse().map(r=>`<section class="pn kr"><div class="krh"><b>${GG[wdi(r.x)]} ${parse(r.x).getDate()}</b><span>Solo questa giornata</span></div><div class="kpis"><div><span>Conversion rate</span>${r.cv==null?MISS:`<b>${pc1(r.cv)}</b>`}</div><div><span>Scontrino medio</span>${r.sm==null?MISS:`<b>${eur2(r.sm)}</b>`}</div></div><div class="bstats" style="margin-top:12px"><div><span>Scontrini</span><b>${r.rc?nm2(r.rc):"–"}</b></div><div><span>Ingressi</span><b>${r.en?nm2(r.en):"–"}</b></div><div><span>Incassi</span><b>${r.act?eur(Math.round(r.act)):"–"}</b></div></div></section>`).join("");
   return h;
 }
 function viewBudget(){
   const ym=S.bmo,[y,mo]=ym.split("-").map(Number),b=S.bm[ym]||{},total=+b.total||0,W=(b.w&&b.w.length===7?b.w:DEFW);
   const rows=calcMonth(ym),inc=rows.reduce((a,r)=>a+r.act,0),left=Math.max(0,total-inc),pct=total?Math.round(inc/total*100):0;
-  const nolink=eff().staff.filter(q=>!q.uid);
   return dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+
   (ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"")+
-  `<section class="pn">${ph("Account collegati",nolink.length?nolink.length+" da collegare":"tutti collegati")}<div class="list">${eff().staff.map(q=>`<div class="row"><span class="tx">${esc(q.n)}<small class="sub">${q.uid?"account: "+esc(rn(q.uid)):"non collegato"}</small></span><button class="g" data-a="ren" data-i="${q.id}">${q.uid?"Cambia":"Collega"}</button></div>`).join("")}</div><p class="mu" style="margin-bottom:0">Senza collegamento la persona non vede il proprio obiettivo.</p></section>`+
   `<section class="pn">${ph("Budget del mese")}<label class="fld" style="margin-top:0"><span>Budget mensile (€)</span><input type="text" inputmode="decimal" data-a="bmtotal" placeholder="per esempio 30000" value="${fnum(total)}"></label><div class="bstats"><div><span>Incassato</span><b>${eur(Math.round(inc))}</b></div><div><span>Mancano</span><b>${eur(Math.round(left))}</b></div><div><span>Raggiunto</span><b>${pct}%</b></div></div></section>`+
   `<section class="pn">${ph("Peso dei giorni (%)")}<div class="wgrid">${GG.map((g,i)=>`<label><span>${g}</span><input type="text" inputmode="decimal" data-a="bmw" data-i="${i}" value="${fnum(W[i])}"></label>`).join("")}</div><p class="mu" style="margin-bottom:0">Pesi dentro la settimana: l’app li adatta al mese, così la somma dei giorni resta uguale al budget.</p></section>`+
   `<section class="pn"><div class="btns" style="margin:0;justify-content:flex-start"><button class="b" data-a="pdf">Esporta PDF</button><button class="g" data-a="pdfmail">Invia per e-mail</button></div></section>`+
@@ -956,8 +1017,8 @@ function render(){
   const app=$("#app"),logged=!!S.uid;
   const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
   const who=$("#who");who.hidden=!logged;who.textContent=String(S.names[S.uid]||S.email||"?").charAt(0).toUpperCase();
-  if(["todo","budget","avviso","lista","kpi"].includes(S.tab)&&!isAdmin())S.tab="oggi";
-  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],["mag","Magazzino",0],...(isAdmin()?[["todo","ToDo",0],["avviso","Avviso",0],["lista","Check-list",0],["budget","Budget",0],["kpi","KPI",0]]:[])];
+  if(["todo","budget","avviso","lista","kpi","ingressi"].includes(S.tab)&&!isAdmin())S.tab="oggi";
+  const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],["mag","Magazzino",0],...(isAdmin()?[["todo","ToDo",0],["avviso","Avviso",0],["lista","Check-list",0],["budget","Budget",0],["ingressi","Ingressi",0],["kpi","KPI",0]]:[])];
   const nv=$("#nav"),sl=nv.scrollLeft||0;
   nv.innerHTML=logged?tabs.map(([k,l,b])=>`<button data-a="tab" data-i="${k}" class="${S.tab===k?"on":""}"><span class="ic">${IC[k]}</span>${l}${b?`<b class="bd">${b}</b>`:""}</button>`).join(""):"";
   nv.scrollLeft=sl;
@@ -965,7 +1026,7 @@ function render(){
   if(!S.authReady){app.innerHTML=`<p class="mu">Caricamento…</p>`;return}
   if(!logged){app.innerHTML=viewLogin();return}
   if(!S.loaded){app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:`<p class="mu">Caricamento…</p>`);return}
-  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid?`<div class="note">Nessun amministratore impostato: apri il menu (cerchio in alto a destra) e scegli Il tuo profilo.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,mag:viewMag,todo:()=>isAdmin()?viewAssign():"",budget:viewBudget,kpi:viewKpi,avviso:viewAvviso,lista:viewLista}[S.tab])();
+  app.innerHTML=(S.err?`<div class="note">${esc(S.err)}</div>`:"")+(S.adminLoaded&&!S.adminUid?`<div class="note">Nessun amministratore impostato: apri il menu (cerchio in alto a destra) e scegli Il tuo profilo.</div>`:"")+({oggi:viewOggi,ap:viewApertura,ch:viewChiusura,cal:viewCal,plan:viewPlanner,mag:viewMag,todo:()=>isAdmin()?viewAssign():"",budget:viewBudget,ingressi:viewIngressi,kpi:viewKpi,avviso:viewAvviso,lista:viewLista}[S.tab])();
   const sh=$("#sheet"),html=(S.tab==="cal"&&S.sumDay)?sheetHtml():"";
   if(html!==S.sheetHtml){
     const sb=sh.querySelector&&sh.querySelector(".sbody"),st=sb?sb.scrollTop:0;
@@ -990,11 +1051,15 @@ function act(a,el){
   else if(a==="logout"){signOut(auth).then(()=>location.reload())}
   else if(a==="tab"){if(S.sumDay){S.sumDay="";watchSum("")}S.tab=i;render();scrollTo(0,0);const on=$("#nav").querySelector&&$("#nav").querySelector(".on");if(on&&on.scrollIntoView)on.scrollIntoView({inline:"center",block:"nearest"})}
   else if(a==="dprev"||a==="dnext"||a==="dtoday"){S.day=a==="dtoday"?TODAY:addDays(S.day,a==="dprev"?-1:1);delete S.draft.sum;delete S.draft.memo;S.confirm="";watchDay();render()}
+  else if(a==="pmonth"){S.pview="month";S.pm=S.pm||TODAY.slice(0,7);render();scrollTo(0,0)}
+  else if(a==="pweek"){S.pview="week";render();scrollTo(0,0)}
+  else if(a==="plock"){if(!isAdmin())return;S.plock=!S.plock;render()}
+  else if(a==="pmprev"||a==="pmnext"||a==="pmtoday"){if(a==="pmtoday")S.pm=TODAY.slice(0,7);else{const m=parse((S.pm||TODAY.slice(0,7))+"-01");m.setMonth(m.getMonth()+(a==="pmprev"?-1:1));S.pm=ymd(m).slice(0,7)}render()}
   else if(a==="wprev"||a==="wnext"||a==="wtoday"){S.week=a==="wtoday"?mondayOf(TODAY):addDays(S.week,a==="wprev"?-7:7);render()}
   else if(a==="bmprev"||a==="bmnext"||a==="bmtoday"){if(a==="bmtoday")S.bmo=TODAY.slice(0,7);else{const m=parse(S.bmo+"-01");m.setMonth(m.getMonth()+(a==="bmprev"?-1:1));S.bmo=ymd(m).slice(0,7)}render()}
   else if(a==="bmtotal"){save(db.doc("bmonth/"+S.bmo),{total:num(el.value)||0})}
   else if(a==="bmw"){const W=((S.bm[S.bmo]||{}).w||DEFW).slice();W[+i]=num(el.value)||0;save(db.doc("bmonth/"+S.bmo),{w:W})}
-  else if(a==="bday"){S.bexp[i]=!(S.bexp[i]!==undefined?S.bexp[i]:i===TODAY);render()}
+  else if(a==="bday"){S.bexp[i]=!S.bexp[i];render()}
   else if(a==="bclose"){const cur=!!(((S.bm[S.bmo]||{}).closed||{})[i]);save(db.doc("bmonth/"+S.bmo),{closed:{[i]:!cur}})}
   else if(a==="rev"){save(db.doc("rev/"+D2.day),{u:{[D2.s]:num(el.value)}})}
   else if(a==="pushon"){setupPush(true)}
@@ -1037,8 +1102,9 @@ function act(a,el){
     toast("Problema inviato");render()}
   else if(a==="menu"){if(S.modal&&S.modal.type==="menu")closeModal();else openModal({type:"menu"})}
   else if(a==="mopen"){closeModal();openModal({type:i})}
-  else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;S.draft.rnuid=q.uid||"";openModal({type:"rename",sid:i})}
-  else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim(),sel=document.querySelector('#modal [data-d="rnuid"]'),lk=(sel&&typeof sel.value==="string")?sel.value:(S.draft.rnuid||"");clearDrafts();closeModal();if(m&&v){editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q){q.n=v;if(lk)q.uid=lk;else delete q.uid}});toast(lk?v+" collegata a "+rn(lk):"Collegamento tolto")}}
+  else if(a==="ren"){const q=eff().staff.find(x=>x.id===i);if(!q)return;S.draft.rnname=q.n;S.draft.rnuid=q.uid||"";openModal({type:"rename",sid:i,from:D2.from||""})}
+  else if(a==="mren"){const m=S.modal,v=(S.draft.rnname||"").trim(),sel=document.querySelector('#modal [data-d="rnuid"]'),lk=(sel&&typeof sel.value==="string")?sel.value:(S.draft.rnuid||"");clearDrafts();closeModal();if(m&&v){editCfg(c=>{const q=c.staff.find(x=>x.id===m.sid);if(q){q.n=v;if(lk)q.uid=lk;else delete q.uid}});toast(lk?v+" collegata a "+rn(lk):"Collegamento tolto")}if(m&&m.from==="coll")openModal({type:"colleghi"})}
+  else if(a==="mcoll"){clearDrafts();closeModal();openModal({type:"colleghi"})}
   else if(a==="shiftset"){el.className="sp "+stateOf(el.value);save(db.doc("weeks/"+S.week),{cells:{[D2.c]:el.value}})}
   else if(a==="addreport"){const t=(S.draft.rp||"").trim();if(!t){toast("Scrivi la segnalazione");return}
     S.draft.rp="";
@@ -1075,6 +1141,10 @@ function act(a,el){
     const m=S.mag[i];if(!m)return;const z=D2.s,n=Math.max(0,Math.min(99,magQ(m,z)+(+k))),at=Date.now();
     m.q={...(m.q||{}),[z]:n};m.at=at;m.by=S.uid;save(D.doc("mag/"+i),{q:{[z]:n},at,by:S.uid});render();
   }
+  else if(a==="magcats"){openModal({type:"magcats"})}
+  else if(a==="catname"){const v=el.value.trim();if(v)editCfg(c=>{c.cats=(c.cats||DEFCATS).map(x=>({...x}));const x=c.cats.find(y=>y.id===i);if(x)x.t=v});if(S.modal&&S.modal.type==="magcats"){S.modal.v=(S.modal.v||"")+"o";renderModal()}}
+  else if(a==="catdel"){if(magAll().some(x=>catId(x.cat)===i)){toast("Ci sono prodotti in questa categoria");return}if(catArr().length<=1){toast("Serve almeno una categoria");return}editCfg(c=>{c.cats=(c.cats||DEFCATS).filter(y=>y.id!==i)});if(S.modal&&S.modal.type==="magcats"){S.modal.v=(S.modal.v||"")+"o";renderModal()}}
+  else if(a==="catadd"){const v=(S.draft.newcat||"").trim();if(!v)return;S.draft.newcat="";editCfg(c=>{c.cats=(c.cats||DEFCATS).map(x=>({...x}));c.cats.push({id:"c"+uid8(),t:v})});if(S.modal&&S.modal.type==="magcats"){S.modal.v=(S.modal.v||"")+"o";renderModal()}}
   else if(a==="magnew"){magEditDrafts(null);openModal({type:"magedit",mid:""})}
   else if(a==="magedit"){const m=S.mag[i];if(!m)return;magEditDrafts(m);openModal({type:"magedit",mid:i})}
   else if(a==="magsave")magSave()
@@ -1093,7 +1163,7 @@ function act(a,el){
     toast("Bozza caricata: "+DEMO.length+" modelli");render();
   }
 }
-const CH=["chk","itemname","username","taskdone","recname","recwhere","bmtotal","bmw","rev","revx","shiftset"];
+const CH=["catname","chk","itemname","username","taskdone","recname","recwhere","bmtotal","bmw","rev","revx","shiftset"];
 document.addEventListener("click",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))return;act(a,el)});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-a]");if(!el)return;const a=el.dataset.a;if(CH.includes(a))act(a,el)});
 render();
