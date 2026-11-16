@@ -259,8 +259,10 @@ h3.sub2{font:400 20px/1.1 var(--disp);margin:20px 0 2px;letter-spacing:.01em}
 .mc2.w{background:var(--go);color:var(--gotx)}
 .mc2.r{background:var(--bad);color:var(--gotx)}
 .mc2.n{background:var(--fill);color:var(--ink)}
+.mc2.e{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ln2)}
 .mc2.t{box-shadow:inset 0 0 0 3px var(--ink)}
 .dlg .row .g{width:auto;flex:none;padding:10px 15px}
+.kn{display:block;color:var(--mu);font:600 13px var(--sans);margin-top:2px}
 .kpis b.miss{display:block;font:600 15px/2 var(--sans);color:var(--warn);white-space:normal}
 .zh{margin:14px 0 2px;font:700 14px var(--sans);color:var(--mu)}
 </style>
@@ -452,12 +454,12 @@ async function start(u){
     if(!s.exists()){const n=S.email.split("@")[0];await setDoc(r,{name:n.charAt(0).toUpperCase()+n.slice(1)})}}catch(e){}
   subs.users=D.col("users").onSnapshot(q=>{q.docs.forEach(d=>S.names[d.id]=(d.data()||{}).name);render()},fail);
   subs.cfg=D.doc("config/main").onSnapshot(s=>{S.cfg=s.exists?s.data():null;S.loaded=true;schedulePublish();if(!S.pushTried){S.pushTried=1;setupPush(false);if(location.search){deepLink(location.search);try{history.replaceState(null,"",location.pathname)}catch(e){}}}render()},fail);
-  subs.admin=D.doc("meta/admin").onSnapshot(s=>{S.adminUid=s.exists?(s.data().uid||null):null;S.adminLoaded=true;watchAdmin();render()},fail);
+  subs.admin=D.doc("meta/admin").onSnapshot(s=>{S.adminUid=s.exists?(s.data().uid||null):null;S.adminLoaded=true;watchAdmin();cleanDemo(S.mag);render()},fail);
   subs.tasks=D.col("tasks").onSnapshot(q=>{S.tasks=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.reports=D.col("reports").onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()}));render()},fail);
   subs.days=D.col("days").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.daysAll=m;render()},fail);
   subs.weeks=D.col("weeks").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.weeksAll=m;S.fl.wk=1;schedulePublish();render()},fail);
-  subs.mag=D.col("mag").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.mag=m;if(S.modal&&S.modal.type==="magsz")S.modal.v=(S.modal.v||"")+"o";render()},fail);
+  subs.mag=D.col("mag").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());cleanDemo(m);S.mag=m;if(S.modal&&S.modal.type==="magsz")S.modal.v=(S.modal.v||"")+"o";render()},fail);
   watchDay();
 }
 onAuthStateChanged(auth,u=>{S.authReady=true;if(u)start(u);else{S.uid=null;render()}});
@@ -524,7 +526,6 @@ function afterTick(k,i){
   });
 }
 
-const DEMO=[{"b": "Rev'it", "m": "Redridge GTX", "c": "Marrone/Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 1, "47": 2, "44": 1, "41": 1}}, {"b": "Rev'it", "m": "Descent H2O", "c": "Nero/Rosso", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"41": 1, "42": 2, "45": 1, "39": 1, "44": 1, "47": 1, "46": 1}}, {"b": "Rev'it", "m": "Kick", "c": "Verde scuro/Marrone", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"46": 1, "39": 1, "41": 2, "43": 1, "42": 2, "47": 1}}, {"b": "Eleveit", "m": "Freeride 2.2 Air", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"46": 1, "41": 1, "43": 2}}, {"b": "Eleveit", "m": "Stunt Air", "c": "Giallo/Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"39": 2, "46": 1, "45": 1, "40": 2, "47": 1, "44": 1, "43": 1, "41": 1}}, {"b": "Befast", "m": "Trandy", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"47": 2, "45": 2, "41": 1, "42": 1, "44": 1, "46": 1}}, {"b": "OJ", "m": "Break", "c": "Nero", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"47": 1, "42": 1, "43": 1, "45": 1, "41": 1, "39": 1, "46": 2}}, {"b": "Stylmartin", "m": "Vector WP", "c": "Nero/Rosso", "cat": "casual", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"40": 1, "41": 1, "45": 1, "42": 1}}, {"b": "TCX", "m": "Hero 2 WP", "c": "Marrone", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 2, "41": 1, "44": 1, "43": 1}}, {"b": "OJ", "m": "Exploring", "c": "Marrone", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"41": 1, "40": 1, "42": 1, "45": 2}}, {"b": "Scud", "m": "Chelsea", "c": "Marrone", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"43": 1, "39": 1, "42": 1, "40": 2, "44": 2}}, {"b": "Sidi", "m": "SDS Denver", "c": "Marrone", "cat": "stivali", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"46_5": 1, "39_5": 1, "41": 1, "40": 2, "44": 1, "43": 1, "42_5": 1, "39": 1}}, {"b": "Eleveit", "m": "Tonale WP", "c": "Nero", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"43": 1, "41": 2, "47": 1, "45": 1, "46": 2, "40": 1}}, {"b": "TCX", "m": "Fuel WP", "c": "Marrone vintage", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 2, "45": 2, "41": 2, "44": 1, "47": 2, "40": 1, "39": 1, "46": 2}}, {"b": "Alpinestars", "m": "SMX-6 V3", "c": "Nero/Bianco/Rosso", "cat": "racing", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"44": 2, "45": 1, "42": 1, "40": 1, "43": 2, "47": 1, "39": 1}}, {"b": "Alpinestars", "m": "SMX Plus V2", "c": "Nero", "cat": "racing", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"39": 1, "45": 1, "42": 1}}, {"b": "Alpinestars", "m": "Supertech R Vented", "c": "Nero/Bianco/Rosso fluo", "cat": "racing", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 2, "43": 1, "44": 1, "46": 1, "41": 1, "39": 1, "47": 1, "40": 1}}, {"b": "Dainese", "m": "Nexus 2", "c": "Nero", "cat": "racing", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"47": 1, "44": 1, "43": 1}}, {"b": "Gaerne", "m": "GP1 LS", "c": "Nero/Giallo fluo", "cat": "racing", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"42": 2, "40": 1, "43_5": 1, "45_5": 1, "41_5": 1, "40_5": 1, "45": 1}}, {"b": "Sidi", "m": "REX", "c": "Nero/Grigio", "cat": "racing", "g": "U", "h": 1, "mn": 39, "mx": 47, "q": {"47": 1, "39": 1, "44": 1, "46": 2, "44_5": 2, "42_5": 1}}, {"b": "Dainese", "m": "Seeker Gore-Tex", "c": "Nero", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"42": 1, "43": 1, "44": 1}}, {"b": "Gaerne", "m": "G.Midland Gore-Tex", "c": "Nero", "cat": "stivali", "g": "U", "h": 0, "mn": 39, "mx": 47, "q": {"45": 2, "47": 1, "41": 1, "42": 2}}, {"b": "Gaerne", "m": "Fastback Endurance Enduro", "c": "Nero/Marrone", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"47": 1, "45": 1, "48": 1, "44": 1}}, {"b": "Sidi", "m": "X Power Enduro", "c": "Nero", "cat": "enduro", "g": "U", "h": 1, "mn": 40, "mx": 48, "q": {"44": 1, "43_5": 1, "47_5": 1, "47": 2, "43": 1, "42": 1, "44_5": 1, "46": 2}}, {"b": "Gaerne", "m": "SG12", "c": "Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"42": 1, "41": 1, "44": 1, "48": 2, "46": 1, "43": 1, "45": 1}}, {"b": "Acerbis", "m": "X-Rock MM Two", "c": "Rosso/Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"43": 1, "44": 1, "40": 2, "46": 1, "42": 1, "47": 2, "45": 1}}, {"b": "Alpinestars", "m": "Tech 10", "c": "Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"46": 1, "47": 1, "44": 2, "45": 1, "42": 2, "41": 1}}, {"b": "Alpinestars", "m": "Tech 3", "c": "Bianco/Rosso/Blu scuro", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"45": 1, "40": 2, "47": 2, "44": 1, "48": 2, "46": 1, "41": 1, "42": 1}}, {"b": "Acerbis", "m": "X-Race", "c": "Nero", "cat": "enduro", "g": "U", "h": 0, "mn": 40, "mx": 48, "q": {"42": 1, "48": 1, "44": 1, "43": 1, "46": 2}}, {"b": "Sidi", "m": "Crossfire 3 SRS", "c": "Rosso/Nero", "cat": "enduro", "g": "U", "h": 1, "mn": 40, "mx": 48, "q": {"47": 1, "40": 1, "45": 1, "44_5": 2, "40_5": 2, "46": 1, "43": 1}}, {"b": "Rev'it", "m": "Emerald Ladies Talpa", "c": "Bianco", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"42": 1, "38": 2, "40": 1, "37": 1, "36": 2, "41": 2, "35": 1}}, {"b": "Eleveit", "m": "Antibes WP", "c": "Nero", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"38": 2, "37": 1, "41": 1, "40": 2, "35": 2, "42": 1, "39": 2, "36": 2}}, {"b": "Rev'it", "m": "Delta H2O Ladies", "c": "Blu scuro/Nero", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"41": 2, "35": 2, "37": 1, "36": 1}}, {"b": "Falco", "m": "Lennox 2", "c": "Rosso", "cat": "casual", "g": "D", "h": 0, "mn": 35, "mx": 42, "q": {"37": 1, "35": 1, "40": 1, "42": 2, "38": 1, "36": 1, "41": 1, "39": 1}}, {"b": "TCX", "m": "Blend 2 WP WMN", "c": "Nero", "cat": "stivali", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"39": 1, "37": 2, "42": 2, "38": 2, "36": 1}}, {"b": "Alpinestars", "m": "Stella Valencia WP", "c": "Nero", "cat": "stivali", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"37": 2, "40": 1, "41": 1, "39": 1}}, {"b": "Alpinestars", "m": "Stella SMX-6 V3 Drystar", "c": "Bianco", "cat": "racing", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"36": 1, "37": 1, "39": 1, "41": 2, "40": 2}}, {"b": "Dainese", "m": "Freeland 2 Gore-Tex WMN", "c": "Nero", "cat": "stivali", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"40": 1, "36": 1, "37": 2, "41": 2, "39": 1, "42": 1}}, {"b": "Rev'it", "m": "Arena GTX Ladies", "c": "Nero", "cat": "stivali", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"42": 1, "37": 2, "41": 1, "38": 2, "36": 1, "40": 2}}, {"b": "Alpinestars", "m": "Stella Tech 3", "c": "Nero/Bianco/Rosa", "cat": "enduro", "g": "D", "h": 0, "mn": 36, "mx": 42, "q": {"40": 2, "39": 2, "38": 2, "37": 2, "42": 1}}];
 const DEFCATS=[{id:"casual",t:"Casual"},{id:"stivali",t:"Stivali"},{id:"racing",t:"Racing"},{id:"enduro",t:"Enduro"}];
 const LEGACY={stivaletto:"stivali",stivale:"stivali",cross:"enduro"};
 const catArr=()=>{const c=S.cfg&&S.cfg.cats;return c&&c.length?c:DEFCATS};
@@ -550,8 +551,12 @@ const zchip=(m,s)=>`<button class="zc ${magQ(m,s)?"on":"off"}" data-a="magsz" da
 function magRow(m){
   return `<section class="pn mr"><button class="mrh" data-a="magopen" data-i="${m.id}"><span class="mrt"><b>${esc(magName(m))}</b><small>${esc(magSub(m))}</small></span><span class="mrn">${magTot(m)} paia ›</span></button><div class="zrow">${magSizes(m).map(s=>zchip(m,s)).join("")}</div></section>`;
 }
+function cleanDemo(m){
+  if(!isAdmin())return;const ids=Object.keys(m).filter(x=>m[x].demo);if(!ids.length)return;
+  ids.forEach(x=>{delete m[x];D.doc("mag/"+x).delete().catch(()=>{})});toast("Modelli di prova eliminati");
+}
 function magListHtml(){
-  if(!Object.keys(S.mag).length)return `<section class="pn"><p class="mu" style="margin:0">Nessun modello. Aggiungine uno, oppure carica la bozza con 40 modelli di prova.</p></section>`;
+  if(!Object.keys(S.mag).length)return `<section class="pn"><p class="mu" style="margin:0">Nessun prodotto. Tocca Aggiungi prodotto per cominciare.</p></section>`;
   const L=magFiltered();
   if(!L.length)return `<p class="mu">Nessun modello trovato.</p>`;
   const cap=80;
@@ -561,11 +566,11 @@ function viewMag(){
   if(S.magId&&S.mag[S.magId])return viewMagModel({id:S.magId,...S.mag[S.magId]});
   S.magId="";
   const chip=(k,l,cur,a)=>`<button class="fc ${cur===k?"on":""}" data-a="${a}" data-i="${k}">${l}</button>`;
-  const all=magAll(),demo=all.some(m=>m.demo);
+  const all=magAll();
   return ph("Magazzino",all.length?all.reduce((a,m)=>a+magTot(m),0)+" paia":"")+
+  `<div class="pbar"><button class="b" data-a="magnew">Aggiungi prodotto</button>${isAdmin()?`<button class="g" data-a="magcats">Gestisci categorie</button>`:""}</div>`+
   `<section class="pn"><input type="text" class="mq" data-d="mq" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Cerca nome, marca, colore o SKU" value="${esc(S.draft.mq||"")}"><div class="fcs">${chip("","Tutti",S.mcat,"magcat")}${catPairs().map(([k,l])=>chip(k,l,S.mcat,"magcat")).join("")}</div><div class="fcs">${chip("","Uomo e donna",S.mgen,"maggen")}${GENS.map(([k,l])=>chip(k,l,S.mgen,"maggen")).join("")}</div></section>`+
-  `<div id="maglist">${magListHtml()}</div>`+
-  `<section class="pn"><div class="btns" style="margin:0;justify-content:flex-start"><button class="b" data-a="magnew">Aggiungi prodotto</button>${all.length?"":`<button class="g" data-a="magdemo">Carica la bozza (40 modelli)</button>`}${demo?`<button class="g" data-a="magdeldemo">Elimina i modelli di prova</button>`:""}${isAdmin()?`<button class="g" data-a="magcats">Gestisci categorie</button>`:""}</div></section>`;
+  `<div id="maglist">${magListHtml()}</div>`;
 }
 function viewMagModel(m){
   return `<p class="back" style="margin:6px 0 10px"><button class="g" data-a="magback">‹ Magazzino</button></p>`+
@@ -650,7 +655,7 @@ function modalHtml(){
     catArr().map(c=>`<div class="row"><input type="text" data-a="catname" data-i="${c.id}" value="${esc(c.t)}" aria-label="Nome categoria"><span class="mrn">${used(c.id)}</span><button class="x" data-a="catdel" data-i="${c.id}" aria-label="Elimina">✕</button></div>`).join("")+
     `</div><div class="cmadd"><input type="text" data-d="newcat" placeholder="Nuova categoria" value="${esc(S.draft.newcat||"")}"><button class="g" data-a="catadd">Aggiungi</button></div><button class="g" data-a="mclose">Chiudi</button></div>`;
   }
-  if(m.type==="magdel"){const x=S.mag[m.mid];return dlg(m.kind==="demo"?"Eliminare i modelli di prova?":"Eliminare il modello?",`<p style="margin:0">${m.kind==="demo"?"Verranno cancellati i 40 modelli della bozza, con le loro taglie.":esc(x?magName(x)+" "+(x.c||""):"")+" verrà cancellato con tutte le sue taglie."}</p><button class="b" data-a="magdelgo">Elimina</button><button class="g" data-a="mclose">Annulla</button>`)}
+  if(m.type==="magdel"){const x=S.mag[m.mid];return dlg("Eliminare il modello?",`<p style="margin:0">${esc(x?magName(x)+" "+(x.c||""):"")} verrà cancellato con tutte le sue taglie.</p><button class="b" data-a="magdelgo">Elimina</button><button class="g" data-a="mclose">Annulla</button>`)}
   if(m.type==="rename")return dlg("Rinomina",`<input type="text" data-d="rnname" value="${esc(S.draft.rnname||"")}"><label class="fld" style="margin:0"><span>Account collegato</span><select data-d="rnuid"><option value="">Nessuno</option>${people().map(u=>`<option value="${u}" ${S.draft.rnuid===u?"selected":""}>${esc(rn(u))}</option>`).join("")}</select></label><button class="b" data-a="mren">Salva</button><button class="g" data-a="${m.from==="coll"?"mcoll":"mclose"}">Annulla</button>`);
   if(m.type==="menu")return `<div class="mbg clr" data-a="mclose"></div><div class="pop"><button data-a="mopen" data-i="profile">Il tuo profilo</button>${adm?`<button data-a="mopen" data-i="colleghi">Colleghi</button>`:""}</div>`;
   if(m.type==="colleghi")return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>Colleghi</h2><p class="mu" style="margin:0">Il nome nel Planner e l’account collegato. Senza collegamento la persona non vede il proprio obiettivo e non riceve i promemoria di turno.</p><div class="list">${eff().staff.map(q=>`<div class="row"><span class="tx">${esc(q.n)}<small class="sub">${q.uid?"account: "+esc(rn(q.uid)):"non collegato"}</small></span><button class="g" data-a="ren" data-i="${q.id}" data-from="coll">${q.uid?"Cambia":"Collega"}</button></div>`).join("")}</div><div class="zh">Nomi degli account</div><p class="mu" style="margin:0">Il nome che vedono tutti nell’app. Si salva quando esci dal campo.</p>${people().map(u=>`<input type="text" data-a="username" data-u="${u}" value="${esc(rn(u))}" aria-label="Nome">`).join("")}<button class="g" data-a="mclose">Chiudi</button></div>`;
@@ -717,7 +722,7 @@ function memoCard(){
 }
 function memoPanel(d){
   const m=d.memo||{},v=S.draft.memo!==undefined?S.draft.memo:(m.t||"");
-  return `<section class="pn">${ph("Promemoria per domani",m.t?esc(nm(m.by))+" alle "+hm(m.at):"")}<textarea data-d="memo" placeholder="Cosa deve sapere chi apre domani?">${esc(v)}</textarea><div class="btns"><button class="g" data-a="savememo">Salva promemoria</button></div></section>`;
+  return `<section class="pn">${ph("Promemoria per domani",m.t?esc(nm(m.by))+" alle "+hm(m.at):"")}<textarea data-d="memo" placeholder="Cosa deve sapere chi apre domani?">${esc(v)}</textarea><div class="btns"><button class="b" data-a="savememo">Salva promemoria</button></div></section>`;
 }
 function rptRow(r){
   const ex=!!S.exp[r.id],n=cmAll(r,r.by,r.at).length;
@@ -740,7 +745,7 @@ function viewAssign(){
   const recent=t=>!t.done||(Date.now()-(t.doneAt||0)<2.592e8);
   const given=S.tasks.filter(t=>t.by===S.uid&&t.to!==S.uid&&recent(t)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||tfor(x).localeCompare(tfor(y))||(x.at||0)-(y.at||0));
   const opts=Object.entries(S.names).filter(([id])=>id!==S.uid).map(([id,n])=>`<option value="${id}" ${S.draft.tkto===id?"selected":""}>${esc(n)}</option>`).join("");
-  return `<section class="pn">${ph("Assegna a un collega","solo amministratore")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option><option value="__all" ${S.draft.tkto==="__all"?"selected":""}>Tutti i colleghi</option>${opts}</select><label class="fld" style="margin:4px 0 0"><span>Per il giorno</span><input type="date" data-d="tkday" value="${esc(S.draft.tkday||TODAY)}"></label><button class="b" data-a="addtask">Assegna</button></div><p class="mu">Il collega la vede in Oggi, nel giorno scelto.</p><div class="list">`+
+  return `<section class="pn">${ph("Assegna a un collega")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa deve fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Scegli il collega…</option><option value="__all" ${S.draft.tkto==="__all"?"selected":""}>Tutti i colleghi</option>${opts}</select><label class="fld" style="margin:4px 0 0"><span>Per il giorno</span><input type="date" data-d="tkday" value="${esc(S.draft.tkday||TODAY)}"></label><button class="b" data-a="addtask">Assegna</button></div><div class="list">`+
   given.map(t=>`<div class="row"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}<small class="sub">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}, ${esc(fmtDay(tfor(t)))}</small></span><button class="x" data-a="deltask" data-i="${t.id}" aria-label="Elimina">✕</button></div>`).join("")+`</div></section>`;
 }
 function chkCard(k,items,title){
@@ -834,9 +839,9 @@ function viewPlanMonth(){
   let h=dayHead(null,MONTHS[mo-1],String(y),"pmprev","pmnext")+planBar()+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="pmtoday">Questo mese</button></p>`:"");
   if(!me)h+=`<div class="note">Il tuo account non è collegato a un nome del Planner, quindi non so quali sono i tuoi turni.${isAdmin()?" Collegalo dal menu in alto a destra, voce Colleghi.":" Chiedi all’amministratore di collegarlo."} Vedi comunque le iniziali di chi lavora.</div>`;
   h+=`<section class="pn"><div class="mcal">${GG.map(g=>`<div class="h">${g}</div>`).join("")}${Array.from({length:off},()=>"<span></span>").join("")}`+
-   Array.from({length:n},(_,i)=>{const x=ym+"-"+pad(i+1),cells=cellsFor(x),on=st.filter(q=>stateOf(cells[x+"_"+q.id])==="w"),mine=!!me&&on.some(q=>q.id===me.id);
-     return `<div class="mc2 ${me?(mine?"w":"r"):"n"} ${x===TODAY?"t":""}" aria-label="${GG[wdi(x)]} ${i+1}${me?(mine?", in turno":", riposo"):""}"><b>${i+1}</b><i>${esc(on.map(ini).join(" "))}</i></div>`}).join("")+`</div></section>`+
-   (me?`<div class="legend"><span><i class="dot" style="background:var(--go)"></i>In turno</span><span><i class="dot" style="background:var(--bad)"></i>Non in turno</span></div>`:"");
+   Array.from({length:n},(_,i)=>{const x=ym+"-"+pad(i+1),cells=cellsFor(x),on=st.filter(q=>stateOf(cells[x+"_"+q.id])==="w"),my=me?stateOf(cells[x+"_"+me.id]):"",mine=my==="w";
+     return `<div class="mc2 ${me?(mine?"w":my?"r":"e"):"n"} ${x===TODAY?"t":""}" aria-label="${GG[wdi(x)]} ${i+1}${me?(mine?", in turno":my?", non in turno":", non compilato"):""}"><b>${i+1}</b><i>${esc(on.map(ini).join(" "))}</i></div>`}).join("")+`</div></section>`+
+   (me?`<div class="legend"><span><i class="dot" style="background:var(--go)"></i>In turno</span><span><i class="dot" style="background:var(--bad)"></i>Non in turno</span><span><i class="dot" style="box-shadow:inset 0 0 0 1.5px var(--ln2)"></i>Non compilato</span></div>`:"");
   return h;
 }
 function viewPlanner(){
@@ -858,7 +863,7 @@ function recCfg(){
   return `<section class="pn">${ph("Cadenze fisse","ogni settimana")}<p class="mu" style="margin-top:0">Attività che si ripetono ogni settimana nel giorno indicato. Scegli dove compaiono: in Oggi, nella checklist di Apertura o in quella di Chiusura. Per la Chiusura scegli il giorno della sera: se il ritiro è martedì mattina, scegli lunedì.</p>`+
   GGL.map((n,w)=>`<h3 class="sub2">${n}</h3><div class="list">`+
     rec.filter(r=>r.d===w).map(r=>`<div class="row"><input type="text" data-a="recname" data-i="${r.id}" value="${esc(r.t)}">${whSel(`data-a="recwhere" data-i="${r.id}"`,r.w||"oggi")}<button class="x" data-a="delrec" data-i="${r.id}" aria-label="Elimina">✕</button></div>`).join("")+
-    `<div class="row" style="flex-wrap:wrap"><input type="text" style="flex:1 1 100%" data-d="newrec_${w}" placeholder="Nuova attività del ${n.toLowerCase()}" value="${esc(S.draft["newrec_"+w]||"")}">${whSel(`data-d="newrecw_${w}" style="flex:1"`,S.draft["newrecw_"+w]||"oggi")}<button class="g" data-a="addrec" data-w="${w}">Aggiungi</button></div></div>`).join("")+`</section>`;
+    `<div class="row" style="flex-wrap:wrap"><input type="text" style="flex:1 1 100%" data-d="newrec_${w}" placeholder="Aggiungi attività" value="${esc(S.draft["newrec_"+w]||"")}">${whSel(`data-d="newrecw_${w}" style="flex:1"`,S.draft["newrecw_"+w]||"oggi")}<button class="g" data-a="addrec" data-w="${w}">Aggiungi</button></div></div>`).join("")+`</section>`;
 }
 function bdayCard(r){
   const x=r.x,d=parse(x),ex=!!S.bexp[x],hasAct=r.act>0,show=!r.closed&&hasAct;
@@ -886,24 +891,21 @@ function kpiDays(ym){
 function viewIngressi(){
   const ym=S.bmo,[y,mo]=ym.split("-").map(Number),n=new Date(y,mo,0).getDate(),days=Array.from({length:n},(_,i)=>ym+"-"+pad(i+1)).filter(x=>x<=TODAY);
   let h=dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"");
-  h+=`<p class="mu" style="margin:0 0 12px">Scrivi gli ingressi quando te li mandano. Servono per la conversion rate nel tab KPI. Gli incassi e gli scontrini si inseriscono nel Budget.</p>`;
   if(!days.length)return h+`<section class="pn"><p class="mu" style="margin:0">Nessun giorno da compilare in questo mese.</p></section>`;
   const wk={};days.forEach(x=>{(wk[mondayOf(x)]=wk[mondayOf(x)]||[]).push(x)});
   const sd=x=>parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  return h+Object.keys(wk).sort().reverse().map(w=>{const L=wk[w],tot=L.reduce((a,x)=>a+(+((S.rev[x]||{}).en)||0),0),miss=L.filter(x=>!(+((S.rev[x]||{}).en)||0)).length;
-    return `<section class="pn">${ph(L.length>1?sd(L[0])+" – "+sd(L[L.length-1]):sd(L[0]),tot?nm2(tot)+" ingressi":"da compilare")}${tot&&miss?`<p class="mu" style="margin:0 0 4px">Mancano ${miss} ${miss===1?"giorno":"giorni"}</p>`:""}`+L.map(x=>`<label class="rv"><span>${GG[wdi(x)]} ${parse(x).getDate()}</span><input type="text" inputmode="numeric" data-a="revx" data-day="${x}" data-f="en" placeholder="0" value="${fnum(+((S.rev[x]||{}).en)||0)}"></label>`).join("")+`</section>`}).join("");
+  return h+Object.keys(wk).sort().map(w=>{const L=wk[w],tot=L.reduce((a,x)=>a+(+((S.rev[x]||{}).en)||0),0),miss=L.filter(x=>!(+((S.rev[x]||{}).en)||0)).length;
+    return `<section class="pn">${ph(L.length>1?sd(L[0])+" – "+sd(L[L.length-1]):sd(L[0]),tot?nm2(tot)+" ingressi":"")}${tot&&miss?`<p class="mu" style="margin:0 0 4px">Mancano ${miss} ${miss===1?"giorno":"giorni"}</p>`:""}`+L.map(x=>`<label class="rv"><span>${GG[wdi(x)]} ${parse(x).getDate()}</span><input type="text" inputmode="numeric" data-a="revx" data-day="${x}" data-f="en" placeholder="0" value="${fnum(+((S.rev[x]||{}).en)||0)}"></label>`).join("")+`</section>`}).join("");
 }
 function viewKpi(){
   const ym=S.bmo,[y,mo]=ym.split("-").map(Number),rows=kpiRows(ym),last=rows[rows.length-1],days=kpiDays(ym),MISS=`<b class="miss">Dato mancante</b>`;
   let h=dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+(ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"");
   if(last){
-    const notes=[];
-    if(last.nP<rows.length)notes.push("Conversion rate calcolata su "+last.nP+" giorni su "+rows.length+" chiusi: negli altri mancano ingressi o scontrini.");
-    if(last.nQ<rows.length)notes.push("Scontrino medio calcolato su "+last.nQ+" giorni su "+rows.length+" chiusi: negli altri mancano incassi o scontrini.");
-    h+=`<section class="pn">${ph("Progressivo del mese",rows.length+(rows.length===1?" giorno chiuso":" giorni chiusi"))}<div class="kpis"><div><span>Conversion rate</span>${last.ccv==null?MISS:`<b>${pc1(last.ccv)}</b>`}</div><div><span>Scontrino medio</span>${last.csm==null?MISS:`<b>${eur2(last.csm)}</b>`}</div></div>`+
-      `<div class="bstats" style="margin-top:14px"><div><span>Scontrini</span><b>${nm2(last.C.rc)}</b></div><div><span>Ingressi</span><b>${nm2(last.C.en)}</b></div><div><span>Incassi</span><b>${eur(Math.round(last.C.inc))}</b></div></div>${notes.map(t=>`<p class="mu" style="margin:10px 0 0">${t}</p>`).join("")}</section>`;
+    const den=Math.max(days.length,last.nP,last.nQ);
+    h+=`<section class="pn">${ph("Progressivo del mese",rows.length+(rows.length===1?" giorno chiuso":" giorni chiusi"))}<div class="kpis"><div><span>Conversion rate</span>${last.ccv==null?MISS:`<b>${pc1(last.ccv)}</b>`}<small class="kn">${last.nP}/${den}</small></div><div><span>Scontrino medio</span>${last.csm==null?MISS:`<b>${eur2(last.csm)}</b>`}<small class="kn">${last.nQ}/${den}</small></div></div>`+
+      `<div class="bstats" style="margin-top:14px"><div><span>Scontrini</span><b>${nm2(last.C.rc)}</b></div><div><span>Ingressi</span><b>${nm2(last.C.en)}</b></div><div><span>Incassi</span><b>${eur(Math.round(last.C.inc))}</b></div></div></section>`;
   }else h+=`<section class="pn">${ph("Progressivo del mese","nessun giorno chiuso")}<p class="mu" style="margin:0">Nel tab Budget inserisci incassi e scontrini, poi premi “Chiudi il giorno”. Gli ingressi vanno nel tab Ingressi.</p></section>`;
-  if(days.length)h+=`<h3 class="sub2" style="margin:6px 2px 10px">Giorno per giorno</h3>`+days.slice().reverse().map(r=>`<section class="pn kr"><div class="krh"><b>${GG[wdi(r.x)]} ${parse(r.x).getDate()}</b><span>Solo questa giornata</span></div><div class="kpis"><div><span>Conversion rate</span>${r.cv==null?MISS:`<b>${pc1(r.cv)}</b>`}</div><div><span>Scontrino medio</span>${r.sm==null?MISS:`<b>${eur2(r.sm)}</b>`}</div></div><div class="bstats" style="margin-top:12px"><div><span>Scontrini</span><b>${r.rc?nm2(r.rc):"–"}</b></div><div><span>Ingressi</span><b>${r.en?nm2(r.en):"–"}</b></div><div><span>Incassi</span><b>${r.act?eur(Math.round(r.act)):"–"}</b></div></div></section>`).join("");
+  if(days.length)h+=`<h3 class="sub2" style="margin:6px 2px 10px">Giorno per giorno</h3>`+days.slice().reverse().map(r=>`<section class="pn kr"><div class="krh"><b>${GG[wdi(r.x)]} ${parse(r.x).getDate()}</b></div><div class="kpis"><div><span>Conversion rate</span>${r.cv==null?MISS:`<b>${pc1(r.cv)}</b>`}</div><div><span>Scontrino medio</span>${r.sm==null?MISS:`<b>${eur2(r.sm)}</b>`}</div></div><div class="bstats" style="margin-top:12px"><div><span>Scontrini</span><b>${r.rc?nm2(r.rc):"–"}</b></div><div><span>Ingressi</span><b>${r.en?nm2(r.en):"–"}</b></div><div><span>Incassi</span><b>${r.act?eur(Math.round(r.act)):"–"}</b></div></div></section>`).join("");
   return h;
 }
 function viewBudget(){
@@ -912,7 +914,7 @@ function viewBudget(){
   return dayHead(null,MONTHS[mo-1],String(y),"bmprev","bmnext")+
   (ym!==TODAY.slice(0,7)?`<p class="back"><button class="g" data-a="bmtoday">Questo mese</button></p>`:"")+
   `<section class="pn">${ph("Budget del mese")}<label class="fld" style="margin-top:0"><span>Budget mensile (€)</span><input type="text" inputmode="decimal" data-a="bmtotal" placeholder="per esempio 30000" value="${fnum(total)}"></label><div class="bstats"><div><span>Incassato</span><b>${eur(Math.round(inc))}</b></div><div><span>Mancano</span><b>${eur(Math.round(left))}</b></div><div><span>Raggiunto</span><b>${pct}%</b></div></div></section>`+
-  `<section class="pn">${ph("Peso dei giorni (%)")}<div class="wgrid">${GG.map((g,i)=>`<label><span>${g}</span><input type="text" inputmode="decimal" data-a="bmw" data-i="${i}" value="${fnum(W[i])}"></label>`).join("")}</div><p class="mu" style="margin-bottom:0">Pesi dentro la settimana: l’app li adatta al mese, così la somma dei giorni resta uguale al budget.</p></section>`+
+  `<section class="pn">${ph("Peso dei giorni (%)")}<div class="wgrid">${GG.map((g,i)=>`<label><span>${g}</span><input type="text" inputmode="decimal" data-a="bmw" data-i="${i}" value="${fnum(W[i])}"></label>`).join("")}</div></section>`+
   `<section class="pn"><div class="btns" style="margin:0;justify-content:flex-start"><button class="b" data-a="pdf">Esporta PDF</button><button class="g" data-a="pdfmail">Invia per e-mail</button></div></section>`+
   rows.map(bdayCard).join("");
 }
@@ -994,11 +996,11 @@ async function exportPdf(ym,mode){
 }
 function avvisoCfg(){
   const a=eff().avviso,v=S.draft.avv!==undefined?S.draft.avv:(a?a.t:"");
-  return `<section class="pn">${ph("Avviso")}<p class="mu" style="margin-top:0">Appare in cima a Oggi per tutti, finché non lo togli.</p><textarea data-d="avv" placeholder="Scrivi l’avviso">${esc(v)}</textarea><div class="btns">${a&&a.t?`<button class="g" data-a="avvisoclear">Togli avviso</button>`:""}<button class="b" data-a="avvisosave">Salva avviso</button></div></section>`;
+  return `<section class="pn">${ph("Avviso")}<textarea data-d="avv" placeholder="Scrivi l’avviso">${esc(v)}</textarea><div class="btns">${a&&a.t?`<button class="g" data-a="avvisoclear">Togli avviso</button>`:""}<button class="b" data-a="avvisosave">Salva avviso</button></div></section>`;
 }
 function notifCfg(){
   const n=eff().notif||{},vv=S.draft.vapid!==undefined?S.draft.vapid:(n.vapid||"");
-  return `<section class="pn">${ph("Notifiche","solo amministratore")}<p class="mu" style="margin-top:0">Promemoria automatici a chi è in turno nel Planner: apertura 9:30, attività 15:00, chiusura 19:10. A te arrivano gli avvisi se alle 10:00 manca l’apertura e alle 19:30 la chiusura.</p>`+
+  return `<section class="pn">${ph("Notifiche","solo amministratore")}`+
   `<h3 class="sub2" style="margin-top:6px">Chiave web push</h3><input type="text" data-d="vapid" placeholder="Incolla qui la chiave pubblica" value="${esc(vv)}"><div class="btns"><button class="b" data-a="vapidsave">Salva chiave</button></div>`+
   `<p class="mu" style="margin-bottom:0">${n.vapid?"Chiave impostata.":"Chiave non ancora impostata."} Ognuno attiva le notifiche dal proprio profilo (cerchio in alto a destra).</p></section>`;
 }
@@ -1149,18 +1151,12 @@ function act(a,el){
   else if(a==="magedit"){const m=S.mag[i];if(!m)return;magEditDrafts(m);openModal({type:"magedit",mid:i})}
   else if(a==="magsave")magSave()
   else if(a==="magdelask"){openModal({type:"magdel",kind:"one",mid:i})}
-  else if(a==="magdeldemo"){openModal({type:"magdel",kind:"demo"})}
   else if(a==="magdelgo"){
     const m=S.modal;if(!m)return;
-    const ids=m.kind==="demo"?Object.keys(S.mag).filter(x=>S.mag[x].demo):[m.mid];
+    const ids=[m.mid];
     ids.forEach(x=>{delete S.mag[x];D.doc("mag/"+x).delete().catch(()=>toast("Non riuscito"))});
     if(ids.includes(S.magId))S.magId="";
-    toast(m.kind==="demo"?"Modelli di prova eliminati":"Modello eliminato");closeModal();render();
-  }
-  else if(a==="magdemo"){
-    const at=Date.now();
-    DEMO.forEach((d,j)=>{const id="d"+pad(j+1),doc={...d,demo:true,at,by:S.uid};S.mag[id]=doc;D.doc("mag/"+id).set(doc).catch(()=>toast("Salvataggio non riuscito"))});
-    toast("Bozza caricata: "+DEMO.length+" modelli");render();
+    toast("Modello eliminato");closeModal();render();
   }
 }
 const CH=["catname","chk","itemname","username","taskdone","recname","recwhere","bmtotal","bmw","rev","revx","shiftset"];
