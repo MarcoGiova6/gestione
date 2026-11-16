@@ -165,6 +165,9 @@ textarea{min-height:100px;resize:vertical}
 .g{border:0;border-radius:10px;padding:10px 15px;background:var(--fill);color:var(--ink);font:600 14px var(--sans)}
 .sq{width:42px;height:42px;padding:0;font-size:22px;line-height:1;border-radius:12px}
 .x{border:0;background:transparent;color:var(--mu);font-size:20px;padding:2px 10px;line-height:1}
+.one{display:flex;gap:6px;align-items:center}
+.one>*{min-width:0;font-size:14px;padding:11px 8px}
+.one .o1{flex:1 1 0}.one .o2{flex:0 0 62px;padding-left:6px;padding-right:2px}.one .o3{flex:0 0 100px;padding-left:2px;padding-right:2px;font-size:13px}.one .o4{flex:none;padding:11px 13px;font-size:18px;line-height:1}
 .tkb{width:100%;border:0;background:transparent;text-align:left;color:var(--ink);font:inherit;border-radius:0}
 .list>.tkb+.tkb{border-top:1px solid var(--ln)}
 .tkb .tx{flex:1;min-width:0;font-weight:600}
@@ -469,6 +472,7 @@ async function start(u){
   subs.days=D.col("days").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.daysAll=m;render()},fail);
   subs.weeks=D.col("weeks").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());S.weeksAll=m;S.fl.wk=1;schedulePublish();render()},fail);
   subs.mag=D.col("mag").onSnapshot(q=>{const m={};q.docs.forEach(d=>m[d.id]=d.data());cleanDemo(m);S.mag=m;if(S.modal&&S.modal.type==="magsz")S.modal.v=(S.modal.v||"")+"o";render()},fail);
+  subs.ysr=D.doc("push/"+S.uid).onSnapshot(s=>{S.ysr=s.exists?((s.data()||{}).ysr||""):"";render()},fail);
   watchDay();
 }
 onAuthStateChanged(auth,u=>{S.authReady=true;if(u)start(u);else{S.uid=null;render()}});
@@ -668,23 +672,24 @@ function modalHtml(){
   if(m.type==="tdet"){
     const t=S.tasks.find(x=>x.id===m.tid);
     if(!t)return dlg("Attività",`<p style="margin:0">Questa attività non esiste più.</p><button class="g" data-a="mclose">Chiudi</button>`);
-    const opts=Object.entries(S.names).map(([id,n])=>`<option value="${id}" ${(S.draft.tdto||t.to)===id?"selected":""}>${esc(id===S.uid?"Io":n)}</option>`).join("");
+    const own=t.to===t.by;
+    const opts=Object.entries(S.names).filter(([id])=>id!==S.uid).map(([id,n])=>`<option value="${id}" ${(S.draft.tdto||t.to)===id?"selected":""}>${esc(n)}</option>`).join("");
     const st=t.done?`Fatta da ${esc(nm(t.doneBy||t.to))}${t.doneAt?" il "+fmtWhen(t.doneAt):""}`:"Da fare";
-    return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>Attività</h2>`+
-    `<label class="fld"><span>Cosa c’è da fare</span><textarea data-d="tdt">${esc(S.draft.tdt!==undefined?S.draft.tdt:t.t)}</textarea></label>`+
-    `<label class="fld"><span>Chi deve farla</span><select data-d="tdto">${opts}</select></label>`+
-    `<label class="fld"><span>Per il giorno</span><input type="date" data-d="tdd" value="${esc(S.draft.tdd||tfor(t))}"></label>`+
+    return `<div class="mbg"></div><div class="dlg wd" role="dialog" aria-modal="true"><h2>${own?"Attività per me":"Attività"}</h2>`+
+    `<label class="fld"><span>Cosa c’è da fare</span><textarea data-d="tdt" ${own?'style="min-height:60px"':""}>${esc(S.draft.tdt!==undefined?S.draft.tdt:t.t)}</textarea></label>`+
+    (own?`<label class="fld"><span>Dettagli</span><textarea data-d="tdn">${esc(S.draft.tdn!==undefined?S.draft.tdn:(t.d||""))}</textarea></label>`:
+     `<label class="fld"><span>Chi deve farla</span><select data-d="tdto">${opts}</select></label><label class="fld"><span>Per il giorno</span><input type="date" data-d="tdd" value="${esc(S.draft.tdd||tfor(t))}"></label>`)+
     `<button class="b" data-a="tdsave">Salva modifiche</button>`+
-    `<p class="mu" style="margin:0">Creata ${t.at?"il "+fmtWhen(t.at):""} · ${st}</p>`+
-    (t.to===S.uid?`<button class="g" data-a="tdtog">${t.done?"Riapri":"Segna come fatta"}</button>`:"")+
+    `<p class="mu" style="margin:0">Creata ${t.at?"il "+fmtWhen(t.at):""}${own?"":" · "+st}</p>`+
     `<div class="zh">Commenti</div>${cmBlock(t,"addcmtask",t.id)}`+
     (m.ask?`<p style="margin:8px 0 0"><b>Eliminare questa attività?</b></p><button class="b" data-a="tddel">Elimina</button><button class="g" data-a="tdno">Annulla</button>`:`<button class="g" data-a="tdask">Elimina attività</button>`)+
     `<button class="g" data-a="mclose">Chiudi</button></div>`;
   }
   if(m.type==="ysum"){
     const y=addDays(TODAY,-1),d=S.daysAll[y]||{},t=String(d.sum||"").trim();
-    return dlg("Riepilogo di ieri",`<p class="mu" style="margin:0">${esc(fmtDay(y))}${t&&d.sumBy?" · salvato da "+esc(nm(d.sumBy))+(d.sumAt?" alle "+hm(d.sumAt):""):""}</p>`+(t?`<p style="white-space:pre-wrap;color:var(--ink);margin:0">${esc(t)}</p>`:`<p style="margin:0">Ieri non è stato salvato nessun riepilogo.</p>`)+`<button class="b" data-a="mclose">Chiudi</button>`);
+    return dlg("Riepilogo di ieri",`<p class="mu" style="margin:0">${esc(fmtDay(y))}${t&&d.sumBy?" · salvato da "+esc(nm(d.sumBy))+(d.sumAt?" alle "+hm(d.sumAt):""):""}</p>`+(t?`<p style="white-space:pre-wrap;color:var(--ink);margin:0">${esc(t)}</p><button class="b" data-a="ysconf">Conferma lettura</button><button class="g" data-a="mclose">Chiudi</button>`:`<p style="margin:0">Ieri non è stato salvato nessun riepilogo.</p><button class="g" data-a="mclose">Chiudi</button>`));
   }
+  if(m.type==="yask")return dlg("Hai letto?",`<button class="b" data-a="ysyes">Sì</button><button class="g" data-a="ysno">No</button>`);
   if(m.type==="turno"){
     const x=m.x,cs=cellsOf(mondayOf(x)),VAL={w:"L",r:"R",f:"F",m:"M"};
     return `<div class="mbg" data-a="mclose"></div><div class="dlg" role="dialog" aria-modal="true"><h2>${GGL[wdi(x)]} ${parse(x).toLocaleDateString("it-IT",{day:"numeric",month:"long"})}</h2>`+
@@ -771,18 +776,24 @@ function reportsCard(){
 }
 const tfor=t=>t.for||ymd(new Date(t.at||0));
 function myTasksCard(){
-  const l=S.tasks.filter(t=>t.to===S.uid&&(tfor(t)===S.day||(S.day===TODAY&&!t.done&&tfor(t)<TODAY))).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||(x.at||0)-(y.at||0));
+  const l=S.tasks.filter(t=>t.to===S.uid&&t.by!==S.uid&&(tfor(t)===S.day||(S.day===TODAY&&!t.done&&tfor(t)<TODAY))).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||(x.at||0)-(y.at||0));
   if(!l.length)return "";
   return `<section class="pn">${ph(S.day===TODAY?"Per te oggi":"Per te",l.filter(t=>!t.done).length+" da fare")}<div class="list">`+
   l.map(t=>`<label class="row ck ${t.done?"dn":""}">${ck(`data-a="taskdone" data-i="${t.id}"`,t.done)}<span class="tx">${esc(t.t)}${!t.done&&tfor(t)<TODAY?`<small class="sub">In ritardo, era per ${esc(fmtDay(tfor(t)))}</small>`:""}</span><span class="who">da ${esc(nm(t.by))}</span></label>`).join("")+`</div></section>`;
 }
 function viewAssign(){
   const recent=t=>!t.done||(Date.now()-(t.doneAt||0)<2.592e8);
-  const given=S.tasks.filter(t=>t.by===S.uid&&recent(t)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||tfor(x).localeCompare(tfor(y))||(x.at||0)-(y.at||0));
+  const mine=t=>t.to===t.by;
+  const given=S.tasks.filter(t=>t.by===S.uid&&!mine(t)&&recent(t)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||tfor(x).localeCompare(tfor(y))||(x.at||0)-(y.at||0));
+  const own=S.tasks.filter(t=>t.by===S.uid&&mine(t)).sort((x,y)=>(y.at||0)-(x.at||0));
   const opts=Object.entries(S.names).filter(([id])=>id!==S.uid).map(([id,n])=>`<option value="${id}" ${S.draft.tkto===id?"selected":""}>${esc(n)}</option>`).join("");
-  return `<section class="pn">${ph("Nuova attività")}<div class="stack"><input type="text" data-d="tk" placeholder="Cosa c’è da fare?" value="${esc(S.draft.tk||"")}"><select data-d="tkto"><option value="">Chi deve farla?</option><option value="${S.uid}" ${S.draft.tkto===S.uid?"selected":""}>Io</option><option value="__all" ${S.draft.tkto==="__all"?"selected":""}>Tutti i colleghi</option>${opts}</select><label class="fld" style="margin:4px 0 0"><span>Per il giorno</span><input type="date" data-d="tkday" value="${esc(S.draft.tkday||TODAY)}"></label><button class="b" data-a="addtask">Aggiungi</button></div></section>`+
-  `<section class="pn">${ph("Attività",given.filter(t=>!t.done).length+" da fare")}<div class="list">`+
-  (given.map(t=>{const n=cmAll(t,t.by,t.at).length;return `<button class="row tkb" data-a="tdopen" data-i="${t.id}"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}<small class="sub">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}, ${esc(fmtDay(tfor(t)))}${n?" · "+n+(n>1?" commenti":" commento"):""}</small></span><span class="who" aria-hidden="true">›</span></button>`}).join("")||`<p class="mu" style="margin:0">Nessuna attività.</p>`)+`</div></section>`;
+  const cn=t=>{const n=cmAll(t,t.by,t.at).length;return n?n+(n>1?" commenti":" commento"):""};
+  return `<section class="pn">${ph("Nuova attività colleghi")}<div class="one"><input type="text" class="o1" data-d="tk" placeholder="Cosa fare" aria-label="Cosa c’è da fare" value="${esc(S.draft.tk||"")}"><select class="o2" data-d="tkto" aria-label="Chi deve farla"><option value="">Chi</option><option value="__all" ${S.draft.tkto==="__all"?"selected":""}>Tutti</option>${opts}</select><input type="date" class="o3" data-d="tkday" aria-label="Per il giorno" value="${esc(S.draft.tkday||TODAY)}"><button class="b o4" data-a="addtask" aria-label="Aggiungi">+</button></div>`+
+  `<div class="list" style="margin-top:6px">`+
+  (given.map(t=>`<button class="row tkb" data-a="tdopen" data-i="${t.id}"><span class="tx" style="${t.done?"color:var(--mu);text-decoration:line-through":""}">${esc(t.t)}<small class="sub">${t.done?"fatta da ":"per "}${esc(nm(t.done?(t.doneBy||t.to):t.to))}, ${esc(fmtDay(tfor(t)))}${cn(t)?" · "+cn(t):""}</small></span><span class="who" aria-hidden="true">›</span></button>`).join("")||`<p class="mu" style="margin:0">Nessuna attività per i colleghi.</p>`)+`</div></section>`+
+  `<section class="pn">${ph("Nuova attività per me")}<div class="stack"><input type="text" data-d="mk" placeholder="Cosa c’è da fare" value="${esc(S.draft.mk||"")}"><textarea data-d="md" placeholder="Dettagli">${esc(S.draft.md||"")}</textarea><button class="b" data-a="addme">Aggiungi</button></div>`+
+  `<div class="list" style="margin-top:6px">`+
+  (own.map(t=>{const sub=[String(t.d||"").trim()?shT(String(t.d).replace(/\s+/g," "),70):"",cn(t)].filter(Boolean).join(" · ");return `<button class="row tkb" data-a="tdopen" data-i="${t.id}"><span class="tx">${esc(t.t)}${sub?`<small class="sub">${esc(sub)}</small>`:""}</span><span class="who" aria-hidden="true">›</span></button>`}).join("")||`<p class="mu" style="margin:0">Nessuna attività per te.</p>`)+`</div></section>`;
 }
 function chkCard(k,items,title){
   const mp=i=>S.dayDoc[i.k||k]||{},n=items.filter(i=>mp(i)[i.id]).length;
@@ -799,7 +810,7 @@ function dayBar(){
 function viewOggi(){
   const c=eff();
   const rec=recFor(S.day,"oggi");
-  return dayBar()+(S.day===TODAY?`<button class="ysum" data-a="ysum">Leggi riepilogo di ieri</button>`:"")+budgetPanel()+avvisoCard()+memoCard()+myTasksCard()+
+  return dayBar()+(S.day===TODAY&&S.ysr!==TODAY&&String((S.daysAll[addDays(TODAY,-1)]||{}).sum||"").trim()?`<button class="ysum" data-a="ysum">Leggi riepilogo di ieri</button>`:"")+budgetPanel()+avvisoCard()+memoCard()+myTasksCard()+
   (rec.length?chkCard("rec",rec,"Attività fisse del "+GGL[wdi(S.day)].toLowerCase()):"")+
   `<section class="pn">${ph("Attività svolte",S.acts.length||"")}<div class="stack">
     <input type="text" data-d="at" placeholder="Cosa è stato fatto?" value="${esc(S.draft.at||"")}">
@@ -1041,7 +1052,7 @@ function render(){
   if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&$("#app").contains(a)){S.pending=true;return}
   S.pending=false;
   const app=$("#app"),logged=!!S.uid;
-  const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&!t.done).length;
+  const openRep=S.reports.filter(r=>!r.res).length,mine=S.tasks.filter(t=>t.to===S.uid&&t.by!==S.uid&&!t.done).length;
   const who=$("#who");who.hidden=!logged;who.textContent=String(S.names[S.uid]||S.email||"?").charAt(0).toUpperCase();
   if(["todo","budget","avviso","lista","kpi","ingressi"].includes(S.tab)&&!isAdmin())S.tab="oggi";
   const tabs=[["oggi","Oggi",openRep],["ap","Apertura",0],["ch","Chiusura",0],["cal","Riepilogo",0],["plan","Planner",0],["mag","Magazzino",0],...(isAdmin()?[["todo","ToDo",0],["avviso","Avviso",0],["lista","Check-list",0],["budget","Budget",0],["ingressi","Ingressi",0],["kpi","KPI",0]]:[])];
@@ -1143,12 +1154,17 @@ function act(a,el){
     if(dest.length>1)toast("Assegnata a "+dest.length+" colleghi");render()}
   else if(a==="taskdone"){save(db.doc("tasks/"+i),{done:el.checked,doneAt:el.checked?Date.now():0,doneBy:el.checked?S.uid:""})}
   else if(a==="deltask"){db.doc("tasks/"+i).delete().catch(()=>toast("Operazione non riuscita"))}
-  else if(a==="tdopen"){if(!isAdmin())return;const t=S.tasks.find(x=>x.id===i);if(!t)return;S.draft.tdt=t.t;S.draft.tdd=tfor(t);S.draft.tdto=t.to;S.draft["cm_"+i]="";openModal({type:"tdet",tid:i})}
+  else if(a==="tdopen"){if(!isAdmin())return;const t=S.tasks.find(x=>x.id===i);if(!t)return;S.draft.tdt=t.t;S.draft.tdn=t.d||"";S.draft.tdd=tfor(t);S.draft.tdto=t.to;S.draft["cm_"+i]="";openModal({type:"tdet",tid:i})}
   else if(a==="tdsave"){if(!isAdmin()||!S.modal)return;const id=S.modal.tid,t=S.tasks.find(x=>x.id===id);if(!t)return;const tx=(S.draft.tdt||"").trim();if(!tx){toast("Scrivi cosa c’è da fare");return}
-    const to=S.draft.tdto||t.to,fd=S.draft.tdd||tfor(t);save(db.doc("tasks/"+id),{t:tx,to,for:fd});
-    if(to!==t.to&&to!==S.uid)notify([to],"Nuova attività per te 📌",shT(tx)+(fd!==TODAY?" (per il "+fd.split("-").reverse().join("/")+")":""),"?tab=oggi");
+    if(t.to===t.by){save(db.doc("tasks/"+id),{t:tx,d:(S.draft.tdn||"").trim()})}
+    else{const to=S.draft.tdto||t.to,fd=S.draft.tdd||tfor(t);save(db.doc("tasks/"+id),{t:tx,to,for:fd});
+      if(to!==t.to&&to!==S.uid)notify([to],"Nuova attività per te 📌",shT(tx)+(fd!==TODAY?" (per il "+fd.split("-").reverse().join("/")+")":""),"?tab=oggi")}
     clearDrafts();closeModal();toast("Attività salvata")}
-  else if(a==="tdtog"){if(!isAdmin()||!S.modal)return;const id=S.modal.tid,t=S.tasks.find(x=>x.id===id);if(!t||t.to!==S.uid)return;const d=!t.done;save(db.doc("tasks/"+id),{done:d,doneAt:d?Date.now():0,doneBy:d?S.uid:""})}
+  else if(a==="addme"){if(!isAdmin())return;const t=(S.draft.mk||"").trim();if(!t){toast("Scrivi cosa c’è da fare");return}const d=(S.draft.md||"").trim();S.draft.mk="";S.draft.md="";
+    db.doc("tasks/"+uid8()).set({t,d,to:S.uid,by:S.uid,at:Date.now(),done:false,for:TODAY}).catch(()=>toast("Salvataggio non riuscito"));render()}
+  else if(a==="ysconf"){openModal({type:"yask"})}
+  else if(a==="ysno"){openModal({type:"ysum"})}
+  else if(a==="ysyes"){S.ysr=TODAY;save(db.doc("push/"+S.uid),{ysr:TODAY});clearDrafts();S.modal=null;renderModal();S.tab="oggi";S.day=TODAY;render();scrollTo(0,0)}
   else if(a==="addcmtask"){if(!isAdmin())return;const t=(S.draft["cm_"+i]||"").trim();if(!t){toast("Scrivi il commento");return}S.draft["cm_"+i]="";save(db.doc("tasks/"+i),{cm:{[uid8()]:{t,by:S.uid,at:Date.now()}}})}
   else if(a==="tdask"){if(!S.modal)return;S.modal.ask=true;S.modal.v=(S.modal.v||"")+"o";renderModal()}
   else if(a==="tdno"){if(!S.modal)return;S.modal.ask=false;S.modal.v=(S.modal.v||"")+"o";renderModal()}
